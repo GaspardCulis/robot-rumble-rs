@@ -1,4 +1,4 @@
-use core::gravity::{Mass, Position, Velocity};
+use core::gravity::{GravityPlugin, Mass, Position, Velocity};
 
 use bevy::prelude::*;
 
@@ -29,7 +29,7 @@ fn main() {
                 })
                 .build(),
         )
+        .add_plugins(GravityPlugin)
         .add_systems(Startup, add_players)
-        .add_systems(Update, core::gravity::apply_forces)
         .run();
 }
