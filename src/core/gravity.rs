@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use std::cmp::max;
 
-const G: u32 = 800;
+const G: f32 = 800.;
 
 #[derive(Component, Debug)]
 pub struct Position(pub Vec2);
@@ -31,8 +32,17 @@ pub fn apply_forces(
     time: Res<Time>,
 ) {
     for (a_mass, a_position, mut a_velocity) in on.iter_mut() {
+        let mut force_vec = Vec2::new(0., 0.);
         for (b_mass, b_position) in from.iter() {
-            todo!();
+            if a_position.0 == b_position.0 {
+                continue;
+            }
+
+            let distance = a_position.0.distance_squared(b_position.0).ceil();
+            let force = G * (a_mass.0 * b_mass.0) as f32 / distance;
+            force_vec += force * (b_position.0 - a_position.0).normalize();
         }
+
+        a_velocity.0 += (force_vec / a_mass.0 as f32) * time.delta_seconds();
     }
 }
