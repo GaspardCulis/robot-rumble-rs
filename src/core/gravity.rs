@@ -3,16 +3,10 @@ use bevy::prelude::*;
 const G: u32 = 800;
 
 #[derive(Component, Debug)]
-pub struct Position {
-    pub x: f32,
-    pub y: f32,
-}
+pub struct Position(pub Vec2);
 
 #[derive(Component, Debug)]
-pub struct Velocity {
-    pub x: f32,
-    pub y: f32,
-}
+pub struct Velocity(pub Vec2);
 
 #[derive(Component, Debug)]
 pub struct Mass(pub u32);
