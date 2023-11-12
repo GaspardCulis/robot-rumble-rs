@@ -3,6 +3,7 @@ use core::gravity::{Mass, Position, Velocity};
 use bevy::prelude::*;
 
 mod core;
+mod entities;
 
 fn add_players(mut commands: Commands) {
     commands.spawn((
