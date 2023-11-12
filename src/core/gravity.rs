@@ -1,12 +1,8 @@
 use bevy::prelude::*;
 
+use super::physics::{Position, Velocity};
+
 const G: f32 = 800.;
-
-#[derive(Component, Debug)]
-pub struct Position(pub Vec2);
-
-#[derive(Component, Debug)]
-pub struct Velocity(pub Vec2);
 
 #[derive(Component, Debug)]
 pub struct Mass(pub u32);
@@ -25,7 +21,7 @@ impl Plugin for GravityPlugin {
     }
 }
 
-pub fn apply_forces(
+fn apply_forces(
     mut on: Query<(&Mass, &Position, &mut Velocity), Without<Static>>,
     from: Query<(&Mass, &Position), Without<Passive>>,
     time: Res<Time>,
