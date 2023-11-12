@@ -1,16 +1,25 @@
-use core::gravity::{GravityPlugin, Mass, Position, Velocity};
+use core::{
+    gravity::{GravityPlugin, Mass},
+    physics::{PhysicsPlugin, Position, Velocity},
+};
 
 use bevy::prelude::*;
+use entities::player::Player;
 
 mod core;
 mod entities;
 
 fn add_players(mut commands: Commands) {
     commands.spawn((
-        Position { x: 0., y: 0. },
-        Velocity { x: 0., y: 0. },
-        Mass(0),
+        Player,
+        Position(Vec2 { x: 0., y: 0. }),
+        Velocity(Vec2 { x: 2., y: 1. }),
     ));
+}
+
+fn log_player_pos(query: Query<&Position, With<Player>>) {
+    let position = query.single().0;
+    println!("Player position: {}", position);
 }
 
 fn main() {
@@ -29,7 +38,9 @@ fn main() {
                 })
                 .build(),
         )
+        .add_plugins(PhysicsPlugin)
         .add_plugins(GravityPlugin)
         .add_systems(Startup, add_players)
+        .add_systems(Update, log_player_pos)
         .run();
 }

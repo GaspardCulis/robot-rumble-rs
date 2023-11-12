@@ -10,7 +10,7 @@ pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        todo!()
+        app.add_systems(Update, update_position);
     }
 }
 
