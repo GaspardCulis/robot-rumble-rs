@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use std::cmp::max;
 
 const G: f32 = 800.;
 
