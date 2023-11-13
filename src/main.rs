@@ -1,10 +1,11 @@
 use core::{
-    gravity::{GravityPlugin, Mass},
+    gravity::GravityPlugin,
     physics::{PhysicsPlugin, Position, Velocity},
+    spritesheet::AnimatedSpritePlugin,
 };
 
 use bevy::prelude::*;
-use entities::player::Player;
+use entities::{planet::spawn_planet, player::Player};
 
 mod core;
 mod entities;
@@ -15,6 +16,8 @@ fn add_players(mut commands: Commands) {
         Position(Vec2 { x: 0., y: 0. }),
         Velocity(Vec2 { x: 2., y: 1. }),
     ));
+
+    commands.spawn(Camera2dBundle::default());
 }
 
 fn log_player_pos(query: Query<&Position, With<Player>>) {
@@ -40,7 +43,9 @@ fn main() {
         )
         .add_plugins(PhysicsPlugin)
         .add_plugins(GravityPlugin)
+        .add_plugins(AnimatedSpritePlugin)
         .add_systems(Startup, add_players)
+        .add_systems(Startup, spawn_planet)
         .add_systems(Update, log_player_pos)
         .run();
 }
