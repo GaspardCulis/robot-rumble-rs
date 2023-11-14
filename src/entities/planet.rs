@@ -17,7 +17,7 @@ pub fn spawn_planet(
 
     let animation_indices = spritesheet::AnimationIndices {
         first: 0,
-        last: 200,
+        last: 199,
     };
     let animation_timer =
         spritesheet::AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating));

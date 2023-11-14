@@ -5,7 +5,10 @@ use core::{
 };
 
 use bevy::prelude::*;
-use entities::{planet::spawn_planet, player::Player};
+use entities::{
+    planet::spawn_planet,
+    player::{spawn_player, Player},
+};
 
 mod core;
 mod entities;
@@ -46,6 +49,7 @@ fn main() {
         .add_plugins(AnimatedSpritePlugin)
         .add_systems(Startup, add_players)
         .add_systems(Startup, spawn_planet)
+        .add_systems(Startup, spawn_player)
         .add_systems(Update, log_player_pos)
         .run();
 }
