@@ -1,9 +1,17 @@
 use bevy::prelude::*;
 
-use crate::core::spritesheet;
+use crate::core::{gravity::Mass, physics::Position, spritesheet};
 
 #[derive(Component)]
 pub struct Planet;
+
+#[derive(Bundle)]
+struct PlanetBundle {
+    marker: Planet,
+    position: Position,
+    mass: Mass,
+    sprite: SpriteSheetBundle,
+}
 
 pub fn spawn_planet(
     mut commands: Commands,
