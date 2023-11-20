@@ -21,13 +21,14 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         SpriteBundle {
             texture: asset_server.load("img/player.png"),
-            transform: Transform::from_xyz(100., 0., 0.),
+            transform: Transform::from_scale(Vec3::splat(0.1)),
 
             ..default()
         },
         Player,
-        Position(Vec2 { x: 0., y: 0. }),
-        Velocity(Vec2 { x: 20., y: 10. }),
+        Position(Vec2 { x: 100., y: 0. }),
+        Velocity(Vec2 { x: 0., y: 100. }),
+        Mass(800),
     ));
 }
 

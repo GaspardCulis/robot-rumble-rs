@@ -10,7 +10,6 @@ struct PlanetBundle {
     marker: Planet,
     position: Position,
     mass: Mass,
-    sprite: SpriteSheetBundle,
 }
 
 pub fn spawn_planet(
@@ -38,5 +37,10 @@ pub fn spawn_planet(
         },
         animation_indices,
         animation_timer,
+        PlanetBundle {
+            marker: Planet,
+            position: Position(Vec2 { x: 0., y: 0. }),
+            mass: Mass(1200),
+        },
     ));
 }
