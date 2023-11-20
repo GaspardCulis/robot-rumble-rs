@@ -6,9 +6,13 @@ use crate::core::{
 };
 
 const PLAYER_MASS: u32 = 800;
+const PLAYER_VELOCITY: f32 = 500.;
 
 #[derive(Component)]
 pub struct Player;
+
+#[derive(Component)]
+pub struct PlayerInputVelocity(Vec2);
 
 #[derive(Resource)]
 pub struct PlayerSprite(Handle<Image>);
@@ -56,10 +60,26 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup);
+        app.add_systems(Update, handle_keys);
     }
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let player_sprite = asset_server.load("img/player.png");
     commands.insert_resource(PlayerSprite(player_sprite));
+}
+
+fn handle_keys(mut query: Query<&mut PlayerInputVelocity>, keyboard_input: Res<Input<KeyCode>>) {
+    let mut velocity = query.single_mut();
+
+    if keyboard_input.any_just_pressed([KeyCode::Space, KeyCode::Z]) {
+        todo!("Jump");
+    }
+
+    if keyboard_input.pressed(KeyCode::D) {
+        velocity.0.x = PLAYER_VELOCITY;
+    }
+    if keyboard_input.pressed(KeyCode::Q) {
+        velocity.0.x = -PLAYER_VELOCITY;
+    }
 }
