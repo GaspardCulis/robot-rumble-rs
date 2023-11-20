@@ -12,6 +12,16 @@ struct PlanetBundle {
     mass: Mass,
 }
 
+impl Default for PlanetBundle {
+    fn default() -> Self {
+        Self {
+            marker: Planet,
+            position: Position(Vec2::ZERO),
+            mass: Mass(1024),
+        }
+    }
+}
+
 pub fn spawn_planet(
     mut commands: Commands,
     assets_server: Res<AssetServer>,
@@ -38,9 +48,8 @@ pub fn spawn_planet(
         animation_indices,
         animation_timer,
         PlanetBundle {
-            marker: Planet,
-            position: Position(Vec2 { x: 0., y: 0. }),
             mass: Mass(1200),
+            ..Default::default()
         },
     ));
 }
