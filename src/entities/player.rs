@@ -35,14 +35,5 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, sprite_movement);
-    }
-}
-
-fn sprite_movement(mut query: Query<(&Position, &mut Transform)>) {
-    for (position, mut transform) in query.iter_mut() {
-        transform.translation.x = position.0.x;
-        transform.translation.y = position.0.y;
-    }
+    fn build(&self, app: &mut App) {}
 }

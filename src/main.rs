@@ -1,14 +1,10 @@
-use core::{
-    camera::CameraPlugin,
-    gravity::GravityPlugin,
-    physics::{PhysicsPlugin, Position, Velocity},
-    spritesheet::AnimatedSpritePlugin,
-};
+use core::{physics::Position, CorePlugins};
 
 use bevy::prelude::*;
 use entities::{
     planet::spawn_planet,
-    player::{spawn_player, Player, PlayerPlugin},
+    player::{spawn_player, Player},
+    EntitiesPlugins,
 };
 
 mod core;
@@ -35,11 +31,8 @@ fn main() {
                 })
                 .build(),
         )
-        .add_plugins(PhysicsPlugin)
-        .add_plugins(GravityPlugin)
-        .add_plugins(CameraPlugin)
-        .add_plugins(AnimatedSpritePlugin)
-        .add_plugins(PlayerPlugin)
+        .add_plugins(CorePlugins)
+        .add_plugins(EntitiesPlugins)
         .add_systems(Startup, spawn_planet)
         .add_systems(Startup, spawn_player)
         .add_systems(Update, log_player_pos)
