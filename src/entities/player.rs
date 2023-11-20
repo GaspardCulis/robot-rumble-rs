@@ -5,6 +5,8 @@ use crate::core::{
     physics::{Position, Velocity},
 };
 
+const PLAYER_MASS: u32 = 800;
+
 #[derive(Component)]
 pub struct Player;
 
@@ -14,7 +16,17 @@ struct PlayerBundle {
     position: Position,
     velocity: Velocity,
     mass: Mass,
-    sprite: SpriteSheetBundle,
+}
+
+impl Default for PlayerBundle {
+    fn default() -> Self {
+        Self {
+            marker: Player,
+            position: Position(Vec2::ZERO),
+            velocity: Velocity(Vec2::ZERO),
+            mass: Mass(PLAYER_MASS),
+        }
+    }
 }
 
 pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -25,10 +37,11 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 
             ..default()
         },
-        Player,
-        Position(Vec2 { x: 100., y: 0. }),
-        Velocity(Vec2 { x: 0., y: 100. }),
-        Mass(800),
+        PlayerBundle {
+            position: Position(Vec2 { x: 100., y: 0. }),
+            velocity: Velocity(Vec2 { x: 0., y: 100. }),
+            ..Default::default()
+        },
     ));
 }
 
