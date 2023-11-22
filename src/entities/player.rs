@@ -55,6 +55,18 @@ impl Default for PlayerBundle {
     }
 }
 
+pub struct PlayerPlugin;
+
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_collection::<PlayerAssets>()
+            .add_systems(Startup, spawn_player)
+            .add_systems(Update, handle_keys)
+            .add_systems(Update, player_physics)
+            .add_systems(Update, rotate_to_nearest_planet);
+    }
+}
+
 fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
     commands.spawn((PlayerBundle {
         position: Position(Vec2 { x: 100., y: 0. }),
@@ -67,18 +79,6 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
         },
         ..Default::default()
     },));
-}
-
-pub struct PlayerPlugin;
-
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_collection::<PlayerAssets>()
-            .add_systems(Startup, spawn_player)
-            .add_systems(Update, handle_keys)
-            .add_systems(Update, player_physics)
-            .add_systems(Update, rotate_to_nearest_planet);
-    }
 }
 
 fn handle_keys(
