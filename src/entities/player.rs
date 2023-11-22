@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 
-use crate::core::{
-    gravity::Mass,
-    physics::{Position, Velocity},
+use crate::{
+    core::{
+        gravity::Mass,
+        physics::{Position, Velocity},
+    },
+    utils::math,
 };
 
 const PLAYER_MASS: u32 = 800;
@@ -70,18 +73,26 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn handle_keys(mut query: Query<&mut PlayerInputVelocity>, keyboard_input: Res<Input<KeyCode>>) {
+fn handle_keys(
+    mut query: Query<&mut PlayerInputVelocity>,
+    keyboard_input: Res<Input<KeyCode>>,
+    time: Res<Time>,
+) {
     let mut velocity = query.single_mut();
+    let delta = time.delta_seconds();
 
     if keyboard_input.any_just_pressed([KeyCode::Space, KeyCode::Z]) {
         todo!("Jump");
     }
 
     if keyboard_input.pressed(KeyCode::D) {
-        velocity.0.x = PLAYER_VELOCITY;
+        velocity.0.x = math::lerp(velocity.0.x, PLAYER_VELOCITY, delta);
     }
     if keyboard_input.pressed(KeyCode::Q) {
-        velocity.0.x = -PLAYER_VELOCITY;
+        velocity.0.x = math::lerp(velocity.0.x, -PLAYER_VELOCITY, delta);
+    }
+    if keyboard_input.pressed(KeyCode::S) {
+        velocity.0.y = math::lerp(velocity.0.y, -PLAYER_VELOCITY * 0.75, delta);
     }
 }
 
