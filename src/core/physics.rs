@@ -6,6 +6,9 @@ pub struct Position(pub Vec2);
 #[derive(Component, Debug)]
 pub struct Velocity(pub Vec2);
 
+#[derive(Component, Debug)]
+pub struct Rotation(pub f32);
+
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
@@ -21,9 +24,15 @@ fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>
     }
 }
 
-fn update_sprite_transforms(mut query: Query<(&Position, &mut Transform), With<Sprite>>) {
-    for (position, mut transform) in query.iter_mut() {
+fn update_sprite_transforms(
+    mut query: Query<(&mut Transform, &Position, Option<&Rotation>), With<Sprite>>,
+) {
+    for (mut transform, position, rotation) in query.iter_mut() {
         transform.translation.x = position.0.x;
         transform.translation.y = position.0.y;
+
+        if rotation.is_some() {
+            transform.rotation = Quat::from_rotation_z(rotation.unwrap().0);
+        }
     }
 }
