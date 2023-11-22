@@ -5,6 +5,8 @@ use bevy_asset_loader::prelude::*;
 
 use crate::core::{gravity::Mass, physics::Position, spritesheet};
 
+const DEFAULT_RADIUS: u32 = 128;
+
 #[derive(Component)]
 pub struct Planet;
 
@@ -28,12 +30,11 @@ struct PlanetBundle {
 
 impl Default for PlanetBundle {
     fn default() -> Self {
-        const DEFAULT_RADIUS: u32 = 512;
         Self {
             marker: Planet,
             position: Position(Vec2::ZERO),
-            radius: Radius(radius_to_mass(DEFAULT_RADIUS)),
-            mass: Mass(DEFAULT_RADIUS),
+            radius: Radius(DEFAULT_RADIUS),
+            mass: Mass(radius_to_mass(DEFAULT_RADIUS)),
         }
     }
 }
@@ -59,12 +60,12 @@ fn spawn_planet(mut commands: Commands, sprite: Res<PlanetAssets>) {
         SpriteSheetBundle {
             texture_atlas: sprite.planet.clone(),
             sprite: TextureAtlasSprite::new(animation_indices.first),
+            transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 / 50f32)),
             ..default()
         },
         animation_indices,
         animation_timer,
         PlanetBundle {
-            mass: Mass(1200),
             ..Default::default()
         },
     ));
