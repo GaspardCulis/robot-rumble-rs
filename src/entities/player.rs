@@ -28,6 +28,13 @@ struct PlayerAssets {
     player: Handle<Image>,
 }
 
+#[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
+enum PlayerState {
+    #[default]
+    InAir,
+    OnGround,
+}
+
 #[derive(Bundle)]
 struct PlayerBundle {
     marker: Player,
@@ -60,6 +67,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_collection::<PlayerAssets>()
+            .add_state::<PlayerState>()
             .add_systems(Startup, spawn_player)
             .add_systems(Update, handle_keys)
             .add_systems(Update, player_physics)
@@ -70,7 +78,7 @@ impl Plugin for PlayerPlugin {
 fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
     commands.spawn((PlayerBundle {
         position: Position(Vec2 { x: 100., y: 0. }),
-        velocity: Velocity(Vec2 { x: 0., y: 100. }),
+        velocity: Velocity(Vec2 { x: 0., y: 0. }),
         rotation: Rotation(PI / 2.),
         sprite_bundle: SpriteBundle {
             texture: sprite.player.clone(),
@@ -84,12 +92,15 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
 fn handle_keys(
     mut query: Query<(&mut PlayerInputVelocity, &mut Velocity, &Rotation)>,
     keyboard_input: Res<Input<KeyCode>>,
+    player_state: Res<State<PlayerState>>,
     time: Res<Time>,
 ) {
     let (mut input_velocity, mut velocity, rotation) = query.single_mut();
     let delta = time.delta_seconds();
 
-    if keyboard_input.any_just_pressed([KeyCode::Space, KeyCode::Z]) {
+    if keyboard_input.any_just_pressed([KeyCode::Space, KeyCode::Z])
+        && *player_state.get() == PlayerState::OnGround
+    {
         velocity.0 += Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY;
     }
 
