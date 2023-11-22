@@ -5,6 +5,7 @@ use entities::{planet::spawn_planet, player::Player, EntitiesPlugins};
 
 mod core;
 mod entities;
+mod utils;
 
 fn log_player_pos(query: Query<&Position, With<Player>>) {
     let position = query.single().0;
