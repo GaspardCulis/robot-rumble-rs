@@ -152,7 +152,8 @@ fn player_physics(
     short_angle = (2. * short_angle) % (2. * PI) - short_angle;
     player_rotation.0 += short_angle * time.delta_seconds() * 1.;
 
-    player_position.0 += input_velocity.0 * time.delta_seconds();
+    player_position.0 +=
+        Vec2::from_angle(player_rotation.0).rotate(input_velocity.0) * time.delta_seconds();
 
     // Check if collides
     if nearest_distance - PLAYER_RADIUS <= 0. {
