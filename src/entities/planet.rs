@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 
 use bevy::prelude::*;
+use bevy_asset_loader::prelude::*;
 
 use crate::core::{gravity::Mass, physics::Position, spritesheet};
 
@@ -9,6 +10,13 @@ pub struct Planet;
 
 #[derive(Component)]
 pub struct Radius(pub u32);
+
+#[derive(AssetCollection, Resource)]
+struct PlanetAssets {
+    #[asset(texture_atlas(tile_size_x = 100., tile_size_y = 100., columns = 25, rows = 8))]
+    #[asset(path = "img/planet1.png")]
+    planet: Handle<TextureAtlas>,
+}
 
 #[derive(Bundle)]
 struct PlanetBundle {
@@ -30,16 +38,16 @@ impl Default for PlanetBundle {
     }
 }
 
-pub fn spawn_planet(
-    mut commands: Commands,
-    assets_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
-    let texture_handle = assets_server.load("img/planet1.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(100., 100.), 25, 8, None, None);
-    let texture_alias_handle = texture_atlases.add(texture_atlas);
+pub struct PlanetPlugin;
 
+impl Plugin for PlanetPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_collection::<PlanetAssets>()
+            .add_systems(Startup, spawn_planet);
+    }
+}
+
+fn spawn_planet(mut commands: Commands, sprite: Res<PlanetAssets>) {
     let animation_indices = spritesheet::AnimationIndices {
         first: 0,
         last: 199,
@@ -49,7 +57,7 @@ pub fn spawn_planet(
 
     commands.spawn((
         SpriteSheetBundle {
-            texture_atlas: texture_alias_handle,
+            texture_atlas: sprite.planet.clone(),
             sprite: TextureAtlasSprite::new(animation_indices.first),
             ..default()
         },

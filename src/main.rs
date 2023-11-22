@@ -1,7 +1,7 @@
 use core::{physics::Position, CorePlugins};
 
 use bevy::prelude::*;
-use entities::{planet::spawn_planet, player::Player, EntitiesPlugins};
+use entities::{player::Player, EntitiesPlugins};
 
 mod core;
 mod entities;
@@ -30,7 +30,6 @@ fn main() {
         )
         .add_plugins(CorePlugins)
         .add_plugins(EntitiesPlugins)
-        .add_systems(Startup, spawn_planet)
         .add_systems(Update, log_player_pos)
         .run();
 }
