@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use bevy::prelude::*;
 
 use crate::core::{gravity::Mass, physics::Position, spritesheet};
@@ -5,19 +7,25 @@ use crate::core::{gravity::Mass, physics::Position, spritesheet};
 #[derive(Component)]
 pub struct Planet;
 
+#[derive(Component)]
+pub struct Radius(pub u32);
+
 #[derive(Bundle)]
 struct PlanetBundle {
     marker: Planet,
     position: Position,
+    radius: Radius,
     mass: Mass,
 }
 
 impl Default for PlanetBundle {
     fn default() -> Self {
+        const DEFAULT_RADIUS: u32 = 512;
         Self {
             marker: Planet,
             position: Position(Vec2::ZERO),
-            mass: Mass(1024),
+            radius: Radius(radius_to_mass(DEFAULT_RADIUS)),
+            mass: Mass(DEFAULT_RADIUS),
         }
     }
 }
@@ -52,4 +60,8 @@ pub fn spawn_planet(
             ..Default::default()
         },
     ));
+}
+
+fn radius_to_mass(radius: u32) -> u32 {
+    (PI * radius.pow(2) as f64) as u32
 }
