@@ -15,11 +15,12 @@ use super::planet::{Planet, Radius};
 
 const PLAYER_MASS: u32 = 800;
 const PLAYER_VELOCITY: f32 = 500.;
+const PLAYER_RADIUS: f32 = 10.;
 
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct PlayerInputVelocity(Vec2);
 
 #[derive(AssetCollection, Resource)]
@@ -28,7 +29,7 @@ struct PlayerAssets {
     player: Handle<Image>,
 }
 
-#[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum PlayerState {
     #[default]
     InAir,
@@ -76,9 +77,8 @@ impl Plugin for PlayerPlugin {
 
 fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
     commands.spawn((PlayerBundle {
-        position: Position(Vec2 { x: 100., y: 0. }),
+        position: Position(Vec2 { x: 0., y: 500. }),
         velocity: Velocity(Vec2 { x: 0., y: 0. }),
-        rotation: Rotation(PI / 2.),
         sprite_bundle: SpriteBundle {
             texture: sprite.player.clone(),
             transform: Transform::from_scale(Vec3::splat(0.1)),
@@ -115,20 +115,29 @@ fn handle_keys(
 }
 
 fn player_physics(
-    mut player_query: Query<(&mut Position, &mut Rotation, &PlayerInputVelocity), Without<Planet>>,
+    mut player_query: Query<
+        (
+            &mut Position,
+            &mut Rotation,
+            &mut Velocity,
+            &PlayerInputVelocity,
+        ),
+        Without<Planet>,
+    >,
     planet_query: Query<(&Position, &Radius), With<Planet>>,
-    mut player_state: Res<State<PlayerState>>,
+    mut player_state: ResMut<NextState<PlayerState>>,
     time: Res<Time>,
 ) {
-    let (mut player_position, mut player_rotation, velocity) = player_query.single_mut();
+    let (mut player_position, mut player_rotation, mut velocity, input_velocity) =
+        player_query.single_mut();
 
-    // Find nearest planet
+    // Find nearest planet (asserts that one planet exists)
     let mut nearest_position = Vec2::ZERO;
     let mut nearest_radius: u32 = 0;
     let mut nearest_distance = f32::MAX;
     for (position, radius) in planet_query.iter() {
-        let distance = position.0.distance(player_position.0);
-        if distance - (radius.0 as f32) < nearest_distance {
+        let distance = position.0.distance(player_position.0) - radius.0 as f32;
+        if distance < nearest_distance {
             nearest_position = position.0;
             nearest_radius = radius.0;
             nearest_distance = distance;
@@ -143,5 +152,17 @@ fn player_physics(
     short_angle = (2. * short_angle) % (2. * PI) - short_angle;
     player_rotation.0 += short_angle * time.delta_seconds() * 1.;
 
-    player_position.0 += velocity.0 * time.delta_seconds();
+    // Check if collides
+    if nearest_distance - PLAYER_RADIUS <= 0. {
+        let collision_normal = (player_position.0 - nearest_position).normalize();
+        velocity.0 = Vec2::ZERO;
+
+        let clip_position =
+            nearest_position + collision_normal * (PLAYER_RADIUS + nearest_radius as f32);
+        player_position.0 = clip_position;
+
+        player_state.set(PlayerState::OnGround);
+    }
+
+    player_position.0 += input_velocity.0 * time.delta_seconds();
 }

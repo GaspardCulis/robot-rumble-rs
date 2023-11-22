@@ -1,15 +1,24 @@
-use core::{physics::Position, CorePlugins};
+use core::{
+    physics::{Position, Velocity},
+    CorePlugins,
+};
 
 use bevy::prelude::*;
-use entities::{player::Player, EntitiesPlugins};
+use entities::{
+    player::{Player, PlayerInputVelocity},
+    EntitiesPlugins,
+};
 
 mod core;
 mod entities;
 mod utils;
 
-fn log_player_pos(query: Query<&Position, With<Player>>) {
-    let position = query.single().0;
-    println!("Player position: {}", position);
+fn log_player_pos(query: Query<(&Position, &Velocity, &PlayerInputVelocity), With<Player>>) {
+    let (position, velocity, input_velocity) = query.single();
+    println!(
+        "Position: {:?} | Velocity {:?} | Input velocity {:?}",
+        position, velocity, input_velocity
+    );
 }
 
 fn main() {
