@@ -152,6 +152,8 @@ fn player_physics(
     short_angle = (2. * short_angle) % (2. * PI) - short_angle;
     player_rotation.0 += short_angle * time.delta_seconds() * 1.;
 
+    player_position.0 += input_velocity.0 * time.delta_seconds();
+
     // Check if collides
     if nearest_distance - PLAYER_RADIUS <= 0. {
         let collision_normal = (player_position.0 - nearest_position).normalize();
@@ -163,6 +165,4 @@ fn player_physics(
 
         player_state.set(PlayerState::OnGround);
     }
-
-    player_position.0 += input_velocity.0 * time.delta_seconds();
 }
