@@ -104,10 +104,10 @@ fn handle_keys(
     }
 
     if keyboard_input.pressed(KeyCode::D) {
-        input_velocity.0.x = math::lerp(input_velocity.0.x, PLAYER_VELOCITY, delta);
+        input_velocity.0.x = math::lerp(input_velocity.0.x, PLAYER_VELOCITY, delta * 2.);
     }
     if keyboard_input.pressed(KeyCode::Q) {
-        input_velocity.0.x = math::lerp(input_velocity.0.x, -PLAYER_VELOCITY, delta);
+        input_velocity.0.x = math::lerp(input_velocity.0.x, -PLAYER_VELOCITY, delta * 2.);
     }
 
     if !(keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Q)) {
