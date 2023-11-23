@@ -150,7 +150,7 @@ fn player_physics(
         + PI / 2.;
     let mut short_angle = (target_angle - player_rotation.0) % (2. * PI);
     short_angle = (2. * short_angle) % (2. * PI) - short_angle;
-    player_rotation.0 += short_angle * time.delta_seconds() * 1.;
+    player_rotation.0 += short_angle * time.delta_seconds() * 6.;
 
     player_position.0 +=
         Vec2::from_angle(player_rotation.0).rotate(input_velocity.0) * time.delta_seconds();
