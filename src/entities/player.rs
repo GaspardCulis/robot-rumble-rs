@@ -97,7 +97,7 @@ fn handle_keys(
     let (mut input_velocity, mut velocity, rotation) = query.single_mut();
     let delta = time.delta_seconds();
 
-    if keyboard_input.any_just_pressed([KeyCode::Space, KeyCode::Z])
+    if keyboard_input.any_pressed([KeyCode::Space, KeyCode::Z])
         && *player_state.get() == PlayerState::OnGround
     {
         velocity.0 += Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY;
