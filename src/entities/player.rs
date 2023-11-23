@@ -165,5 +165,7 @@ fn player_physics(
         player_position.0 = clip_position;
 
         player_state.set(PlayerState::OnGround);
+    } else {
+        player_state.set(PlayerState::InAir);
     }
 }
