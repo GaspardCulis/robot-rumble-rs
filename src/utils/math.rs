@@ -1,3 +1,7 @@
+use std::f32::consts::PI;
+
+pub const RAD: f32 = 2. * PI;
+
 pub fn lerp<T>(start: T, end: T, t: f32) -> T
 where
     T: std::ops::Add<Output = T>
