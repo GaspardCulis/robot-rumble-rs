@@ -8,7 +8,7 @@ use crate::{
         gravity::Mass,
         physics::{Position, Rotation, Velocity},
     },
-    utils::math,
+    utils::math::{self, RAD},
 };
 
 use super::planet::{Planet, Radius};
@@ -155,8 +155,8 @@ fn player_physics(
     let target_angle = (nearest_position.y - player_position.0.y)
         .atan2(nearest_position.x - player_position.0.x)
         + PI / 2.;
-    let mut short_angle = (target_angle - player_rotation.0) % (2. * PI);
-    short_angle = (2. * short_angle) % (2. * PI) - short_angle;
+    let mut short_angle = (target_angle - player_rotation.0) % RAD;
+    short_angle = (2. * short_angle) % RAD - short_angle;
     player_rotation.0 += short_angle * time.delta_seconds() * 6.;
 
     player_position.0 +=
