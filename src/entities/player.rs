@@ -15,7 +15,7 @@ use super::planet::{Planet, Radius};
 
 const PLAYER_MASS: u32 = 800;
 const PLAYER_VELOCITY: f32 = 500.;
-const PLAYER_RADIUS: f32 = 10.;
+const PLAYER_RADIUS: f32 = 16.;
 
 #[derive(Component)]
 pub struct Player;
