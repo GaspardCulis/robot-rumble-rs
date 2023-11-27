@@ -79,6 +79,7 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
     commands.spawn((PlayerBundle {
         position: Position(Vec2 { x: 0., y: 500. }),
         velocity: Velocity(Vec2 { x: 0., y: 0. }),
+        rotation: Rotation(PI),
         sprite_bundle: SpriteBundle {
             texture: sprite.player.clone(),
             transform: Transform::from_scale(Vec3::splat(0.1)),
@@ -89,18 +90,25 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
 }
 
 fn handle_keys(
-    mut query: Query<(&mut PlayerInputVelocity, &mut Velocity, &Rotation)>,
+    mut query: Query<(
+        &mut Position,
+        &mut PlayerInputVelocity,
+        &mut Velocity,
+        &Rotation,
+    )>,
     keyboard_input: Res<Input<KeyCode>>,
     player_state: Res<State<PlayerState>>,
     time: Res<Time>,
 ) {
-    let (mut input_velocity, mut velocity, rotation) = query.single_mut();
+    let (mut position, mut input_velocity, mut velocity, rotation) = query.single_mut();
     let delta = time.delta_seconds();
 
     if keyboard_input.any_pressed([KeyCode::Space, KeyCode::Z])
         && *player_state.get() == PlayerState::OnGround
     {
-        velocity.0 += Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 1.2;
+        velocity.0 += Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY;
+        // Immediately update position
+        position.0 += velocity.0 * delta;
     }
 
     if keyboard_input.pressed(KeyCode::D) {
@@ -111,7 +119,11 @@ fn handle_keys(
     }
 
     if !(keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Q)) {
-        input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * 6.);
+        let mut slow_down_rate = 6.;
+        if *player_state.get() == PlayerState::InAir {
+            slow_down_rate = 1.;
+        }
+        input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * slow_down_rate);
     }
 
     if keyboard_input.pressed(KeyCode::S) {
@@ -166,6 +178,15 @@ fn player_physics(
     if nearest_distance - PLAYER_RADIUS <= 0. {
         let collision_normal = (player_position.0 - nearest_position).normalize();
         velocity.0 = Vec2::ZERO;
+
+        let rotation_normal_diff = (collision_normal.angle_between(Vec2::Y) + RAD) % RAD
+            - (player_rotation.0 + RAD + PI / 2.) % RAD;
+
+        println!("Rotation normal diff = {}", rotation_normal_diff.abs());
+
+        if rotation_normal_diff.abs() > 30. {
+            println!("MAGOD");
+        }
 
         let clip_position =
             nearest_position + collision_normal * (PLAYER_RADIUS + nearest_radius as f32);
