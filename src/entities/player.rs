@@ -176,21 +176,25 @@ fn player_physics(
 
     // Check if collides
     if nearest_distance - PLAYER_RADIUS <= 0. {
+        // Compute collision normal
         let collision_normal = (player_position.0 - nearest_position).normalize();
-        velocity.0 = Vec2::ZERO;
-
-        let rotation_normal_diff = (collision_normal.angle_between(Vec2::Y) + RAD) % RAD
-            - (player_rotation.0 + RAD + PI / 2.) % RAD;
-
-        println!("Rotation normal diff = {}", rotation_normal_diff.abs());
-
-        if rotation_normal_diff.abs() > 30. {
-            println!("MAGOD");
-        }
-
+        // Clip player to ground
         let clip_position =
             nearest_position + collision_normal * (PLAYER_RADIUS + nearest_radius as f32);
         player_position.0 = clip_position;
+
+        // Check landing angle
+        let rotation_diff = ((player_rotation.0 - target_angle) + PI) % (2. * PI) - PI;
+
+        // Bounce if not on feet
+        if rotation_diff.abs() > 30f32.to_radians() {
+            let velocity_along_normal = velocity.0.dot(collision_normal);
+            let reflexion_vector = velocity.0 - 2. * velocity_along_normal * collision_normal;
+            velocity.0 = reflexion_vector * 0.5;
+        } else {
+            // Reset velocity
+            velocity.0 = Vec2::ZERO;
+        }
 
         player_state.set(PlayerState::OnGround);
     } else {
