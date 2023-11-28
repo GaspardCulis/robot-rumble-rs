@@ -127,7 +127,7 @@ fn handle_keys(
     }
 
     if keyboard_input.pressed(KeyCode::S) {
-        input_velocity.0.y = math::lerp(input_velocity.0.y, -PLAYER_VELOCITY * 0.75, delta);
+        input_velocity.0.y = math::lerp(input_velocity.0.y, -PLAYER_VELOCITY, delta);
     } else {
         input_velocity.0.y = math::lerp(input_velocity.0.y, 0., delta * 10.);
     }
