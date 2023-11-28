@@ -106,7 +106,7 @@ fn handle_keys(
     if keyboard_input.any_pressed([KeyCode::Space, KeyCode::Z])
         && *player_state.get() == PlayerState::OnGround
     {
-        velocity.0 += Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY;
+        velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY;
         // Immediately update position
         position.0 += velocity.0 * delta;
     }
