@@ -1,5 +1,6 @@
 # Robot Rumble
-*Brief overview*
+
+_Brief overview_
 
 **Title**: Robot Rumble
 
@@ -11,5 +12,17 @@
 
 ## TODOS
 
+- [ ] Player lost and angular velocity
+- [ ] Weapons:
+  - [ ] Shotgun
+  - [ ] Uzi
+  - [ ] Black hole launcher
+  - [ ] Rocket launcher
 - [ ] Implement [pixel planet](https://deep-fold.itch.io/pixel-planet-generator) shader
- 
+- [ ] Add background shader using [pixel space background](https://deep-fold.itch.io/space-background-generator) shader
+- [ ] Multiplayer using [SpacetimeDB](https://spacetimedb.com/)
+- [ ] UI
+  - [ ] Main menu
+  - [ ] Server browser menu
+  - [ ] Pause menu
+  - [ ] Settings menu
