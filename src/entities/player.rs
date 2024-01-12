@@ -183,11 +183,10 @@ fn player_physics(
             nearest_position + collision_normal * (PLAYER_RADIUS + nearest_radius as f32);
         player_position.0 = clip_position;
 
-        // Check landing angle
-        let rotation_diff = ((player_rotation.0 - target_angle) + PI) % (2. * PI) - PI;
-
         // Bounce if not on feet
+        let rotation_diff = math::clip_angle(player_rotation.0 - target_angle);
         if rotation_diff.abs() > 30f32.to_radians() {
+            println!("Bouncing");
             let velocity_along_normal = velocity.0.dot(collision_normal);
             let reflexion_vector = velocity.0 - 2. * velocity_along_normal * collision_normal;
             velocity.0 = reflexion_vector * 0.5;

@@ -11,3 +11,7 @@ where
 {
     start + (end - start) * t
 }
+
+pub fn clip_angle(angle: f32) -> f32 {
+    ((angle + PI).rem_euclid(2.0 * PI)) - PI
+}
