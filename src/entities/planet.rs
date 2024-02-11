@@ -1,9 +1,12 @@
 use std::f64::consts::PI;
 
-use bevy::prelude::*;
-use bevy_asset_loader::prelude::*;
+use bevy::{
+    prelude::*,
+    render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
+};
 
-use crate::core::{gravity::Mass, physics::Position, spritesheet};
+use crate::core::{gravity::Mass, physics::Position};
 
 const DEFAULT_RADIUS: u32 = 128;
 
@@ -12,13 +15,6 @@ pub struct Planet;
 
 #[derive(Component)]
 pub struct Radius(pub u32);
-
-#[derive(AssetCollection, Resource)]
-struct PlanetAssets {
-    #[asset(texture_atlas(tile_size_x = 100., tile_size_y = 100., columns = 25, rows = 8))]
-    #[asset(path = "img/planet1.png")]
-    planet: Handle<TextureAtlas>,
-}
 
 #[derive(Bundle)]
 struct PlanetBundle {
@@ -43,34 +39,49 @@ pub struct PlanetPlugin;
 
 impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
-        app.init_collection::<PlanetAssets>()
+        app.add_plugins(Material2dPlugin::<PlanetMaterial>::default())
             .add_systems(Startup, spawn_planet);
     }
 }
 
-fn spawn_planet(mut commands: Commands, sprite: Res<PlanetAssets>) {
-    let animation_indices = spritesheet::AnimationIndices {
-        first: 0,
-        last: 199,
-    };
-    let animation_timer =
-        spritesheet::AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating));
+fn spawn_planet(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<PlanetMaterial>>,
+) {
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: meshes.add(Mesh::from(shape::Circle::default())).into(),
+        transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0)),
+        material: materials
+            .add(PlanetMaterial {
+                color: Color::Rgba {
+                    red: 1.0,
+                    green: 0.0,
+                    blue: 0.0,
+                    alpha: 1.0,
+                },
+            })
+            .clone(),
+        ..default()
+    });
 
-    commands.spawn((
-        SpriteSheetBundle {
-            texture_atlas: sprite.planet.clone(),
-            sprite: TextureAtlasSprite::new(animation_indices.first),
-            transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 / 50f32)),
-            ..default()
-        },
-        animation_indices,
-        animation_timer,
-        PlanetBundle {
-            ..Default::default()
-        },
-    ));
+    commands.spawn(PlanetBundle {
+        ..Default::default()
+    });
 }
 
 fn radius_to_mass(radius: u32) -> u32 {
     (PI * radius.pow(2) as f64) as u32
+}
+
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct PlanetMaterial {
+    #[uniform(0)]
+    color: Color,
+}
+
+impl Material2d for PlanetMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/planet/earth_like.wgsl".into()
+    }
 }
