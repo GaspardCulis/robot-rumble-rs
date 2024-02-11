@@ -50,7 +50,7 @@ fn spawn_planet(
     mut materials: ResMut<Assets<PlanetMaterial>>,
 ) {
     commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(Mesh::from(shape::Circle::default())).into(),
+        mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
         transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0)),
         material: materials
             .add(PlanetMaterial {
