@@ -50,19 +50,21 @@ fn spawn_planet(
         transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0)),
         material: materials
             .add(planet_materials::UnderMaterial {
-                pixels: 100.0,
-                rotation: 0.0,
+                common: planet_materials::CommonMaterial {
+                    pixels: 100.0,
+                    rotation: 0.0,
+                    size: 50.0,
+                    octaves: 4,
+                    seed: 14.0,
+                    time_speed: 0.2,
+                },
                 light_origin: Vec2 { x: 0.39, y: 0.39 },
-                time_speed: 0.2,
                 dither_size: 2.0,
                 light_border_1: 0.4,
                 light_border_2: 0.6,
                 color1: Color::rgb(1.0, 0.0, 0.0),
                 color2: Color::rgb(0.0, 1.0, 0.0),
                 color3: Color::rgb(0.0, 0.0, 1.0),
-                size: 50.0,
-                octaves: 4,
-                seed: 14.0,
             })
             .clone(),
         ..default()
