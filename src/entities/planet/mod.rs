@@ -55,9 +55,9 @@ fn spawn_planet(
                 dither_size: 2.0,
                 light_border_1: 0.4,
                 light_border_2: 0.6,
-                color1: Color::rgb(1.0, 0.0, 0.0),
-                color2: Color::rgb(0.0, 1.0, 0.0),
-                color3: Color::rgb(0.0, 0.0, 1.0),
+                color1: Color::rgb(0.573, 0.91, 0.753),
+                color2: Color::rgb(0.31, 0.643, 0.722),
+                color3: Color::rgb(0.173, 0.208, 0.302),
             })
             .clone(),
         ..default()
