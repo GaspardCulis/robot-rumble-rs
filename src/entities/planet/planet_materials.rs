@@ -36,6 +36,19 @@ pub struct CommonMaterial {
     pub time_speed: f32,
 }
 
+impl Default for CommonMaterial {
+    fn default() -> Self {
+        Self {
+            pixels: 100.0,
+            rotation: 0.0,
+            size: 50.0,
+            octaves: 4,
+            seed: 14.0,
+            time_speed: 0.2,
+        }
+    }
+}
+
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct UnderMaterial {
     #[uniform(0)]
