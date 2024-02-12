@@ -1,6 +1,6 @@
 #define_import_path planet::common
 
-struct PlanetMaterialCommon {
+struct MaterialCommon {
     pixels: f32,
     rotation: f32,
     size: f32,
@@ -9,7 +9,7 @@ struct PlanetMaterialCommon {
     time_speed: f32,
 }
 
-@group(1) @binding(0) var<uniform> pm_common: PlanetMaterialCommon;
+@group(1) @binding(0) var<uniform> pm_common: MaterialCommon;
 
 fn rand(coord: vec2<f32>) -> f32 {
     let tmp = (coord % vec2<f32>(2.0, 1.0)) * round(pm_common.size);
