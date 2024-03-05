@@ -68,7 +68,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_collection::<PlayerAssets>()
-            .add_state::<PlayerState>()
+            .init_state::<PlayerState>()
             .add_systems(Startup, spawn_player)
             .add_systems(Update, handle_keys)
             .add_systems(Update, player_physics);
@@ -103,7 +103,7 @@ fn handle_keys(
     let (mut position, mut input_velocity, mut velocity, rotation) = query.single_mut();
     let delta = time.delta_seconds();
 
-    if keyboard_input.any_pressed([KeyCode::Space, KeyCode::Z])
+    if keyboard_input.any_pressed([KeyCode::Space, KeyCode::KeyZ])
         && *player_state.get() == PlayerState::OnGround
     {
         velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY;
@@ -111,14 +111,14 @@ fn handle_keys(
         position.0 += velocity.0 * delta;
     }
 
-    if keyboard_input.pressed(KeyCode::D) {
+    if keyboard_input.pressed(KeyCode::KeyD) {
         input_velocity.0.x = math::lerp(input_velocity.0.x, PLAYER_VELOCITY, delta * 2.);
     }
-    if keyboard_input.pressed(KeyCode::Q) {
+    if keyboard_input.pressed(KeyCode::KeyQ) {
         input_velocity.0.x = math::lerp(input_velocity.0.x, -PLAYER_VELOCITY, delta * 2.);
     }
 
-    if !(keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Q)) {
+    if !(keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::KeyQ)) {
         let mut slow_down_rate = 6.;
         if *player_state.get() == PlayerState::InAir {
             slow_down_rate = 1.;
@@ -126,7 +126,7 @@ fn handle_keys(
         input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * slow_down_rate);
     }
 
-    if keyboard_input.pressed(KeyCode::S) {
+    if keyboard_input.pressed(KeyCode::KeyS) {
         input_velocity.0.y = math::lerp(input_velocity.0.y, -PLAYER_VELOCITY, delta);
     } else {
         input_velocity.0.y = math::lerp(input_velocity.0.y, 0., delta * 10.);
