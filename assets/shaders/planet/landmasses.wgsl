@@ -57,13 +57,13 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     var col = vec4<f32>(pm_under.color4);
 
     if (fbm4 + d_light < fbm1) {
-    	col = col3;
+    	col = pm_under.color3;
 	}
 	if (fbm3 + d_light < fbm1) {
-		col = col2;
+		col = pm_under.color2;
 	}
 	if (fbm2 + d_light < fbm1) {
-		col = col1;
+		col = pm_under.color1;
 	}
 
     return vec4<f32>(col.rgb, step(pm_under.land_cutoff, fbm1) * a * col.a);
