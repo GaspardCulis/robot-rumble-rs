@@ -71,6 +71,6 @@ pub struct UnderMaterial {
 
 impl Material2d for UnderMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/planet/planet_under.wgsl".into()
+        "shaders/planet/under.wgsl".into()
     }
 }
