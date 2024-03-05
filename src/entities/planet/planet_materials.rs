@@ -75,6 +75,21 @@ impl Material2d for UnderMaterial {
     }
 }
 
+impl Default for UnderMaterial {
+    fn default() -> Self {
+        Self {
+            common: CommonMaterial::default(),
+            light_origin: Vec2 { x: 0.39, y: 0.39 },
+            dither_size: 2.0,
+            light_border_1: 0.4,
+            light_border_2: 0.6,
+            color1: Color::rgb(0.573, 0.91, 0.753),
+            color2: Color::rgb(0.31, 0.643, 0.722),
+            color3: Color::rgb(0.173, 0.208, 0.302),
+        }
+    }
+}
+
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct LandmassesMaterial {
     #[uniform(0)]
