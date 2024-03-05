@@ -103,7 +103,7 @@ fn handle_keys(
     let (mut position, mut input_velocity, mut velocity, rotation) = query.single_mut();
     let delta = time.delta_seconds();
 
-    if keyboard_input.any_pressed([KeyCode::Space, KeyCode::KeyZ])
+    if keyboard_input.any_pressed([KeyCode::Space, KeyCode::KeyW])
         && *player_state.get() == PlayerState::OnGround
     {
         velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY;
@@ -114,11 +114,11 @@ fn handle_keys(
     if keyboard_input.pressed(KeyCode::KeyD) {
         input_velocity.0.x = math::lerp(input_velocity.0.x, PLAYER_VELOCITY, delta * 2.);
     }
-    if keyboard_input.pressed(KeyCode::KeyQ) {
+    if keyboard_input.pressed(KeyCode::KeyA) {
         input_velocity.0.x = math::lerp(input_velocity.0.x, -PLAYER_VELOCITY, delta * 2.);
     }
 
-    if !(keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::KeyQ)) {
+    if !(keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::KeyA)) {
         let mut slow_down_rate = 6.;
         if *player_state.get() == PlayerState::InAir {
             slow_down_rate = 1.;
