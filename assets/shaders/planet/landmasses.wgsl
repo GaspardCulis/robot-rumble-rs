@@ -4,7 +4,6 @@
     
 struct MaterialLandmasses {
     light_origin: vec2<f32>,
-    dither_size: f32,
     light_border_1: f32,
     light_border_2: f32,
     land_cutoff: f32,
@@ -20,8 +19,6 @@ struct MaterialLandmasses {
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     var uv = floor(in.uv * pm_common.pixels) / pm_common.pixels;
-
-    let dith = dither(in.uv, uv);
 
     var d_light = distance(uv, vec2<f32>(pm_under.light_origin));
 
