@@ -97,8 +97,6 @@ pub struct LandmassesMaterial {
     #[uniform(1)]
     pub light_origin: Vec2,
     #[uniform(1)]
-    pub dither_size: f32,
-    #[uniform(1)]
     pub light_border_1: f32,
     #[uniform(1)]
     pub light_border_2: f32,
