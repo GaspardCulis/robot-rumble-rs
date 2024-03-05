@@ -74,3 +74,33 @@ impl Material2d for UnderMaterial {
         "shaders/planet/under.wgsl".into()
     }
 }
+
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct LandmassesMaterial {
+    #[uniform(0)]
+    pub common: CommonMaterial,
+    #[uniform(1)]
+    pub light_origin: Vec2,
+    #[uniform(1)]
+    pub dither_size: f32,
+    #[uniform(1)]
+    pub light_border_1: f32,
+    #[uniform(1)]
+    pub light_border_2: f32,
+    #[uniform(1)]
+    pub land_cutoff: f32,
+    #[uniform(1)]
+    pub color1: Color,
+    #[uniform(1)]
+    pub color2: Color,
+    #[uniform(1)]
+    pub color3: Color,
+    #[uniform(1)]
+    pub color4: Color,
+}
+
+impl Material2d for LandmassesMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/planet/landmasses.wgsl".into()
+    }
+}
