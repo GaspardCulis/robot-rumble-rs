@@ -12,7 +12,7 @@ struct MaterialUnder {
     color3: vec4<f32>,
 }
 
-@group(1) @binding(1) var<uniform> pm_under: MaterialUnder;
+@group(2) @binding(1) var<uniform> pm_under: MaterialUnder;
 
 
 @fragment
