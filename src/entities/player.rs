@@ -96,7 +96,7 @@ fn handle_keys(
         &mut Velocity,
         &Rotation,
     )>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     player_state: Res<State<PlayerState>>,
     time: Res<Time>,
 ) {
