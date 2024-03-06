@@ -22,7 +22,8 @@ impl Plugin for PlanetMaterialsPlugin {
             Shader::from_wgsl
         );
 
-        app.add_plugins(Material2dPlugin::<UnderMaterial>::default());
+        app.add_plugins(Material2dPlugin::<UnderMaterial>::default())
+            .add_plugins(Material2dPlugin::<LandmassesMaterial>::default());
     }
 }
 
@@ -41,7 +42,7 @@ impl Default for CommonMaterial {
         Self {
             pixels: 100.0,
             rotation: 0.0,
-            size: 50.0,
+            size: 5.0,
             octaves: 4,
             seed: 14.0,
             time_speed: 0.2,
@@ -78,7 +79,10 @@ impl Material2d for UnderMaterial {
 impl Default for UnderMaterial {
     fn default() -> Self {
         Self {
-            common: CommonMaterial::default(),
+            common: CommonMaterial {
+                octaves: 3,
+                ..Default::default()
+            },
             light_origin: Vec2 { x: 0.39, y: 0.39 },
             dither_size: 2.0,
             light_border_1: 0.4,
