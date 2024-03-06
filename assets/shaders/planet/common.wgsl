@@ -12,7 +12,7 @@ struct MaterialCommon {
 @group(2) @binding(0) var<uniform> pm_common: MaterialCommon;
 
 fn rand(coord: vec2<f32>) -> f32 {
-    let tmp = (coord % vec2<f32>(2.0, 1.0)) * round(pm_common.size);
+    let tmp = coord % (vec2<f32>(2.0, 1.0) * round(pm_common.size));
     return fract(sin(dot(tmp.xy, vec2<f32>(12.9898,78.233))) * 15.5453 * pm_common.seed);
 }
 
