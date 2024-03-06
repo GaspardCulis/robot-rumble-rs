@@ -2,7 +2,7 @@ use crate::core::{gravity::Mass, physics::Position};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use std::f64::consts::PI;
 
-mod planet_materials;
+mod materials;
 
 const DEFAULT_RADIUS: u32 = 128;
 
@@ -35,7 +35,7 @@ pub struct PlanetPlugin;
 
 impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(planet_materials::PlanetMaterialsPlugin)
+        app.add_plugins(materials::PlanetMaterialsPlugin)
             .add_systems(Startup, spawn_planet);
     }
 }
@@ -43,13 +43,13 @@ impl Plugin for PlanetPlugin {
 fn spawn_planet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<planet_materials::LandmassesMaterial>>,
+    mut materials: ResMut<Assets<materials::LandmassesMaterial>>,
 ) {
     commands.spawn(MaterialMesh2dBundle {
         mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
         transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0)),
         material: materials
-            .add(planet_materials::LandmassesMaterial::default())
+            .add(materials::LandmassesMaterial::default())
             .clone(),
         ..default()
     });
