@@ -20,7 +20,7 @@ struct MaterialLandmasses {
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     var uv = floor(in.uv * pm_common.pixels) / pm_common.pixels;
 
-    var d_light = distance(uv, vec2<f32>(pm_under.light_origin));
+    var d_light = distance(uv, pm_under.light_origin);
 
     let d_circle = distance(uv, vec2<f32>(0.5));
 

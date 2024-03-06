@@ -21,7 +21,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 
     let dith = dither(in.uv, uv);
 
-    var d_light = distance(uv, vec2<f32>(pm_under.light_origin));
+    var d_light = distance(uv, pm_under.light_origin);
 
     let d_circle = distance(uv, vec2<f32>(0.5));
 
