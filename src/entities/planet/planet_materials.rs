@@ -121,3 +121,23 @@ impl Material2d for LandmassesMaterial {
         "shaders/planet/landmasses.wgsl".into()
     }
 }
+
+impl Default for LandmassesMaterial {
+    fn default() -> Self {
+        Self {
+            common: CommonMaterial {
+                size: 4.292,
+                octaves: 6,
+                ..Default::default()
+            },
+            light_origin: Vec2 { x: 0.39, y: 0.39 },
+            light_border_1: 0.4,
+            light_border_2: 0.5,
+            land_cutoff: 0.5,
+            color1: Color::rgb(0.784, 0.831, 0.365),
+            color2: Color::rgb(0.388, 0.671, 0.247),
+            color3: Color::rgb(0.184, 0.341, 0.325),
+            color4: Color::rgb(0.157, 0.208, 0.251),
+        }
+    }
+}
