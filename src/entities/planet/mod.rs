@@ -43,12 +43,27 @@ impl Plugin for PlanetPlugin {
 fn spawn_planet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<materials::LandmassesMaterial>>,
+    mut under_material: ResMut<Assets<materials::UnderMaterial>>,
+    mut landmasses_material: ResMut<Assets<materials::LandmassesMaterial>>,
 ) {
     commands.spawn(MaterialMesh2dBundle {
         mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
+        transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0))
+            .with_translation(Vec3 {
+                x: 0.,
+                y: 0.,
+                z: -1.,
+            }),
+        material: under_material
+            .add(materials::UnderMaterial::default())
+            .clone(),
+        ..default()
+    });
+
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
         transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0)),
-        material: materials
+        material: landmasses_material
             .add(materials::LandmassesMaterial::default())
             .clone(),
         ..default()
