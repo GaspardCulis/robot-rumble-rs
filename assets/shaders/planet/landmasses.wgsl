@@ -2,7 +2,7 @@
 #import bevy_sprite::mesh2d_vertex_output::VertexOutput;
 #import planet::common::{pm_common, rand, noise, fbm, dither, rotate, spherify};
     
-struct MaterialLandmasses {
+struct LandmassesMaterial {
     light_origin: vec2<f32>,
     light_border_1: f32,
     light_border_2: f32,
@@ -13,7 +13,7 @@ struct MaterialLandmasses {
     color4: vec4<f32>,
 }
 
-@group(2) @binding(1) var<uniform> pm_under: MaterialLandmasses;
+@group(2) @binding(1) var<uniform> pm_under: LandmassesMaterial;
 
 
 @fragment
