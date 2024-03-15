@@ -10,7 +10,7 @@ use bevy::{
 };
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-pub struct LandmassesMaterial {
+pub struct CloudsMaterial {
     #[uniform(0)]
     pub common: super::CommonMaterial,
     #[uniform(1)]
@@ -35,13 +35,13 @@ pub struct LandmassesMaterial {
     pub shadow_outline_color: Color,
 }
 
-impl Material2d for LandmassesMaterial {
+impl Material2d for CloudsMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/clouds.wgsl".into()
     }
 }
 
-impl Default for LandmassesMaterial {
+impl Default for CloudsMaterial {
     fn default() -> Self {
         Self {
             common: super::CommonMaterial {
