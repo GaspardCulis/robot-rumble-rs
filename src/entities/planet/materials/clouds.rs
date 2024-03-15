@@ -45,15 +45,15 @@ impl Default for CloudsMaterial {
     fn default() -> Self {
         Self {
             common: super::CommonMaterial {
-                size: 4.292,
-                octaves: 6,
+                size: 7.745,
+                octaves: 2,
                 ..Default::default()
             },
-            cloud_cover: 1.3,
+            cloud_cover: 0.415,
             stretch: 2.0,
-            cloud_curve: 0.415,
-            light_border_1: 0.4,
-            light_border_2: 0.5,
+            cloud_curve: 1.3,
+            light_border_1: 0.5,
+            light_border_2: 0.6,
             light_origin: Vec2 { x: 0.39, y: 0.39 },
             base_color: Color::rgb(0.875, 0.878, 0.91),
             outiline_color: Color::rgb(0.639, 0.655, 0.761),
