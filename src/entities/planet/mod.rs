@@ -43,8 +43,9 @@ impl Plugin for PlanetPlugin {
 fn spawn_planet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut under_material: ResMut<Assets<materials::UnderMaterial>>,
+    mut clouds_material: ResMut<Assets<materials::CloudsMaterial>>,
     mut landmasses_material: ResMut<Assets<materials::LandmassesMaterial>>,
+    mut under_material: ResMut<Assets<materials::UnderMaterial>>,
 ) {
     commands.spawn(MaterialMesh2dBundle {
         mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
@@ -52,7 +53,7 @@ fn spawn_planet(
             .with_translation(Vec3 {
                 x: 0.,
                 y: 0.,
-                z: -1.,
+                z: -2.,
             }),
         material: under_material
             .add(materials::UnderMaterial::default())
@@ -62,9 +63,24 @@ fn spawn_planet(
 
     commands.spawn(MaterialMesh2dBundle {
         mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
-        transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0)),
+        transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0))
+            .with_translation(Vec3 {
+                x: 0.,
+                y: 0.,
+                z: -1.,
+            }),
+
         material: landmasses_material
             .add(materials::LandmassesMaterial::default())
+            .clone(),
+        ..default()
+    });
+
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
+        transform: Transform::from_scale(Vec3::splat(DEFAULT_RADIUS as f32 * 2.0)),
+        material: clouds_material
+            .add(materials::CloudsMaterial::default())
             .clone(),
         ..default()
     });
