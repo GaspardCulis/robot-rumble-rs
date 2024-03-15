@@ -1,5 +1,6 @@
 use bevy::{asset::load_internal_asset, prelude::*, sprite::Material2dPlugin};
 
+mod clouds;
 mod common;
 mod landmasses;
 mod under;
