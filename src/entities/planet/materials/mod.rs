@@ -4,6 +4,7 @@ mod clouds;
 mod common;
 mod landmasses;
 mod under;
+pub use clouds::CloudsMaterial;
 pub use common::CommonMaterial;
 pub use landmasses::LandmassesMaterial;
 pub use under::UnderMaterial;
@@ -25,7 +26,8 @@ impl Plugin for PlanetMaterialsPlugin {
             Shader::from_wgsl
         );
 
-        app.add_plugins(Material2dPlugin::<UnderMaterial>::default())
-            .add_plugins(Material2dPlugin::<LandmassesMaterial>::default());
+        app.add_plugins(Material2dPlugin::<CloudsMaterial>::default())
+            .add_plugins(Material2dPlugin::<LandmassesMaterial>::default())
+            .add_plugins(Material2dPlugin::<UnderMaterial>::default());
     }
 }
