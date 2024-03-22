@@ -2,10 +2,12 @@ use bevy::{asset::load_internal_asset, prelude::*, sprite::Material2dPlugin};
 
 mod clouds;
 mod common;
+mod craters;
 mod landmasses;
 mod under;
 pub use clouds::CloudsMaterial;
 pub use common::CommonMaterial;
+pub use craters::CratersMaterial;
 pub use landmasses::LandmassesMaterial;
 pub use under::UnderMaterial;
 
@@ -27,6 +29,7 @@ impl Plugin for PlanetMaterialsPlugin {
         );
 
         app.add_plugins(Material2dPlugin::<CloudsMaterial>::default())
+            .add_plugins(Material2dPlugin::<CratersMaterial>::default())
             .add_plugins(Material2dPlugin::<LandmassesMaterial>::default())
             .add_plugins(Material2dPlugin::<UnderMaterial>::default());
     }
