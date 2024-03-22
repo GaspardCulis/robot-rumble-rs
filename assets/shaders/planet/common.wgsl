@@ -7,6 +7,7 @@ struct CommonMaterial {
     octaves: i32,
     seed: f32,
     time_speed: f32,
+    light_origin: vec2<f32>
 }
 
 @group(2) @binding(0) var<uniform> pm_common: CommonMaterial;

@@ -1,6 +1,5 @@
 use bevy::{
     asset::Asset,
-    math::Vec2,
     reflect::TypePath,
     render::{
         color::Color,
@@ -13,8 +12,6 @@ use bevy::{
 pub struct UnderMaterial {
     #[uniform(0)]
     pub common: super::CommonMaterial,
-    #[uniform(1)]
-    pub light_origin: Vec2,
     #[uniform(1)]
     pub dither_size: f32,
     #[uniform(1)]
@@ -42,7 +39,6 @@ impl Default for UnderMaterial {
                 octaves: 3,
                 ..Default::default()
             },
-            light_origin: Vec2 { x: 0.39, y: 0.39 },
             dither_size: 2.0,
             light_border_1: 0.4,
             light_border_2: 0.6,

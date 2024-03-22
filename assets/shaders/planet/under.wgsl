@@ -3,7 +3,6 @@
 #import planet::common::{pm_common, rand, noise, fbm, dither, rotate, spherify};
     
 struct UnderMaterial {
-    light_origin: vec2<f32>,
     dither_size: f32,
     light_border_1: f32,
     light_border_2: f32,
@@ -21,7 +20,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 
     let dith = dither(in.uv, uv);
 
-    var d_light = distance(uv, pm_under.light_origin);
+    var d_light = distance(uv, pm_common.light_origin);
 
     let d_circle = distance(uv, vec2<f32>(0.5));
 

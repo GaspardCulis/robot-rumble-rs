@@ -8,7 +8,6 @@ struct CloudsMaterial {
     cloud_curve: f32,
     light_border_1: f32,
     light_border_2: f32,
-    light_origin: vec2<f32>,
     base_color: vec4<f32>,
     outline_color: vec4<f32>,
     shadow_color: vec4<f32>,
@@ -33,7 +32,7 @@ fn cloud_alpha(uv: vec2<f32>) -> f32 {
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 	var uv = floor(in.uv*pm_common.pixels)/pm_common.pixels;
 	
-	let d_light = distance(uv , pm_clouds.light_origin);
+	let d_light = distance(uv , pm_common.light_origin);
 	
 	let d_circle = distance(uv, vec2<f32>(0.5));
 	let a = step(d_circle, 0.5);
