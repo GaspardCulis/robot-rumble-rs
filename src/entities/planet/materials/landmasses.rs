@@ -49,10 +49,10 @@ impl Default for LandmassesMaterial {
             light_border_1: 0.4,
             light_border_2: 0.5,
             land_cutoff: 0.5,
-            color1: Color::rgb(0.784, 0.831, 0.365),
-            color2: Color::rgb(0.388, 0.671, 0.247),
-            color3: Color::rgb(0.184, 0.341, 0.325),
-            color4: Color::rgb(0.157, 0.208, 0.251),
+            color1: Color::hex("#c8d45d").unwrap(),
+            color2: Color::hex("#63ab3f").unwrap(),
+            color3: Color::hex("#2f5753").unwrap(),
+            color4: Color::hex("#283540").unwrap(),
         }
     }
 }
