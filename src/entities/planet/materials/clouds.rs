@@ -28,7 +28,7 @@ pub struct CloudsMaterial {
     #[uniform(1)]
     pub base_color: Color,
     #[uniform(1)]
-    pub outiline_color: Color,
+    pub outline_color: Color,
     #[uniform(1)]
     pub shadow_color: Color,
     #[uniform(1)]
@@ -56,7 +56,7 @@ impl Default for CloudsMaterial {
             light_border_2: 0.6,
             light_origin: Vec2 { x: 0.39, y: 0.39 },
             base_color: Color::rgb(0.875, 0.878, 0.91),
-            outiline_color: Color::rgb(0.639, 0.655, 0.761),
+            outline_color: Color::rgb(0.639, 0.655, 0.761),
             shadow_color: Color::rgb(0.408, 0.435, 0.6),
             shadow_outline_color: Color::rgb(0.251, 0.286, 0.451),
         }
