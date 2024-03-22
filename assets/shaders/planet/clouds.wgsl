@@ -14,6 +14,8 @@ struct CloudsMaterial {
     shadow_outline_color: vec4<f32>,
 }
 
+@group(2) @binding(1) var<uniform> pm_clouds: CloudsMaterial;
+
 fn cloud_alpha(uv: vec2<f32>) -> f32 {
 	var c_noise: f32 = 0.0;
 	
@@ -25,8 +27,6 @@ fn cloud_alpha(uv: vec2<f32>) -> f32 {
 	
 	return fbm;
 }
-
-@group(2) @binding(1) var<uniform> pm_clouds: CloudsMaterial;
 
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
