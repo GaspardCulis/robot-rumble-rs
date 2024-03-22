@@ -1,6 +1,6 @@
 #import bevy_sprite::mesh2d_view_bindings::globals;
 #import bevy_sprite::mesh2d_vertex_output::VertexOutput;
-#import planet::common::{pm_common, rand, noise, fbm, dither, rotate, spherify};
+#import planet::common::{pm_common, rand, noise, fbm, dither, rotate, spherify, circleNoise};
 
 struct CloudsMaterial {
     cloud_cover: f32,
@@ -13,17 +13,6 @@ struct CloudsMaterial {
     outline_color: vec4<f32>,
     shadow_color: vec4<f32>,
     shadow_outline_color: vec4<f32>,
-}
-
-fn circleNoise(uv: vec2<f32>) -> f32 {
-	let uv_y = floor(uv.y);
-	var tmp_uv = uv;
-    tmp_uv.x += uv_y*.31;
-    let f = fract(tmp_uv);
-	let h = rand(vec2<f32>(floor(tmp_uv.x),floor(uv_y)));
-    let m = (length(f-0.25-(h*0.5)));
-    let r = h*0.25;
-    return smoothstep(0.0, r, m*0.75);
 }
 
 fn cloud_alpha(uv: vec2<f32>) -> f32 {
