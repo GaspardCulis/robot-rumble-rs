@@ -12,17 +12,24 @@ _Brief overview_
 
 ## TODOS
 
-- [ ] Player lost and angular velocity
+- [ ] Player:
+  - [ ] Sprites and animations
+  - [ ] Keep angular velocity on lost
 - [ ] Weapons:
   - [ ] Shotgun
   - [ ] Uzi
   - [ ] Black hole launcher
   - [ ] Rocket launcher
-- [x] Implement [pixel planet](https://deep-fold.itch.io/pixel-planet-generator) shader
-- [ ] Add background shader using [pixel space background](https://deep-fold.itch.io/space-background-generator) shader
-- [ ] Multiplayer using [SpacetimeDB](https://spacetimedb.com/)
+- [ ] Planets and environment:
+  - [x] Implement [pixel planet](https://deep-fold.itch.io/pixel-planet-generator) shader
+  - [ ] Add background shader using [pixel space background](https://deep-fold.itch.io/space-background-generator) shader
+  - [ ] Map generation
+- [ ] Multiplayer (using [SpacetimeDB](https://spacetimedb.com/) ?)
 - [ ] UI
   - [ ] Main menu
   - [ ] Server browser menu
   - [ ] Pause menu
   - [ ] Settings menu
+- [ ] Tutorials:
+  - [ ] Enter orbit
+  - [ ] Use shotgun to jump and move
