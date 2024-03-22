@@ -55,10 +55,10 @@ impl Default for CloudsMaterial {
             light_border_1: 0.5,
             light_border_2: 0.6,
             light_origin: Vec2 { x: 0.39, y: 0.39 },
-            base_color: Color::rgb(0.875, 0.878, 0.91),
-            outline_color: Color::rgb(0.639, 0.655, 0.761),
-            shadow_color: Color::rgb(0.408, 0.435, 0.6),
-            shadow_outline_color: Color::rgb(0.251, 0.286, 0.451),
+            base_color: Color::hex("#dfe0e8").unwrap(),
+            outline_color: Color::hex("#a3a7c2").unwrap(),
+            shadow_color: Color::hex("#686f99").unwrap(),
+            shadow_outline_color: Color::hex("#404973").unwrap(),
         }
     }
 }
