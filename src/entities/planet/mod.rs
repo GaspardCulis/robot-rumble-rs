@@ -2,6 +2,7 @@ use crate::core::{gravity::Mass, physics::Position};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use std::f64::consts::PI;
 
+mod kinds;
 mod materials;
 
 const DEFAULT_RADIUS: u32 = 128;
