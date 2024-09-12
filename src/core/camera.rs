@@ -7,7 +7,9 @@ impl Plugin for CameraPlugin {
         app.add_systems(Startup, |mut commands: Commands| {
             commands.spawn(Camera2dBundle {
                 camera: Camera {
-                    clear_color: ClearColorConfig::Custom(Color::hex("#171711").unwrap()),
+                    clear_color: ClearColorConfig::Custom(Color::Srgba(
+                        Srgba::hex("#171711").unwrap(),
+                    )),
                     ..Default::default()
                 },
                 ..Default::default()

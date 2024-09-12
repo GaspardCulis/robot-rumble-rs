@@ -1,10 +1,8 @@
 use bevy::{
     asset::Asset,
+    color::{LinearRgba, Srgba},
     reflect::TypePath,
-    render::{
-        color::Color,
-        render_resource::{AsBindGroup, ShaderRef},
-    },
+    render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 
@@ -15,9 +13,9 @@ pub struct CratersMaterial {
     #[uniform(1)]
     pub light_border: f32,
     #[uniform(1)]
-    pub color1: Color,
+    pub color1: LinearRgba,
     #[uniform(1)]
-    pub color2: Color,
+    pub color2: LinearRgba,
 }
 
 impl Material2d for CratersMaterial {
@@ -31,8 +29,8 @@ impl Default for CratersMaterial {
         Self {
             common: super::CommonMaterial::default(),
             light_border: 0.5,
-            color1: Color::hex("#4c6885").unwrap(),
-            color2: Color::hex("#3a3f5e").unwrap(),
+            color1: Srgba::hex("#4c6885").unwrap().into(),
+            color2: Srgba::hex("#3a3f5e").unwrap().into(),
         }
     }
 }
