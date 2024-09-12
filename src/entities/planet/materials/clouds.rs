@@ -1,10 +1,8 @@
 use bevy::{
     asset::Asset,
+    color::{LinearRgba, Srgba},
     reflect::TypePath,
-    render::{
-        color::Color,
-        render_resource::{AsBindGroup, ShaderRef},
-    },
+    render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 
@@ -23,13 +21,13 @@ pub struct CloudsMaterial {
     #[uniform(1)]
     pub light_border_2: f32,
     #[uniform(1)]
-    pub base_color: Color,
+    pub base_color: LinearRgba,
     #[uniform(1)]
-    pub outline_color: Color,
+    pub outline_color: LinearRgba,
     #[uniform(1)]
-    pub shadow_color: Color,
+    pub shadow_color: LinearRgba,
     #[uniform(1)]
-    pub shadow_outline_color: Color,
+    pub shadow_outline_color: LinearRgba,
 }
 
 impl Material2d for CloudsMaterial {
@@ -51,10 +49,10 @@ impl Default for CloudsMaterial {
             cloud_curve: 1.3,
             light_border_1: 0.5,
             light_border_2: 0.6,
-            base_color: Color::hex("#dfe0e8").unwrap(),
-            outline_color: Color::hex("#a3a7c2").unwrap(),
-            shadow_color: Color::hex("#686f99").unwrap(),
-            shadow_outline_color: Color::hex("#404973").unwrap(),
+            base_color: Srgba::hex("#dfe0e8").unwrap().into(),
+            outline_color: Srgba::hex("#a3a7c2").unwrap().into(),
+            shadow_color: Srgba::hex("#686f99").unwrap().into(),
+            shadow_outline_color: Srgba::hex("#404973").unwrap().into(),
         }
     }
 }

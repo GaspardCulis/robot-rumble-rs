@@ -1,10 +1,8 @@
 use bevy::{
     asset::Asset,
+    color::{LinearRgba, Srgba},
     reflect::TypePath,
-    render::{
-        color::Color,
-        render_resource::{AsBindGroup, ShaderRef},
-    },
+    render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 
@@ -19,11 +17,11 @@ pub struct UnderMaterial {
     #[uniform(1)]
     pub light_border_2: f32,
     #[uniform(1)]
-    pub color1: Color,
+    pub color1: LinearRgba,
     #[uniform(1)]
-    pub color2: Color,
+    pub color2: LinearRgba,
     #[uniform(1)]
-    pub color3: Color,
+    pub color3: LinearRgba,
 }
 
 impl Material2d for UnderMaterial {
@@ -42,9 +40,9 @@ impl Default for UnderMaterial {
             dither_size: 2.0,
             light_border_1: 0.4,
             light_border_2: 0.6,
-            color1: Color::hex("#92e8c0").unwrap(),
-            color2: Color::hex("#4fa4b8").unwrap(),
-            color3: Color::hex("#2c354d").unwrap(),
+            color1: Srgba::hex("#92e8c0").unwrap().into(),
+            color2: Srgba::hex("#4fa4b8").unwrap().into(),
+            color3: Srgba::hex("#2c354d").unwrap().into(),
         }
     }
 }
