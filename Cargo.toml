@@ -14,3 +14,4 @@ opt-level = 3
 [dependencies]
 bevy = { version = "0.14", features = ["wayland"] }
 bevy_asset_loader = { version = "0.21", features = ["2d"] }
+rand = "0.8.5"
