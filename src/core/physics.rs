@@ -14,7 +14,7 @@ pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, update_position);
-        app.add_systems(Update, update_sprite_transforms);
+        app.add_systems(Update, update_spatial_bundles);
     }
 }
 
@@ -24,9 +24,7 @@ fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>
     }
 }
 
-fn update_sprite_transforms(
-    mut query: Query<(&mut Transform, &Position, Option<&Rotation>), With<Sprite>>,
-) {
+fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
     for (mut transform, position, rotation) in query.iter_mut() {
         transform.translation.x = position.0.x;
         transform.translation.y = position.0.y;
