@@ -65,7 +65,7 @@ fn instance_layer_material<M: Material2d>(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut material: ResMut<Assets<M>>,
-    query: Query<(Entity, &PlanetMaterialLayerInit<M>)>,
+    query: Query<(Entity, &PlanetMaterialLayerInit<M>), Added<PlanetMaterialLayerInit<M>>>,
 ) {
     for (entity, layer) in query.iter() {
         let mesh_bundle_entity = commands
