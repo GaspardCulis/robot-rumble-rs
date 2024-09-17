@@ -47,13 +47,24 @@ impl Plugin for PlanetPlugin {
 }
 
 fn spawn_planet(mut commands: Commands) {
-    let kind = kinds::EarthLike::new();
-
     commands
         .spawn(PlanetBundle {
             ..Default::default()
         })
-        .insert(kind);
+        .insert(kinds::EarthLike::new());
+
+    commands
+        .spawn(PlanetBundle {
+            position: Position(Vec2::new(-400., -300.)),
+            radius: Radius(DEFAULT_RADIUS / 2),
+            mass: Mass(radius_to_mass(DEFAULT_RADIUS / 2)),
+            spatial: SpatialBundle {
+                transform: Transform::from_scale(Vec3::splat((DEFAULT_RADIUS) as f32)),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(kinds::MoonLike::new());
 }
 
 fn radius_to_mass(radius: u32) -> u32 {
