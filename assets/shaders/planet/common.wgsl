@@ -69,5 +69,5 @@ fn circleNoise(uv: vec2<f32>) -> f32 {
 	let h = rand(vec2<f32>(floor(tmp_uv.x),floor(uv_y)));
     let m = (length(f-0.25-(h*0.5)));
     let r = h*0.25;
-    return smoothstep(0.0, r, m*0.75);
+    return smoothstep(r-0.1*r, r, m);
 }
