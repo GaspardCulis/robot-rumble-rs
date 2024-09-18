@@ -50,7 +50,7 @@ impl PlanetMaterial for UnderMaterial {
     fn from_config(config: &UnderMaterialConfig) -> Self {
         Self {
             common: super::CommonMaterial {
-                size: config.dither_size,
+                size: config.size,
                 octaves: config.octaves,
                 ..Default::default()
             },
