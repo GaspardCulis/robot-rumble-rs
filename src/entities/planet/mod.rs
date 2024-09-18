@@ -2,7 +2,7 @@ use crate::core::{gravity::Mass, physics::Position};
 use bevy::prelude::*;
 use std::f64::consts::PI;
 
-mod kinds;
+mod config;
 mod materials;
 
 const DEFAULT_RADIUS: u32 = 128;
