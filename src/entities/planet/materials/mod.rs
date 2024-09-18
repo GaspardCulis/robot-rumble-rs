@@ -9,11 +9,13 @@ use bevy::{
 mod clouds;
 mod common;
 mod craters;
+mod dry_terrain;
 mod landmasses;
 mod under;
 pub use clouds::CloudsMaterial;
 pub use common::CommonMaterial;
 pub use craters::CratersMaterial;
+pub use dry_terrain::DryTerrainMaterial;
 pub use landmasses::LandmassesMaterial;
 pub use under::UnderMaterial;
 
