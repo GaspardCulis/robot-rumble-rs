@@ -16,6 +16,9 @@ pub mod types {
 }
 
 #[derive(serde::Deserialize, Asset, TypePath)]
+pub struct PlanetsConfig(Vec<PlanetKindConfig>);
+
+#[derive(serde::Deserialize)]
 pub struct PlanetKindConfig {
     r#type: PlanetTypeConfig,
     layers: Vec<PlanetLayerConfig>,
