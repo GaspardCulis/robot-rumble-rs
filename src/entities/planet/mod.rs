@@ -52,9 +52,15 @@ impl Plugin for PlanetPlugin {
     }
 }
 
-fn load_planets_config(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn load_planets_config(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut spawn_planet_events: EventWriter<SpawnPlanetEvent>,
+) {
     let planets_config = PlanetsConfigHandle(asset_server.load("planet_kinds.ron"));
     commands.insert_resource(planets_config);
+
+    spawn_planet_events.send(SpawnPlanetEvent);
 }
 
 fn handle_spawn_planet_event(
@@ -66,65 +72,53 @@ fn handle_spawn_planet_event(
     for _ in events.read() {
         if let Some(config) = planet_configs.get(planet_config.0.id()) {
             if let Some(kind) = config.0.choose(&mut rand::thread_rng()) {
-                // Spawn the planet's material layers
-                let layers: Vec<_> = kind
-                    .layers
-                    .iter()
-                    .enumerate()
-                    .map(|(i, layer)| {
-                        let scale = layer.scale.unwrap_or(1.0);
-                        let z_index = i as f32;
-                        let layer_commands = match layer.material.clone() {
-                            config::PlanetLayerMaterialConfig::Under(config) => commands.spawn(
-                                PlanetMaterialLayerInit::<materials::UnderMaterial> {
-                                    config,
-                                    scale,
-                                    z_index,
-                                },
-                            ),
-                            config::PlanetLayerMaterialConfig::Landmasses(config) => commands
-                                .spawn(PlanetMaterialLayerInit::<materials::LandmassesMaterial> {
-                                    config,
-                                    scale,
-                                    z_index,
-                                }),
-                            config::PlanetLayerMaterialConfig::Clouds(config) => commands.spawn(
-                                PlanetMaterialLayerInit::<materials::CloudsMaterial> {
-                                    config,
-                                    scale,
-                                    z_index,
-                                },
-                            ),
-                            config::PlanetLayerMaterialConfig::Craters(config) => {
-                                commands.spawn(PlanetMaterialLayerInit::<
-                                    materials::CratersMaterial,
-                                > {
-                                    config,
-                                    scale,
-                                    z_index,
-                                })
-                            }
-                            config::PlanetLayerMaterialConfig::DryTerrain(config) => commands
-                                .spawn(PlanetMaterialLayerInit::<materials::DryTerrainMaterial> {
-                                    config,
-                                    scale,
-                                    z_index,
-                                }),
-                        };
-
-                        layer_commands.id()
-                    })
-                    .collect();
-
                 // Spawn the planet
-                let mut planet_commands = commands.spawn(PlanetBundle {
+                let mut planet = commands.spawn(PlanetBundle {
                     ..Default::default()
                 });
 
-                // Add layers as childs
-                layers.into_iter().for_each(|layer| {
-                    planet_commands.add_child(layer);
-                });
+                // Spawn the planet's material layers
+                for (i, layer) in kind.layers.iter().enumerate() {
+                    let scale = layer.scale.unwrap_or(1.0);
+                    let z_index = i as f32;
+                    match layer.material.clone() {
+                        config::PlanetLayerMaterialConfig::Under(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::UnderMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::Landmasses(config) => planet.insert(
+                            PlanetMaterialLayerInit::<materials::LandmassesMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            },
+                        ),
+                        config::PlanetLayerMaterialConfig::Clouds(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::CloudsMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::Craters(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::CratersMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::DryTerrain(config) => planet.insert(
+                            PlanetMaterialLayerInit::<materials::DryTerrainMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            },
+                        ),
+                    };
+                }
             } else {
                 warn!("Received SpawnPlanetEvent on an empty PlanetKindConfig set");
             }
