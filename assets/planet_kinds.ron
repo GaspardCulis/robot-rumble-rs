@@ -1,3 +1,46 @@
 PlanetsConfig([
-    
+    // EarthLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: Under ((
+                    // Common
+                    size: 5.0,
+                    octaves: 3,
+                    // Material specific
+                    dither_size: 2.0,
+                    light_border_1: 0.4,
+                    light_border_2: 0.6,
+                    palette: ( "#92e8c0", "#4fa4b8", "#2c354d" )
+                ))
+            ),
+            (
+                material: Landmasses ((
+                    // Common
+                    size: 4.0,
+                    octaves: 6,
+                    // Material specific
+                    light_border_1: 0.4,
+                    light_border_2: 0.5,
+                    land_cutoff: 0.5,
+                    palette: ( "#c8d45d", "#63ab3f", "#2f5753", "#283540" )
+                ))
+            ),
+            (
+                material: Clouds ((
+                    // Common
+                    size: 8.0,
+                    octaves: 2,
+                    // Material specific
+                    cloud_cover: 0.415,
+                    stretch: 2.0,
+                    cloud_curve: 1.3,
+                    light_border_1: 0.5,
+                    light_border_2: 0.6,
+                    palette: ( "#dfe0e8", "#a3a7c2", "#686f99", "#404973" )
+                ))
+            ),
+        ]
+    )
 ])
