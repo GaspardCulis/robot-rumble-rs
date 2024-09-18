@@ -1,11 +1,12 @@
 use bevy::{
-    asset::Asset,
-    color::{LinearRgba, Srgba},
-    math::Vec2,
-    reflect::TypePath,
+    prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
+
+use crate::entities::planet::config::types::*;
+
+use super::PlanetMaterial;
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CratersMaterial {
@@ -19,22 +20,35 @@ pub struct CratersMaterial {
     pub color2: LinearRgba,
 }
 
+#[derive(Component, serde::Deserialize)]
+pub struct CratersMaterialConfig {
+    // Common
+    size: f32,
+    octaves: i32,
+    // Material specific
+    light_border: f32,
+    palette: PaletteConfig2,
+}
+
 impl Material2d for CratersMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/craters.wgsl".into()
     }
 }
 
-impl Default for CratersMaterial {
-    fn default() -> Self {
+impl PlanetMaterial for CratersMaterial {
+    type Config = CratersMaterialConfig;
+
+    fn from_config(config: &Self::Config, _: &mut ResMut<Assets<Image>>) -> Self {
         Self {
             common: super::CommonMaterial {
-                light_origin: Vec2::new(0.25, 0.25),
+                size: config.size,
+                octaves: config.octaves,
                 ..Default::default()
             },
-            light_border: 0.5,
-            color1: Srgba::hex("#4c6885").unwrap().into(),
-            color2: Srgba::hex("#3a3f5e").unwrap().into(),
+            light_border: config.light_border,
+            color1: Srgba::hex(&config.palette[0]).unwrap().into(),
+            color2: Srgba::hex(&config.palette[1]).unwrap().into(),
         }
     }
 }

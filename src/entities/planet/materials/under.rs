@@ -27,7 +27,7 @@ pub struct UnderMaterial {
 }
 
 #[derive(Component, serde::Deserialize)]
-struct UnderMaterialConfig {
+pub struct UnderMaterialConfig {
     // Common
     size: f32,
     octaves: i32,
@@ -47,7 +47,7 @@ impl Material2d for UnderMaterial {
 impl PlanetMaterial for UnderMaterial {
     type Config = UnderMaterialConfig;
 
-    fn from_config(config: &UnderMaterialConfig) -> Self {
+    fn from_config(config: &Self::Config, _: &mut ResMut<Assets<Image>>) -> Self {
         Self {
             common: super::CommonMaterial {
                 size: config.size,
