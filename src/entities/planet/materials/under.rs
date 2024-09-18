@@ -1,12 +1,12 @@
 use bevy::{
-    asset::Asset,
-    color::{LinearRgba, Srgba},
-    reflect::TypePath,
+    prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 
-#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+use super::PlanetMaterial;
+
+#[derive(serde::Deserialize, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct UnderMaterial {
     #[uniform(0)]
     pub common: super::CommonMaterial,
@@ -24,25 +24,40 @@ pub struct UnderMaterial {
     pub color3: LinearRgba,
 }
 
+#[derive(Component, serde::Deserialize)]
+struct UnderMaterialConfig {
+    // Common
+    size: f32,
+    octaves: i32,
+    // Material specific
+    dither_size: f32,
+    light_border_1: f32,
+    light_border_2: f32,
+    palette: [String; 3],
+}
+
 impl Material2d for UnderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/under.wgsl".into()
     }
 }
 
-impl Default for UnderMaterial {
-    fn default() -> Self {
+impl PlanetMaterial for UnderMaterial {
+    type Config = UnderMaterialConfig;
+
+    fn from_config(config: &UnderMaterialConfig) -> Self {
         Self {
             common: super::CommonMaterial {
-                octaves: 3,
+                size: config.dither_size,
+                octaves: config.octaves,
                 ..Default::default()
             },
-            dither_size: 2.0,
-            light_border_1: 0.4,
-            light_border_2: 0.6,
-            color1: Srgba::hex("#92e8c0").unwrap().into(),
-            color2: Srgba::hex("#4fa4b8").unwrap().into(),
-            color3: Srgba::hex("#2c354d").unwrap().into(),
+            dither_size: config.dither_size,
+            light_border_1: config.light_border_1,
+            light_border_2: config.light_border_2,
+            color1: Srgba::hex(&config.palette[0]).unwrap().into(),
+            color2: Srgba::hex(&config.palette[1]).unwrap().into(),
+            color3: Srgba::hex(&config.palette[2]).unwrap().into(),
         }
     }
 }
