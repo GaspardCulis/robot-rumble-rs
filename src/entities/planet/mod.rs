@@ -47,6 +47,7 @@ impl Plugin for PlanetPlugin {
 }
 
 fn spawn_planet(mut commands: Commands) {
+    /*
     commands
         .spawn(PlanetBundle {
             ..Default::default()
@@ -64,7 +65,7 @@ fn spawn_planet(mut commands: Commands) {
             },
             ..Default::default()
         })
-        .insert(kinds::MoonLike::new());
+        .insert(kinds::MoonLike::new());*/
 }
 
 fn radius_to_mass(radius: u32) -> u32 {
