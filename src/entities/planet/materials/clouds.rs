@@ -32,7 +32,7 @@ pub struct CloudsMaterial {
     pub shadow_outline_color: LinearRgba,
 }
 
-#[derive(Component, serde::Deserialize)]
+#[derive(Component, serde::Deserialize, Clone)]
 pub struct CloudsMaterialConfig {
     // Common
     size: f32,

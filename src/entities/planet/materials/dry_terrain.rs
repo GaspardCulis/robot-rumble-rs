@@ -23,7 +23,7 @@ pub struct DryTerrainMaterial {
     color_texture: Option<Handle<Image>>,
 }
 
-#[derive(Component, serde::Deserialize)]
+#[derive(Component, serde::Deserialize, Clone)]
 pub struct DryTerrainMaterialConfig {
     // Common
     size: f32,
