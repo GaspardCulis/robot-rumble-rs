@@ -20,7 +20,7 @@ pub struct CratersMaterial {
     pub color2: LinearRgba,
 }
 
-#[derive(Component, serde::Deserialize)]
+#[derive(Component, serde::Deserialize, Clone)]
 pub struct CratersMaterialConfig {
     // Common
     size: f32,

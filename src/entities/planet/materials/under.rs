@@ -26,7 +26,7 @@ pub struct UnderMaterial {
     pub color3: LinearRgba,
 }
 
-#[derive(Component, serde::Deserialize)]
+#[derive(Component, serde::Deserialize, Clone)]
 pub struct UnderMaterialConfig {
     // Common
     size: f32,

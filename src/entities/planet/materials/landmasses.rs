@@ -28,7 +28,7 @@ pub struct LandmassesMaterial {
     pub color4: LinearRgba,
 }
 
-#[derive(serde::Deserialize, Component)]
+#[derive(serde::Deserialize, Component, Clone)]
 pub struct LandmassesMaterialConfig {
     // Common
     size: f32,
