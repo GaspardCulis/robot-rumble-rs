@@ -4,6 +4,8 @@ use bevy::{
     sprite::Material2d,
 };
 
+use crate::entities::planet::config::types::*;
+
 use super::PlanetMaterial;
 
 #[derive(serde::Deserialize, Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -33,7 +35,7 @@ struct UnderMaterialConfig {
     dither_size: f32,
     light_border_1: f32,
     light_border_2: f32,
-    palette: [String; 3],
+    palette: PaletteConfig3,
 }
 
 impl Material2d for UnderMaterial {
