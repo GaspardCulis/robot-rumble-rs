@@ -27,7 +27,7 @@ const PLANET_COMMON_HANDLE: Handle<Shader> =
 pub trait PlanetMaterial: Material2d {
     type Config: Component;
 
-    fn from_config(config: &Self::Config) -> Self;
+    fn from_config(config: &Self::Config, images: &mut ResMut<Assets<Image>>) -> Self;
 }
 
 impl Plugin for PlanetMaterialsPlugin {
@@ -78,6 +78,7 @@ pub struct PlanetMaterialLayerInit<M: PlanetMaterial> {
 fn instance_layer_material<M: PlanetMaterial>(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut images: ResMut<Assets<Image>>,
     mut material: ResMut<Assets<M>>,
     query: Query<(Entity, &PlanetMaterialLayerInit<M>), Added<PlanetMaterialLayerInit<M>>>,
 ) {
@@ -90,7 +91,7 @@ fn instance_layer_material<M: PlanetMaterial>(
                     y: 0.,
                     z: layer.z_index,
                 }),
-                material: material.add(M::from_config(&layer.config)),
+                material: material.add(M::from_config(&layer.config, &mut images)),
                 ..default()
             })
             .id();

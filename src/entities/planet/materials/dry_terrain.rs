@@ -4,6 +4,10 @@ use bevy::{
     sprite::Material2d,
 };
 
+use crate::{entities::planet::config::types::*, utils};
+
+use super::PlanetMaterial;
+
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct DryTerrainMaterial {
     #[uniform(0)]
@@ -19,20 +23,48 @@ pub struct DryTerrainMaterial {
     color_texture: Option<Handle<Image>>,
 }
 
+#[derive(Component, serde::Deserialize)]
+pub struct DryTerrainMaterialConfig {
+    // Common
+    size: f32,
+    octaves: i32,
+    // Material specific
+    dither_size: f32,
+    light_distance_1: f32,
+    light_distance_2: f32,
+    colors: ColorGradientConfig,
+}
+
 impl Material2d for DryTerrainMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/under.wgsl".into()
     }
 }
 
-impl Default for DryTerrainMaterial {
-    fn default() -> Self {
+impl PlanetMaterial for DryTerrainMaterial {
+    type Config = DryTerrainMaterialConfig;
+
+    fn from_config(config: &Self::Config, images: &mut ResMut<Assets<Image>>) -> Self {
+        let gradient = utils::gradient(
+            &config.colors.offsets,
+            &config
+                .colors
+                .colors
+                .iter()
+                .map(|color| Srgba::hex(color).unwrap())
+                .collect(),
+        );
+
         Self {
-            common: super::CommonMaterial::default(),
-            dither_size: 2.0,
-            light_distance_1: 0.4,
-            light_distance_2: 0.5,
-            color_texture: todo!(),
+            common: super::CommonMaterial {
+                size: config.size,
+                octaves: config.octaves,
+                ..Default::default()
+            },
+            dither_size: config.dither_size,
+            light_distance_1: config.light_distance_1,
+            light_distance_2: config.light_distance_2,
+            color_texture: Some(images.add(gradient)),
         }
     }
 }
