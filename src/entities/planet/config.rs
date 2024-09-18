@@ -8,7 +8,7 @@ pub mod types {
     pub type PaletteConfig3 = [ColorConfig; 3];
     pub type PaletteConfig4 = [ColorConfig; 4];
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Clone)]
     pub struct ColorGradientConfig {
         pub offsets: Vec<f32>,
         pub colors: Vec<ColorConfig>,
@@ -16,12 +16,12 @@ pub mod types {
 }
 
 #[derive(serde::Deserialize, Asset, TypePath)]
-pub struct PlanetsConfig(Vec<PlanetKindConfig>);
+pub struct PlanetsConfig(pub Vec<PlanetKindConfig>);
 
 #[derive(serde::Deserialize)]
 pub struct PlanetKindConfig {
-    r#type: PlanetTypeConfig,
-    layers: Vec<PlanetLayerConfig>,
+    pub r#type: PlanetTypeConfig,
+    pub layers: Vec<PlanetLayerConfig>,
 }
 
 #[derive(serde::Deserialize)]
@@ -33,11 +33,11 @@ pub enum PlanetTypeConfig {
 #[derive(serde::Deserialize)]
 pub struct PlanetLayerConfig {
     /// Defaults to 1
-    scale: Option<f32>,
-    material: PlanetLayerMaterialConfig,
+    pub scale: Option<f32>,
+    pub material: PlanetLayerMaterialConfig,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub enum PlanetLayerMaterialConfig {
     Under(<UnderMaterial as PlanetMaterial>::Config),
     Landmasses(<LandmassesMaterial as PlanetMaterial>::Config),
