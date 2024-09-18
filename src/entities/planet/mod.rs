@@ -1,5 +1,6 @@
 use crate::core::{gravity::Mass, physics::Position};
 use bevy::prelude::*;
+use bevy_common_assets::ron::RonAssetPlugin;
 use std::f64::consts::PI;
 
 mod config;
@@ -41,12 +42,15 @@ pub struct PlanetPlugin;
 
 impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(materials::PlanetMaterialsPlugin)
-            .add_systems(Startup, spawn_planet);
+        app.add_plugins(RonAssetPlugin::<config::PlanetsConfig>::new(&[]))
+            .add_plugins(materials::PlanetMaterialsPlugin)
+            .add_systems(Startup, load_planets_config);
     }
 }
 
-fn spawn_planet(mut commands: Commands) {
+fn load_planets_config(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let planets_config = PlanetsConfigHandle(asset_server.load("planet_kinds.ron"));
+    commands.insert_resource(planets_config);
     /*
     commands
         .spawn(PlanetBundle {
@@ -71,3 +75,6 @@ fn spawn_planet(mut commands: Commands) {
 fn radius_to_mass(radius: u32) -> u32 {
     (PI * radius.pow(2) as f64) as u32
 }
+
+#[derive(Resource)]
+pub struct PlanetsConfigHandle(Handle<config::PlanetsConfig>);
