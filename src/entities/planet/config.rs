@@ -41,6 +41,7 @@ pub struct PlanetLayerConfig {
 pub enum PlanetLayerMaterialConfig {
     Under(<UnderMaterial as PlanetMaterial>::Config),
     Landmasses(<LandmassesMaterial as PlanetMaterial>::Config),
+    Lakes(<LakesMaterial as PlanetMaterial>::Config),
     Clouds(<CloudsMaterial as PlanetMaterial>::Config),
     Craters(<CratersMaterial as PlanetMaterial>::Config),
     DryTerrain(<DryTerrainMaterial as PlanetMaterial>::Config),

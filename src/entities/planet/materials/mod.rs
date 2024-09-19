@@ -11,12 +11,14 @@ mod clouds;
 mod common;
 mod craters;
 mod dry_terrain;
+mod lakes;
 mod landmasses;
 mod under;
 pub use clouds::CloudsMaterial;
 pub use common::CommonMaterial;
 pub use craters::CratersMaterial;
 pub use dry_terrain::DryTerrainMaterial;
+pub use lakes::LakesMaterial;
 pub use landmasses::LandmassesMaterial;
 pub use under::UnderMaterial;
 
@@ -46,6 +48,7 @@ impl Plugin for PlanetMaterialsPlugin {
         app.add_plugins(PlanetMaterialPlugin::<CloudsMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<CratersMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<DryTerrainMaterial>::default())
+            .add_plugins(PlanetMaterialPlugin::<LakesMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<LandmassesMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<UnderMaterial>::default());
     }
