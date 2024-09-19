@@ -24,7 +24,7 @@ pub struct PlanetMaterialsPlugin;
 const PLANET_COMMON_HANDLE: Handle<Shader> =
     Handle::weak_from_u128(0xF750100345124C4BA08A7406DD1CFEC1);
 
-pub trait PlanetMaterial: Material2d {
+pub trait PlanetMaterial: Material2d + Reflect {
     type Config: Component + Clone;
 
     fn from_config(config: &Self::Config, images: &mut ResMut<Assets<Image>>) -> Self;

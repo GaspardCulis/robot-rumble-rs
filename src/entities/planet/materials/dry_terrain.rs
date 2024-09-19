@@ -8,7 +8,7 @@ use crate::{entities::planet::config::types::*, utils};
 
 use super::PlanetMaterial;
 
-#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+#[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct DryTerrainMaterial {
     #[uniform(0)]
     pub common: super::CommonMaterial,
