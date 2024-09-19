@@ -92,4 +92,48 @@ PlanetsConfig([
             )
         ]
     ),
+    // IceWorld
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: Under ((
+                    // Common
+                    size: 8.0,
+                    octaves: 2,
+                    // Material specific
+                    dither_size: 2.0,
+                    light_border_1: 0.5,
+                    light_border_2: 0.6,
+                    palette: ( "#faffff", "#c7d4e1", "#928fb8" )
+                ))
+            ),
+            (
+                material: Lakes ((
+                    // Common
+                    size: 10.0,
+                    octaves: 3,
+                    // Material specific
+                    light_border_1: 0.02,
+                    light_border_2: 0.05,
+                    lake_cutoff: 0.55,
+                    palette: ( "#4fa4b8", "#4c6885", "#3a3f5e" )
+                ))
+            ),
+            (
+                material: Clouds ((
+                    // Common
+                    size: 4.0,
+                    octaves: 4,
+                    // Material specific
+                    cloud_cover: 0.5,
+                    stretch: 2.5,
+                    cloud_curve: 1.3,
+                    light_border_1: 0.6,
+                    light_border_2: 0.8,
+                    palette: ( "#e1f2ff", "#c0e3ff", "#5e70a5", "#404973" )
+                ))
+            ),
+        ]
+    ),
 ])
