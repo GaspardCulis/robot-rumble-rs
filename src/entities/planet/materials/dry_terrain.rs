@@ -14,12 +14,12 @@ pub struct DryTerrainMaterial {
     pub common: super::CommonMaterial,
     #[uniform(1)]
     pub dither_size: f32,
-    #[uniform(2)]
+    #[uniform(1)]
     pub light_distance_1: f32,
-    #[uniform(3)]
+    #[uniform(1)]
     pub light_distance_2: f32,
-    #[texture(4)]
-    #[sampler(5)]
+    #[texture(2)]
+    #[sampler(3)]
     color_texture: Option<Handle<Image>>,
 }
 
@@ -37,7 +37,7 @@ pub struct DryTerrainMaterialConfig {
 
 impl Material2d for DryTerrainMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/planet/under.wgsl".into()
+        "shaders/planet/dry_terrain.wgsl".into()
     }
 }
 
