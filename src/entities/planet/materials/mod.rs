@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use bevy::{
     asset::load_internal_asset,
     prelude::*,
+    reflect::GetTypeRegistration,
     sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
 };
 
@@ -24,7 +25,7 @@ pub struct PlanetMaterialsPlugin;
 const PLANET_COMMON_HANDLE: Handle<Shader> =
     Handle::weak_from_u128(0xF750100345124C4BA08A7406DD1CFEC1);
 
-pub trait PlanetMaterial: Material2d + Reflect {
+pub trait PlanetMaterial: Material2d + GetTypeRegistration {
     type Config: Component + Clone;
 
     fn from_config(config: &Self::Config, images: &mut ResMut<Assets<Image>>) -> Self;
@@ -63,7 +64,8 @@ where
     M::Data: PartialEq + Eq + core::hash::Hash + Clone,
 {
     fn build(&self, app: &mut App) {
-        app.add_plugins(Material2dPlugin::<M>::default())
+        app.register_type::<M>()
+            .add_plugins(Material2dPlugin::<M>::default())
             .add_systems(Update, instance_layer_material::<M>);
     }
 }
