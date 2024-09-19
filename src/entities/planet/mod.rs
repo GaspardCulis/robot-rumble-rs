@@ -46,26 +46,15 @@ impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(RonAssetPlugin::<config::PlanetsConfig>::new(&[]))
             .add_plugins(materials::PlanetMaterialsPlugin)
+            .add_plugins(config::PlanetsConfigPlugin)
             .add_event::<SpawnPlanetEvent>()
-            .add_systems(Startup, load_planets_config)
             .add_systems(Update, handle_spawn_planet_event);
     }
 }
 
-fn load_planets_config(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut spawn_planet_events: EventWriter<SpawnPlanetEvent>,
-) {
-    let planets_config = PlanetsConfigHandle(asset_server.load("planet_kinds.ron"));
-    commands.insert_resource(planets_config);
-
-    spawn_planet_events.send(SpawnPlanetEvent);
-}
-
 fn handle_spawn_planet_event(
     mut events: EventReader<SpawnPlanetEvent>,
-    planet_config: Res<PlanetsConfigHandle>,
+    planet_config: Res<config::PlanetsConfigHandle>,
     mut commands: Commands,
     planet_configs: Res<Assets<config::PlanetsConfig>>,
 ) {
@@ -131,9 +120,6 @@ fn handle_spawn_planet_event(
 fn radius_to_mass(radius: u32) -> u32 {
     (PI * radius.pow(2) as f64) as u32
 }
-
-#[derive(Resource)]
-struct PlanetsConfigHandle(Handle<config::PlanetsConfig>);
 
 #[derive(Event)]
 pub struct SpawnPlanetEvent;

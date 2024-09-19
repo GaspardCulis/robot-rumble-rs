@@ -45,3 +45,19 @@ pub enum PlanetLayerMaterialConfig {
     Craters(<CratersMaterial as PlanetMaterial>::Config),
     DryTerrain(<DryTerrainMaterial as PlanetMaterial>::Config),
 }
+
+pub struct PlanetsConfigPlugin;
+
+impl Plugin for PlanetsConfigPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, load_planets_config);
+    }
+}
+
+fn load_planets_config(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let planets_config = PlanetsConfigHandle(asset_server.load("planet_kinds.ron"));
+    commands.insert_resource(planets_config);
+}
+
+#[derive(Resource)]
+pub struct PlanetsConfigHandle(pub Handle<PlanetsConfig>);
