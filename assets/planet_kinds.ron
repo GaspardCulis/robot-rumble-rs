@@ -70,5 +70,26 @@ PlanetsConfig([
                 ))
             )
         ]
-    )
+    ),
+    // MarsLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: DryTerrain ((
+                    // Common
+                    size: 8.0,
+                    octaves: 3,
+                    // Material specific
+                    dither_size: 2.0,
+                    light_distance_1: 0.4,
+                    light_distance_2: 0.5,
+                    colors: (
+                        offsets: [0.0, 0.25, 0.5, 0.75, 1.0],
+                        colors: ["#ff8933", "#e64539", "#ad2f45", "#52333f", "#3d2936"],
+                    )
+                ))
+            )
+        ]
+    ),
 ])
