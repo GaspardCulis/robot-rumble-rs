@@ -24,8 +24,8 @@ fn main() {
                 })
                 .build(),
         )
-        .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(CorePlugins)
         .add_plugins(EntitiesPlugins)
+        .add_plugins(WorldInspectorPlugin::new().run_if(|| cfg!(debug_assertions)))
         .run();
 }
