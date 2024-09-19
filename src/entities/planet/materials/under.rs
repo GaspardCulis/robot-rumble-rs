@@ -8,7 +8,7 @@ use crate::entities::planet::config::types::*;
 
 use super::PlanetMaterial;
 
-#[derive(serde::Deserialize, Asset, TypePath, AsBindGroup, Debug, Clone)]
+#[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct UnderMaterial {
     #[uniform(0)]
     pub common: super::CommonMaterial,
