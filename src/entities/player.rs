@@ -20,7 +20,7 @@ const PLAYER_RADIUS: f32 = 16.;
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
 pub struct PlayerInputVelocity(Vec2);
 
 #[derive(AssetCollection, Resource)]
@@ -69,6 +69,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_collection::<PlayerAssets>()
             .init_state::<PlayerState>()
+            .register_type::<PlayerInputVelocity>()
             .add_systems(Startup, spawn_player)
             .add_systems(Update, handle_keys)
             .add_systems(Update, player_physics);
@@ -76,17 +77,20 @@ impl Plugin for PlayerPlugin {
 }
 
 fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
-    commands.spawn((PlayerBundle {
-        position: Position(Vec2 { x: 0., y: 500. }),
-        velocity: Velocity(Vec2 { x: 0., y: 0. }),
-        rotation: Rotation(PI),
-        sprite_bundle: SpriteBundle {
-            texture: sprite.player.clone(),
-            transform: Transform::from_scale(Vec3::splat(0.1)),
-            ..default()
+    commands.spawn((
+        Name::new("Player"),
+        PlayerBundle {
+            position: Position(Vec2 { x: 0., y: 500. }),
+            velocity: Velocity(Vec2 { x: 0., y: 0. }),
+            rotation: Rotation(PI),
+            sprite_bundle: SpriteBundle {
+                texture: sprite.player.clone(),
+                transform: Transform::from_scale(Vec3::splat(0.1)),
+                ..default()
+            },
+            ..Default::default()
         },
-        ..Default::default()
-    },));
+    ));
 }
 
 fn handle_keys(
