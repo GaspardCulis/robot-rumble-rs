@@ -42,5 +42,33 @@ PlanetsConfig([
                 ))
             ),
         ]
+    ),
+    // MoonLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: Under ((
+                    // Common
+                    size: 8.0,
+                    octaves: 4,
+                    // Material specific
+                    dither_size: 2.0,
+                    light_border_1: 0.6,
+                    light_border_2: 0.7,
+                    palette: ( "#a3a7c2", "#4c6885", "#3a3f5e" )
+                ))
+            ),
+            (
+                material: Craters ((
+                    // Common
+                    size: 5.0,
+                    octaves: 4,
+                    // Material specific
+                    light_border: 0.5,
+                    palette: ( "#4c6885", "#3a3f5e" )
+                ))
+            )
+        ]
     )
 ])
