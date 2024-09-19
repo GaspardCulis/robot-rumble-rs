@@ -62,9 +62,12 @@ fn handle_spawn_planet_event(
         if let Some(config) = planet_configs.get(planet_config.0.id()) {
             if let Some(kind) = config.0.choose(&mut rand::thread_rng()) {
                 // Spawn the planet
-                let mut planet = commands.spawn(PlanetBundle {
-                    ..Default::default()
-                });
+                let mut planet = commands.spawn((
+                    Name::new("Planet"),
+                    PlanetBundle {
+                        ..Default::default()
+                    },
+                ));
 
                 // Spawn the planet's material layers
                 for (i, layer) in kind.layers.iter().enumerate() {
