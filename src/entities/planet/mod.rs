@@ -10,7 +10,7 @@ const DEFAULT_RADIUS: u32 = 128;
 #[derive(Component)]
 pub struct Planet;
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct Radius(pub u32);
 
 #[derive(Bundle)]

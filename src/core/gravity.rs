@@ -4,7 +4,7 @@ use super::physics::{Position, Velocity};
 
 const G: f32 = 800.;
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
 pub struct Mass(pub u32);
 
 #[derive(Component)]
@@ -17,7 +17,8 @@ pub struct GravityPlugin;
 
 impl Plugin for GravityPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, apply_forces);
+        app.register_type::<Mass>()
+            .add_systems(Update, apply_forces);
     }
 }
 

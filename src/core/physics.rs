@@ -1,20 +1,23 @@
 use bevy::prelude::*;
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
 pub struct Position(pub Vec2);
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
 pub struct Velocity(pub Vec2);
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
 pub struct Rotation(pub f32);
 
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, update_position);
-        app.add_systems(Update, update_spatial_bundles);
+        app.register_type::<Position>()
+            .register_type::<Velocity>()
+            .register_type::<Rotation>()
+            .add_systems(Update, update_position)
+            .add_systems(Update, update_spatial_bundles);
     }
 }
 
