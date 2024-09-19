@@ -26,7 +26,7 @@ _Brief overview_
   - [ ] Add background shader using [pixel space background](https://deep-fold.itch.io/space-background-generator) shader
   - [ ] Add multiple kinds of planets
     - [ ] Implement all shader types
-    - [ ] Create modular planet config system using [ron](https://github.com/ron-rs/ron)
+    - [x] Create modular planet config system using [ron](https://github.com/ron-rs/ron)
   - [ ] Map generation
 - [ ] Multiplayer (using [SpacetimeDB](https://spacetimedb.com/) ?)
 - [ ] UI
