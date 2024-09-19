@@ -1,3 +1,4 @@
+#import bevy_sprite::mesh2d_view_bindings::globals;
 #define_import_path planet::common
 
 struct CommonMaterial {
@@ -70,4 +71,14 @@ fn circleNoise(uv: vec2<f32>) -> f32 {
     let m = (length(f-0.25-(h*0.5)));
     let r = h*0.25;
     return smoothstep(r-0.1*r, r, m);
+}
+
+fn turbulence(uv: vec2<f32>) -> f32 {
+	var c_noise = 0.0;
+	
+	// more iterations for more turbulence
+	for (var i: f32 = 0.0; i < 10.0; i += 1.0) {
+		c_noise += circleNoise((uv * pm_common.size *0.3) + (i + 11.) + (vec2<f32>(globals.time * pm_common.time_speed, 0.0)));
+	}
+	return c_noise;
 }
