@@ -1,6 +1,7 @@
-use core::CorePlugins;
-
 use bevy::prelude::*;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
+use core::CorePlugins;
 use entities::EntitiesPlugins;
 
 mod core;
@@ -23,6 +24,7 @@ fn main() {
                 })
                 .build(),
         )
+        .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(CorePlugins)
         .add_plugins(EntitiesPlugins)
         .run();
