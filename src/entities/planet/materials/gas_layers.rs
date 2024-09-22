@@ -14,16 +14,6 @@ pub struct GasLayersMaterial {
     pub common: super::CommonMaterial,
     #[uniform(1)]
     pub bands: f32,
-    #[uniform(1)]
-    pub stretch: f32,
-    #[uniform(1)]
-    pub cloud_cover: f32,
-    #[uniform(1)]
-    pub cloud_curve: f32,
-    #[uniform(1)]
-    pub light_border_1: f32,
-    #[uniform(1)]
-    pub light_border_2: f32,
     #[texture(2)]
     #[sampler(3)]
     colorscheme_texture: Option<Handle<Image>>,
@@ -39,11 +29,6 @@ pub struct GasLayersMaterialConfig {
     octaves: i32,
     // Material specific
     bands: f32,
-    stretch: f32,
-    cloud_cover: f32,
-    cloud_curve: f32,
-    light_border_1: f32,
-    light_border_2: f32,
     colorscheme: ColorGradientConfig,
     dark_colorscheme: ColorGradientConfig,
 }
@@ -86,11 +71,6 @@ impl PlanetMaterial for GasLayersMaterial {
                 ..Default::default()
             },
             bands: config.bands,
-            stretch: config.stretch,
-            cloud_cover: config.cloud_cover,
-            cloud_curve: config.cloud_curve,
-            light_border_1: config.light_border_1,
-            light_border_2: config.light_border_2,
             colorscheme_texture: Some(images.add(gradient)),
             darkcolorscheme_texture: Some(images.add(dark_gradient)),
         }
