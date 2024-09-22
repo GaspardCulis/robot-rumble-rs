@@ -41,6 +41,7 @@ enum PlayerState {
 
 #[derive(Bundle)]
 struct PlayerBundle {
+    name: Name,
     marker: Player,
     position: Position,
     velocity: Velocity,
@@ -49,11 +50,14 @@ struct PlayerBundle {
     mass: Mass,
     sprite_bundle: SpriteBundle,
     texture_atlas: TextureAtlas,
+    animation_indices: spritesheet::AnimationIndices,
+    animation_timer: spritesheet::AnimationTimer,
 }
 
 impl Default for PlayerBundle {
     fn default() -> Self {
         Self {
+            name: Name::new("Player"),
             marker: Player,
             position: Position(Vec2::ZERO),
             velocity: Velocity(Vec2::ZERO),
@@ -64,6 +68,11 @@ impl Default for PlayerBundle {
                 ..Default::default()
             },
             texture_atlas: Default::default(),
+            animation_indices: spritesheet::AnimationIndices { first: 0, last: 1 },
+            animation_timer: spritesheet::AnimationTimer(Timer::from_seconds(
+                0.25,
+                TimerMode::Repeating,
+            )),
         }
     }
 }
@@ -86,23 +95,20 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
     let animation_timer =
         spritesheet::AnimationTimer(Timer::from_seconds(0.25, TimerMode::Repeating));
 
-    commands.spawn((
-        Name::new("Player"),
-        PlayerBundle {
-            position: Position(Vec2 { x: 0., y: 500. }),
-            velocity: Velocity(Vec2 { x: 0., y: 0. }),
-            rotation: Rotation(PI),
-            sprite_bundle: SpriteBundle {
-                texture: sprite.player_texture.clone(),
-                transform: Transform::from_scale(Vec3::splat(1.)),
-                ..default()
-            },
-            texture_atlas: TextureAtlas::from(sprite.player_atlas_layout.clone()),
-            ..Default::default()
+    commands.spawn((PlayerBundle {
+        position: Position(Vec2 { x: 0., y: 500. }),
+        velocity: Velocity(Vec2 { x: 0., y: 0. }),
+        rotation: Rotation(PI),
+        sprite_bundle: SpriteBundle {
+            texture: sprite.player_texture.clone(),
+            transform: Transform::from_scale(Vec3::splat(1.4)),
+            ..default()
         },
-        animation_timer,
+        texture_atlas: TextureAtlas::from(sprite.player_atlas_layout.clone()),
         animation_indices,
-    ));
+        animation_timer,
+        ..Default::default()
+    },));
 }
 
 fn handle_keys(
