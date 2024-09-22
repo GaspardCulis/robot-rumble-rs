@@ -11,7 +11,7 @@ struct GasLayersMaterial {
     light_border_2: f32,
 }
 
-@group(2) @binding(1) var<uniform> pm_under: GasLayersMaterial;
+@group(2) @binding(1) var<uniform> pm_gas_layers: GasLayersMaterial;
 
 @group(2) @binding(2) var material_colorscheme_texture: texture_2d<f32>;
 @group(2) @binding(3) var material_colorscheme_sampler: sampler;
@@ -54,7 +54,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     uv = rotate(uv, pm_common.rotation);
     uv = spherify(uv);
 
-    let band = fbm(vec2<f32>(0.0, uv.y*pm_common.size*pm_under.bands));
+    let band = fbm(vec2<f32>(0.0, uv.y*pm_common.size*pm_gas_layers.bands));
 
     let turb = turbulence(uv);
 
