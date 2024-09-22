@@ -60,7 +60,7 @@ fn handle_spawn_planet_event(
 ) {
     for _ in events.read() {
         if let Some(config) = planet_configs.get(planet_config.0.id()) {
-            if let Some(kind) = config.0.get(3) {
+            if let Some(kind) = config.0.get(4) {
                 // Spawn the planet
                 let mut planet = commands.spawn((
                     Name::new("Planet"),
@@ -111,6 +111,13 @@ fn handle_spawn_planet_event(
                         ),
                         config::PlanetLayerMaterialConfig::Lakes(config) => {
                             planet.insert(PlanetMaterialLayerInit::<materials::LakesMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::GasLayers(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::GasLayersMaterial> {
                                 config,
                                 scale,
                                 z_index,
