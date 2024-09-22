@@ -14,6 +14,7 @@ mod dry_terrain;
 mod gas_layers;
 mod lakes;
 mod landmasses;
+mod ring;
 mod under;
 pub use clouds::CloudsMaterial;
 pub use common::CommonMaterial;
@@ -22,6 +23,7 @@ pub use dry_terrain::DryTerrainMaterial;
 pub use gas_layers::GasLayersMaterial;
 pub use lakes::LakesMaterial;
 pub use landmasses::LandmassesMaterial;
+pub use ring::RingMaterial;
 pub use under::UnderMaterial;
 
 pub struct PlanetMaterialsPlugin;
@@ -53,6 +55,7 @@ impl Plugin for PlanetMaterialsPlugin {
             .add_plugins(PlanetMaterialPlugin::<GasLayersMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<LakesMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<LandmassesMaterial>::default())
+            .add_plugins(PlanetMaterialPlugin::<RingMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<UnderMaterial>::default());
     }
 }

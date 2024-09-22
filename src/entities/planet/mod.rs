@@ -123,6 +123,13 @@ fn handle_spawn_planet_event(
                                 z_index,
                             })
                         }
+                        config::PlanetLayerMaterialConfig::Ring(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::RingMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
                     };
                 }
             } else {
