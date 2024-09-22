@@ -12,6 +12,7 @@ impl Plugin for CameraPlugin {
                     )),
                     ..Default::default()
                 },
+                transform: Transform::from_scale(Vec3::splat(0.6)),
                 ..Default::default()
             });
         });
