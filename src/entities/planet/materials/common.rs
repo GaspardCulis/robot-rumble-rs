@@ -24,3 +24,10 @@ impl Default for CommonMaterial {
         }
     }
 }
+
+impl CommonMaterial {
+    pub fn scale(mut self, scale: f32) -> Self {
+        self.pixels *= scale;
+        self
+    }
+}
