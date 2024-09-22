@@ -7,6 +7,7 @@ use crate::{
     core::{
         gravity::Mass,
         physics::{Position, Rotation, Velocity},
+        spritesheet,
     },
     utils::math::{self, RAD},
 };
@@ -25,8 +26,10 @@ pub struct PlayerInputVelocity(Vec2);
 
 #[derive(AssetCollection, Resource)]
 struct PlayerAssets {
-    #[asset(path = "img/player.png")]
-    player: Handle<Image>,
+    #[asset(texture_atlas_layout(tile_size_x = 32, tile_size_y = 32, columns = 2, rows = 1))]
+    player_atlas_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "img/doggo.png")]
+    player_texture: Handle<Image>,
 }
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
@@ -45,6 +48,7 @@ struct PlayerBundle {
     input_velocity: PlayerInputVelocity,
     mass: Mass,
     sprite_bundle: SpriteBundle,
+    texture_atlas: TextureAtlas,
 }
 
 impl Default for PlayerBundle {
@@ -59,6 +63,7 @@ impl Default for PlayerBundle {
             sprite_bundle: SpriteBundle {
                 ..Default::default()
             },
+            texture_atlas: Default::default(),
         }
     }
 }
@@ -77,6 +82,10 @@ impl Plugin for PlayerPlugin {
 }
 
 fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
+    let animation_indices = spritesheet::AnimationIndices { first: 0, last: 1 };
+    let animation_timer =
+        spritesheet::AnimationTimer(Timer::from_seconds(0.25, TimerMode::Repeating));
+
     commands.spawn((
         Name::new("Player"),
         PlayerBundle {
@@ -84,12 +93,15 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
             velocity: Velocity(Vec2 { x: 0., y: 0. }),
             rotation: Rotation(PI),
             sprite_bundle: SpriteBundle {
-                texture: sprite.player.clone(),
-                transform: Transform::from_scale(Vec3::splat(0.1)),
+                texture: sprite.player_texture.clone(),
+                transform: Transform::from_scale(Vec3::splat(1.)),
                 ..default()
             },
+            texture_atlas: TextureAtlas::from(sprite.player_atlas_layout.clone()),
             ..Default::default()
         },
+        animation_timer,
+        animation_indices,
     ));
 }
 
