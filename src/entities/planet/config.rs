@@ -45,6 +45,7 @@ pub enum PlanetLayerMaterialConfig {
     Clouds(<CloudsMaterial as PlanetMaterial>::Config),
     Craters(<CratersMaterial as PlanetMaterial>::Config),
     DryTerrain(<DryTerrainMaterial as PlanetMaterial>::Config),
+    GasLayers(<GasLayersMaterial as PlanetMaterial>::Config),
 }
 
 pub struct PlanetsConfigPlugin;
