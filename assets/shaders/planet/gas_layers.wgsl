@@ -4,11 +4,6 @@
     
 struct GasLayersMaterial {
     bands: f32,
-    stretch: f32,
-    cloud_cover: f32,
-    cloud_curve: f32,
-    light_border_1: f32,
-    light_border_2: f32,
 }
 
 @group(2) @binding(1) var<uniform> pm_gas_layers: GasLayersMaterial;
