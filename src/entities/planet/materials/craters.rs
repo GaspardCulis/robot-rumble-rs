@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::entities::planet::config::types::*;
 
-use super::PlanetMaterial;
+use super::{PlanetMaterial, PlanetMaterialLayerInit};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct CratersMaterial {
@@ -39,10 +39,14 @@ impl Material2d for CratersMaterial {
 impl PlanetMaterial for CratersMaterial {
     type Config = CratersMaterialConfig;
 
-    fn from_config(config: &Self::Config, _: &mut ResMut<Assets<Image>>) -> Self {
+    fn from_layer_init(
+        layer_init: &PlanetMaterialLayerInit<Self>,
+        _: &mut ResMut<Assets<Image>>,
+    ) -> Self {
+        let config = &layer_init.config;
         Self {
             common: super::CommonMaterial {
-                size: config.size,
+                size: config.size * layer_init.scale,
                 octaves: config.octaves,
                 ..Default::default()
             },

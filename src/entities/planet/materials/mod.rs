@@ -34,7 +34,10 @@ const PLANET_COMMON_HANDLE: Handle<Shader> =
 pub trait PlanetMaterial: Material2d + GetTypeRegistration {
     type Config: Component + Clone;
 
-    fn from_config(config: &Self::Config, images: &mut ResMut<Assets<Image>>) -> Self;
+    fn from_layer_init(
+        layer_init: &PlanetMaterialLayerInit<Self>,
+        images: &mut ResMut<Assets<Image>>,
+    ) -> Self;
 }
 
 impl Plugin for PlanetMaterialsPlugin {
@@ -102,7 +105,7 @@ fn instance_layer_material<M: PlanetMaterial>(
                     y: 0.,
                     z: layer.z_index,
                 }),
-                material: material.add(M::from_config(&layer.config, &mut images)),
+                material: material.add(M::from_layer_init(&layer, &mut images)),
                 ..default()
             })
             .id();

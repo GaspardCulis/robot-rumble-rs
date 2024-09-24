@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::{entities::planet::config::types::*, utils};
 
-use super::PlanetMaterial;
+use super::{PlanetMaterial, PlanetMaterialLayerInit};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct GasLayersMaterial {
@@ -42,7 +42,11 @@ impl Material2d for GasLayersMaterial {
 impl PlanetMaterial for GasLayersMaterial {
     type Config = GasLayersMaterialConfig;
 
-    fn from_config(config: &Self::Config, images: &mut ResMut<Assets<Image>>) -> Self {
+    fn from_layer_init(
+        layer_init: &PlanetMaterialLayerInit<Self>,
+        images: &mut ResMut<Assets<Image>>,
+    ) -> Self {
+        let config = &layer_init.config;
         let gradient = utils::gradient(
             &config.colorscheme.offsets,
             &config
@@ -65,7 +69,7 @@ impl PlanetMaterial for GasLayersMaterial {
 
         Self {
             common: super::CommonMaterial {
-                size: config.size,
+                size: config.size * layer_init.scale,
                 octaves: config.octaves,
                 light_origin: Vec2::new(-0.1, 0.3),
                 ..Default::default()
