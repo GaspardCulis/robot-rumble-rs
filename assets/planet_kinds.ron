@@ -136,4 +136,48 @@ PlanetsConfig([
             ),
         ]
     ),
+    // SaturnLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: GasLayers ((
+                    // Common
+                    size: 10.0,
+                    octaves: 3,
+                    // Material specific
+                    bands: 0.892,
+                    colorscheme: (
+                        offsets: [0.0, 0.49, 1.0],
+                        colors: ["#eec39a", "#d9a066", "#8f563b"],
+                    ),
+                    dark_colorscheme: (
+                        offsets: [0.0, 0.5, 1.0],
+                        colors: ["#663931", "#45283c", "#222034"],
+                    )
+                ))
+            ),
+            (
+                scale: Some(3.0),
+                material: Ring ((
+                    // Common
+                    size: 15.0,
+                    octaves: 4,
+                    rotation: 0.7,
+                    // Material specific
+                    ring_width: 0.13,
+                    ring_perspective: 6.0,
+                    scale_rel_to_planet: 6.0,
+                    colorscheme: (
+                        offsets: [0.0, 0.49, 1.0],
+                        colors: ["#eec39a", "#d9a066", "#8f563b"],
+                    ),
+                    dark_colorscheme: (
+                        offsets: [0.0, 0.5, 1.0],
+                        colors: ["#663931", "#45283c", "#222034"],
+                    )
+                ))
+            )
+        ]
+    ),
 ])
