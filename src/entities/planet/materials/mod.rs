@@ -23,6 +23,7 @@ pub use dry_terrain::DryTerrainMaterial;
 pub use gas_layers::GasLayersMaterial;
 pub use lakes::LakesMaterial;
 pub use landmasses::LandmassesMaterial;
+use rand::Rng;
 pub use ring::RingMaterial;
 pub use under::UnderMaterial;
 
@@ -102,6 +103,7 @@ fn instance_layer_material<M: PlanetMaterial>(
     for (entity, radius, layer) in query.iter() {
         let common = CommonMaterial {
             pixels: radius.0 as f32 / 2.,
+            seed: rand::thread_rng().gen(),
             ..Default::default()
         }
         .scale(layer.scale);
