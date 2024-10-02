@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::{entities::planet::config::types::*, utils};
 
-use super::{PlanetMaterial, PlanetMaterialLayerInit};
+use super::{CommonMaterial, PlanetMaterial};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct GasLayersMaterial {
@@ -25,7 +25,6 @@ pub struct GasLayersMaterial {
 #[derive(Component, serde::Deserialize, Clone)]
 pub struct GasLayersMaterialConfig {
     // Common
-    size: f32,
     octaves: i32,
     // Material specific
     bands: f32,
@@ -42,11 +41,13 @@ impl Material2d for GasLayersMaterial {
 impl PlanetMaterial for GasLayersMaterial {
     type Config = GasLayersMaterialConfig;
 
-    fn from_layer_init(
-        layer_init: &PlanetMaterialLayerInit<Self>,
+    fn from_config(
+        mut common: CommonMaterial,
+        config: &Self::Config,
         images: &mut ResMut<Assets<Image>>,
     ) -> Self {
-        let config = &layer_init.config;
+        common.octaves = config.octaves;
+
         let gradient = utils::gradient(
             &config.colorscheme.offsets,
             &config
@@ -68,12 +69,7 @@ impl PlanetMaterial for GasLayersMaterial {
         );
 
         Self {
-            common: super::CommonMaterial {
-                size: config.size * layer_init.scale,
-                octaves: config.octaves,
-                light_origin: Vec2::new(-0.1, 0.3),
-                ..Default::default()
-            },
+            common,
             bands: config.bands,
             colorscheme_texture: Some(images.add(gradient)),
             darkcolorscheme_texture: Some(images.add(dark_gradient)),

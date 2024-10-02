@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::entities::planet::config::types::*;
 
-use super::{PlanetMaterial, PlanetMaterialLayerInit};
+use super::{CommonMaterial, PlanetMaterial};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct CloudsMaterial {
@@ -35,7 +35,6 @@ pub struct CloudsMaterial {
 #[derive(Component, serde::Deserialize, Clone)]
 pub struct CloudsMaterialConfig {
     // Common
-    size: f32,
     octaves: i32,
     // Material specific
     cloud_cover: f32,
@@ -55,17 +54,15 @@ impl Material2d for CloudsMaterial {
 impl PlanetMaterial for CloudsMaterial {
     type Config = CloudsMaterialConfig;
 
-    fn from_layer_init(
-        layer_init: &PlanetMaterialLayerInit<Self>,
+    fn from_config(
+        mut common: CommonMaterial,
+        config: &Self::Config,
         _: &mut ResMut<Assets<Image>>,
     ) -> Self {
-        let config = &layer_init.config;
+        common.octaves = config.octaves;
+
         Self {
-            common: super::CommonMaterial {
-                size: config.size * layer_init.scale,
-                octaves: config.octaves,
-                ..Default::default()
-            },
+            common,
             cloud_cover: config.cloud_cover,
             stretch: config.stretch,
             cloud_curve: config.cloud_curve,

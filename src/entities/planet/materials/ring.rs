@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::{entities::planet::config::types::*, utils};
 
-use super::{PlanetMaterial, PlanetMaterialLayerInit};
+use super::{CommonMaterial, PlanetMaterial};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct RingMaterial {
@@ -29,7 +29,6 @@ pub struct RingMaterial {
 #[derive(Component, serde::Deserialize, Clone)]
 pub struct RingMaterialConfig {
     // Common
-    size: f32,
     octaves: i32,
     rotation: f32,
     // Material specific
@@ -49,11 +48,14 @@ impl Material2d for RingMaterial {
 impl PlanetMaterial for RingMaterial {
     type Config = RingMaterialConfig;
 
-    fn from_layer_init(
-        layer_init: &PlanetMaterialLayerInit<Self>,
+    fn from_config(
+        mut common: CommonMaterial,
+        config: &Self::Config,
         images: &mut ResMut<Assets<Image>>,
     ) -> Self {
-        let config = &layer_init.config;
+        common.octaves = config.octaves;
+        common.rotation = config.rotation;
+
         let gradient = utils::gradient(
             &config.colorscheme.offsets,
             &config
@@ -75,13 +77,7 @@ impl PlanetMaterial for RingMaterial {
         );
 
         Self {
-            common: super::CommonMaterial {
-                size: config.size,
-                octaves: config.octaves,
-                rotation: config.rotation,
-                ..Default::default()
-            }
-            .scale(layer_init.scale),
+            common,
             ring_width: config.ring_width,
             ring_perspective: config.ring_perspective,
             scale_rel_to_planet: config.scale_rel_to_planet,

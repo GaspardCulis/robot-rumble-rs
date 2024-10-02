@@ -34,8 +34,9 @@ const PLANET_COMMON_HANDLE: Handle<Shader> =
 pub trait PlanetMaterial: Material2d + GetTypeRegistration {
     type Config: Component + Clone;
 
-    fn from_layer_init(
-        layer_init: &PlanetMaterialLayerInit<Self>,
+    fn from_config(
+        common: CommonMaterial,
+        config: &Self::Config,
         images: &mut ResMut<Assets<Image>>,
     ) -> Self;
 }
@@ -97,6 +98,11 @@ fn instance_layer_material<M: PlanetMaterial>(
     query: Query<(Entity, &PlanetMaterialLayerInit<M>), Added<PlanetMaterialLayerInit<M>>>,
 ) {
     for (entity, layer) in query.iter() {
+        let common = CommonMaterial {
+            ..Default::default()
+        }
+        .scale(layer.scale);
+
         let mesh_bundle_entity = commands
             .spawn(MaterialMesh2dBundle {
                 mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
@@ -105,7 +111,7 @@ fn instance_layer_material<M: PlanetMaterial>(
                     y: 0.,
                     z: layer.z_index,
                 }),
-                material: material.add(M::from_layer_init(&layer, &mut images)),
+                material: material.add(M::from_config(common, &layer.config, &mut images)),
                 ..default()
             })
             .id();
