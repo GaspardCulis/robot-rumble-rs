@@ -13,7 +13,7 @@ const DEFAULT_RADIUS: u32 = 128;
 #[derive(Component)]
 pub struct Planet;
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Clone)]
 pub struct Radius(pub u32);
 
 #[derive(Bundle)]
@@ -58,13 +58,22 @@ fn handle_spawn_planet_event(
     mut commands: Commands,
     planet_configs: Res<Assets<config::PlanetsConfig>>,
 ) {
-    for _ in events.read() {
+    for event in events.read() {
         if let Some(config) = planet_configs.get(planet_config.0.id()) {
             if let Some(kind) = config.0.get(4) {
                 // Spawn the planet
                 let mut planet = commands.spawn((
                     Name::new("Planet"),
                     PlanetBundle {
+                        position: event.position.clone(),
+                        radius: event.radius.clone(),
+                        mass: Mass(radius_to_mass(event.radius.0)),
+                        spatial: SpatialBundle {
+                            transform: Transform::from_scale(Vec3::splat(
+                                (event.radius.0 * 2) as f32,
+                            )),
+                            ..Default::default()
+                        },
                         ..Default::default()
                     },
                 ));
@@ -146,4 +155,7 @@ fn radius_to_mass(radius: u32) -> u32 {
 }
 
 #[derive(Event)]
-pub struct SpawnPlanetEvent;
+pub struct SpawnPlanetEvent {
+    position: Position,
+    radius: Radius,
+}
