@@ -1,3 +1,4 @@
+#import bevy_sprite::mesh2d_view_bindings::globals;
 #define_import_path planet::common
 
 struct CommonMaterial {
