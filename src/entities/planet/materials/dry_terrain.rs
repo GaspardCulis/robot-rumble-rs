@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::{entities::planet::config::types::*, utils};
 
-use super::{PlanetMaterial, PlanetMaterialLayerInit};
+use super::{CommonMaterial, PlanetMaterial};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct DryTerrainMaterial {
@@ -26,7 +26,6 @@ pub struct DryTerrainMaterial {
 #[derive(Component, serde::Deserialize, Clone)]
 pub struct DryTerrainMaterialConfig {
     // Common
-    size: f32,
     octaves: i32,
     // Material specific
     dither_size: f32,
@@ -44,11 +43,11 @@ impl Material2d for DryTerrainMaterial {
 impl PlanetMaterial for DryTerrainMaterial {
     type Config = DryTerrainMaterialConfig;
 
-    fn from_layer_init(
-        layer_init: &PlanetMaterialLayerInit<Self>,
+    fn from_config(
+        mut common: CommonMaterial,
+        config: &Self::Config,
         images: &mut ResMut<Assets<Image>>,
     ) -> Self {
-        let config = &layer_init.config;
         let gradient = utils::gradient(
             &config.colors.offsets,
             &config
@@ -59,12 +58,10 @@ impl PlanetMaterial for DryTerrainMaterial {
                 .collect(),
         );
 
+        common.octaves = config.octaves;
+
         Self {
-            common: super::CommonMaterial {
-                size: config.size * layer_init.scale,
-                octaves: config.octaves,
-                ..Default::default()
-            },
+            common,
             dither_size: config.dither_size,
             light_distance_1: config.light_distance_1,
             light_distance_2: config.light_distance_2,

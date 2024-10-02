@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::entities::planet::config::types::*;
 
-use super::{PlanetMaterial, PlanetMaterialLayerInit};
+use super::{CommonMaterial, PlanetMaterial};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct LandmassesMaterial {
@@ -31,7 +31,6 @@ pub struct LandmassesMaterial {
 #[derive(serde::Deserialize, Component, Clone)]
 pub struct LandmassesMaterialConfig {
     // Common
-    size: f32,
     octaves: i32,
     // Material specific
     light_border_1: f32,
@@ -49,17 +48,15 @@ impl Material2d for LandmassesMaterial {
 impl PlanetMaterial for LandmassesMaterial {
     type Config = LandmassesMaterialConfig;
 
-    fn from_layer_init(
-        layer_init: &PlanetMaterialLayerInit<Self>,
+    fn from_config(
+        mut common: CommonMaterial,
+        config: &Self::Config,
         _: &mut ResMut<Assets<Image>>,
     ) -> Self {
-        let config = &layer_init.config;
+        common.octaves = config.octaves;
+
         Self {
-            common: super::CommonMaterial {
-                size: config.size * layer_init.scale,
-                octaves: config.octaves,
-                ..Default::default()
-            },
+            common,
             light_border_1: config.light_border_1,
             light_border_2: config.light_border_2,
             land_cutoff: config.land_cutoff,
