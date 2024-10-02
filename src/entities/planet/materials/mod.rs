@@ -26,6 +26,8 @@ pub use landmasses::LandmassesMaterial;
 pub use ring::RingMaterial;
 pub use under::UnderMaterial;
 
+use super::Radius;
+
 pub struct PlanetMaterialsPlugin;
 
 const PLANET_COMMON_HANDLE: Handle<Shader> =
@@ -95,10 +97,11 @@ fn instance_layer_material<M: PlanetMaterial>(
     mut meshes: ResMut<Assets<Mesh>>,
     mut images: ResMut<Assets<Image>>,
     mut material: ResMut<Assets<M>>,
-    query: Query<(Entity, &PlanetMaterialLayerInit<M>), Added<PlanetMaterialLayerInit<M>>>,
+    query: Query<(Entity, &Radius, &PlanetMaterialLayerInit<M>), Added<PlanetMaterialLayerInit<M>>>,
 ) {
-    for (entity, layer) in query.iter() {
+    for (entity, radius, layer) in query.iter() {
         let common = CommonMaterial {
+            pixels: radius.0 as f32 / 2.,
             ..Default::default()
         }
         .scale(layer.scale);
