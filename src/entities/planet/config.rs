@@ -57,15 +57,9 @@ impl Plugin for PlanetsConfigPlugin {
     }
 }
 
-fn load_planets_config(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut events: EventWriter<super::SpawnPlanetEvent>,
-) {
+fn load_planets_config(mut commands: Commands, asset_server: Res<AssetServer>) {
     let planets_config = PlanetsConfigHandle(asset_server.load("planet_kinds.ron"));
     commands.insert_resource(planets_config);
-
-    events.send(super::SpawnPlanetEvent);
 }
 
 #[derive(Resource)]
