@@ -156,6 +156,6 @@ fn radius_to_mass(radius: u32) -> u32 {
 
 #[derive(Event)]
 pub struct SpawnPlanetEvent {
-    position: Position,
-    radius: Radius,
+    pub position: Position,
+    pub radius: Radius,
 }
