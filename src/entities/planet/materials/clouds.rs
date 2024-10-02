@@ -1,12 +1,14 @@
 use bevy::{
-    asset::Asset,
-    color::{LinearRgba, Srgba},
-    reflect::TypePath,
+    prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 
-#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+use crate::entities::planet::config::types::*;
+
+use super::{PlanetMaterial, PlanetMaterialLayerInit};
+
+#[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct CloudsMaterial {
     #[uniform(0)]
     pub common: super::CommonMaterial,
@@ -30,29 +32,49 @@ pub struct CloudsMaterial {
     pub shadow_outline_color: LinearRgba,
 }
 
+#[derive(Component, serde::Deserialize, Clone)]
+pub struct CloudsMaterialConfig {
+    // Common
+    size: f32,
+    octaves: i32,
+    // Material specific
+    cloud_cover: f32,
+    stretch: f32,
+    cloud_curve: f32,
+    light_border_1: f32,
+    light_border_2: f32,
+    palette: PaletteConfig4,
+}
+
 impl Material2d for CloudsMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/clouds.wgsl".into()
     }
 }
 
-impl Default for CloudsMaterial {
-    fn default() -> Self {
+impl PlanetMaterial for CloudsMaterial {
+    type Config = CloudsMaterialConfig;
+
+    fn from_layer_init(
+        layer_init: &PlanetMaterialLayerInit<Self>,
+        _: &mut ResMut<Assets<Image>>,
+    ) -> Self {
+        let config = &layer_init.config;
         Self {
             common: super::CommonMaterial {
-                size: 7.745,
-                octaves: 2,
+                size: config.size * layer_init.scale,
+                octaves: config.octaves,
                 ..Default::default()
             },
-            cloud_cover: 0.415,
-            stretch: 2.0,
-            cloud_curve: 1.3,
-            light_border_1: 0.5,
-            light_border_2: 0.6,
-            base_color: Srgba::hex("#dfe0e8").unwrap().into(),
-            outline_color: Srgba::hex("#a3a7c2").unwrap().into(),
-            shadow_color: Srgba::hex("#686f99").unwrap().into(),
-            shadow_outline_color: Srgba::hex("#404973").unwrap().into(),
+            cloud_cover: config.cloud_cover,
+            stretch: config.stretch,
+            cloud_curve: config.cloud_curve,
+            light_border_1: config.light_border_1,
+            light_border_2: config.light_border_2,
+            base_color: Srgba::hex(&config.palette[0]).unwrap().into(),
+            outline_color: Srgba::hex(&config.palette[1]).unwrap().into(),
+            shadow_color: Srgba::hex(&config.palette[2]).unwrap().into(),
+            shadow_outline_color: Srgba::hex(&config.palette[3]).unwrap().into(),
         }
     }
 }

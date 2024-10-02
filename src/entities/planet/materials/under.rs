@@ -1,12 +1,14 @@
 use bevy::{
-    asset::Asset,
-    color::{LinearRgba, Srgba},
-    reflect::TypePath,
+    prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 
-#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+use crate::entities::planet::config::types::*;
+
+use super::{PlanetMaterial, PlanetMaterialLayerInit};
+
+#[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct UnderMaterial {
     #[uniform(0)]
     pub common: super::CommonMaterial,
@@ -24,25 +26,44 @@ pub struct UnderMaterial {
     pub color3: LinearRgba,
 }
 
+#[derive(Component, serde::Deserialize, Clone)]
+pub struct UnderMaterialConfig {
+    // Common
+    size: f32,
+    octaves: i32,
+    // Material specific
+    dither_size: f32,
+    light_border_1: f32,
+    light_border_2: f32,
+    palette: PaletteConfig3,
+}
+
 impl Material2d for UnderMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/under.wgsl".into()
     }
 }
 
-impl Default for UnderMaterial {
-    fn default() -> Self {
+impl PlanetMaterial for UnderMaterial {
+    type Config = UnderMaterialConfig;
+
+    fn from_layer_init(
+        layer_init: &PlanetMaterialLayerInit<Self>,
+        _: &mut ResMut<Assets<Image>>,
+    ) -> Self {
+        let config = &layer_init.config;
         Self {
             common: super::CommonMaterial {
-                octaves: 3,
+                size: config.size * layer_init.scale,
+                octaves: config.octaves,
                 ..Default::default()
             },
-            dither_size: 2.0,
-            light_border_1: 0.4,
-            light_border_2: 0.6,
-            color1: Srgba::hex("#92e8c0").unwrap().into(),
-            color2: Srgba::hex("#4fa4b8").unwrap().into(),
-            color3: Srgba::hex("#2c354d").unwrap().into(),
+            dither_size: config.dither_size,
+            light_border_1: config.light_border_1,
+            light_border_2: config.light_border_2,
+            color1: Srgba::hex(&config.palette[0]).unwrap().into(),
+            color2: Srgba::hex(&config.palette[1]).unwrap().into(),
+            color3: Srgba::hex(&config.palette[2]).unwrap().into(),
         }
     }
 }

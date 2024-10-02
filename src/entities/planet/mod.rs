@@ -1,8 +1,11 @@
 use crate::core::{gravity::Mass, physics::Position};
 use bevy::prelude::*;
+use bevy_common_assets::ron::RonAssetPlugin;
+use materials::PlanetMaterialLayerInit;
+use rand::seq::SliceRandom;
 use std::f64::consts::PI;
 
-mod kinds;
+mod config;
 mod materials;
 
 const DEFAULT_RADIUS: u32 = 128;
@@ -41,32 +44,106 @@ pub struct PlanetPlugin;
 
 impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(materials::PlanetMaterialsPlugin)
-            .add_systems(Startup, spawn_planet);
+        app.add_plugins(RonAssetPlugin::<config::PlanetsConfig>::new(&[]))
+            .add_plugins(materials::PlanetMaterialsPlugin)
+            .add_plugins(config::PlanetsConfigPlugin)
+            .add_event::<SpawnPlanetEvent>()
+            .add_systems(Update, handle_spawn_planet_event);
     }
 }
 
-fn spawn_planet(mut commands: Commands) {
-    commands
-        .spawn(PlanetBundle {
-            ..Default::default()
-        })
-        .insert(kinds::EarthLike::new());
+fn handle_spawn_planet_event(
+    mut events: EventReader<SpawnPlanetEvent>,
+    planet_config: Res<config::PlanetsConfigHandle>,
+    mut commands: Commands,
+    planet_configs: Res<Assets<config::PlanetsConfig>>,
+) {
+    for _ in events.read() {
+        if let Some(config) = planet_configs.get(planet_config.0.id()) {
+            if let Some(kind) = config.0.get(4) {
+                // Spawn the planet
+                let mut planet = commands.spawn((
+                    Name::new("Planet"),
+                    PlanetBundle {
+                        ..Default::default()
+                    },
+                ));
 
-    commands
-        .spawn(PlanetBundle {
-            position: Position(Vec2::new(-400., -300.)),
-            radius: Radius(DEFAULT_RADIUS / 2),
-            mass: Mass(radius_to_mass(DEFAULT_RADIUS / 2)),
-            spatial: SpatialBundle {
-                transform: Transform::from_scale(Vec3::splat((DEFAULT_RADIUS) as f32)),
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(kinds::MoonLike::new());
+                // Spawn the planet's material layers
+                for (i, layer) in kind.layers.iter().enumerate() {
+                    let scale = layer.scale.unwrap_or(1.0);
+                    let z_index = i as f32;
+                    match layer.material.clone() {
+                        config::PlanetLayerMaterialConfig::Under(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::UnderMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::Landmasses(config) => planet.insert(
+                            PlanetMaterialLayerInit::<materials::LandmassesMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            },
+                        ),
+                        config::PlanetLayerMaterialConfig::Clouds(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::CloudsMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::Craters(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::CratersMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::DryTerrain(config) => planet.insert(
+                            PlanetMaterialLayerInit::<materials::DryTerrainMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            },
+                        ),
+                        config::PlanetLayerMaterialConfig::Lakes(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::LakesMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::GasLayers(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::GasLayersMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        config::PlanetLayerMaterialConfig::Ring(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::RingMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                    };
+                }
+            } else {
+                warn!("Received SpawnPlanetEvent on an empty PlanetKindConfig set");
+            }
+        } else {
+            warn!("Received SpawnPlanetEvent with no PlanetsConfig asset available");
+        }
+    }
 }
 
 fn radius_to_mass(radius: u32) -> u32 {
     (PI * radius.pow(2) as f64) as u32
 }
+
+#[derive(Event)]
+pub struct SpawnPlanetEvent;

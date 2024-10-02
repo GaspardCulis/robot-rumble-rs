@@ -1,6 +1,6 @@
-use bevy::{asset::Asset, math::Vec2, reflect::TypePath, render::render_resource::ShaderType};
+use bevy::{asset::Asset, math::Vec2, reflect::Reflect, render::render_resource::ShaderType};
 
-#[derive(Asset, TypePath, ShaderType, Debug, Clone)]
+#[derive(serde::Deserialize, Asset, ShaderType, Debug, Clone, Reflect)]
 pub struct CommonMaterial {
     pub pixels: f32,
     pub rotation: f32,
@@ -22,5 +22,12 @@ impl Default for CommonMaterial {
             time_speed: 0.2,
             light_origin: Vec2 { x: 0.39, y: 0.39 },
         }
+    }
+}
+
+impl CommonMaterial {
+    pub fn scale(mut self, scale: f32) -> Self {
+        self.pixels *= scale;
+        self
     }
 }

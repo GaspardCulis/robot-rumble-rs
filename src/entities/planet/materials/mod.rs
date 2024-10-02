@@ -3,24 +3,42 @@ use std::marker::PhantomData;
 use bevy::{
     asset::load_internal_asset,
     prelude::*,
+    reflect::GetTypeRegistration,
     sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
 };
 
 mod clouds;
 mod common;
 mod craters;
+mod dry_terrain;
+mod gas_layers;
+mod lakes;
 mod landmasses;
+mod ring;
 mod under;
 pub use clouds::CloudsMaterial;
 pub use common::CommonMaterial;
 pub use craters::CratersMaterial;
+pub use dry_terrain::DryTerrainMaterial;
+pub use gas_layers::GasLayersMaterial;
+pub use lakes::LakesMaterial;
 pub use landmasses::LandmassesMaterial;
+pub use ring::RingMaterial;
 pub use under::UnderMaterial;
 
 pub struct PlanetMaterialsPlugin;
 
 const PLANET_COMMON_HANDLE: Handle<Shader> =
     Handle::weak_from_u128(0xF750100345124C4BA08A7406DD1CFEC1);
+
+pub trait PlanetMaterial: Material2d + GetTypeRegistration {
+    type Config: Component + Clone;
+
+    fn from_layer_init(
+        layer_init: &PlanetMaterialLayerInit<Self>,
+        images: &mut ResMut<Assets<Image>>,
+    ) -> Self;
+}
 
 impl Plugin for PlanetMaterialsPlugin {
     fn build(&self, app: &mut App) {
@@ -36,34 +54,45 @@ impl Plugin for PlanetMaterialsPlugin {
 
         app.add_plugins(PlanetMaterialPlugin::<CloudsMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<CratersMaterial>::default())
+            .add_plugins(PlanetMaterialPlugin::<DryTerrainMaterial>::default())
+            .add_plugins(PlanetMaterialPlugin::<GasLayersMaterial>::default())
+            .add_plugins(PlanetMaterialPlugin::<LakesMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<LandmassesMaterial>::default())
+            .add_plugins(PlanetMaterialPlugin::<RingMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<UnderMaterial>::default());
     }
 }
 
-#[derive(Default)]
-struct PlanetMaterialPlugin<M: Material2d>(PhantomData<M>);
+struct PlanetMaterialPlugin<M: PlanetMaterial>(PhantomData<M>);
 
-impl<M: Material2d> Plugin for PlanetMaterialPlugin<M>
+impl<T: PlanetMaterial> Default for PlanetMaterialPlugin<T> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<M: PlanetMaterial> Plugin for PlanetMaterialPlugin<M>
 where
     M::Data: PartialEq + Eq + core::hash::Hash + Clone,
 {
     fn build(&self, app: &mut App) {
-        app.add_plugins(Material2dPlugin::<M>::default())
+        app.register_type::<M>()
+            .add_plugins(Material2dPlugin::<M>::default())
             .add_systems(Update, instance_layer_material::<M>);
     }
 }
 
 #[derive(Component)]
-pub struct PlanetMaterialLayerInit<M: Material2d> {
-    pub material: M,
+pub struct PlanetMaterialLayerInit<M: PlanetMaterial> {
+    pub config: M::Config,
     pub scale: f32,
     pub z_index: f32,
 }
 
-fn instance_layer_material<M: Material2d>(
+fn instance_layer_material<M: PlanetMaterial>(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut images: ResMut<Assets<Image>>,
     mut material: ResMut<Assets<M>>,
     query: Query<(Entity, &PlanetMaterialLayerInit<M>), Added<PlanetMaterialLayerInit<M>>>,
 ) {
@@ -76,7 +105,7 @@ fn instance_layer_material<M: Material2d>(
                     y: 0.,
                     z: layer.z_index,
                 }),
-                material: material.add(layer.material.clone()),
+                material: material.add(M::from_layer_init(&layer, &mut images)),
                 ..default()
             })
             .id();

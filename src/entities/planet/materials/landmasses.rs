@@ -1,12 +1,14 @@
 use bevy::{
-    asset::Asset,
-    color::{LinearRgba, Srgba},
-    reflect::TypePath,
+    prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 
-#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+use crate::entities::planet::config::types::*;
+
+use super::{PlanetMaterial, PlanetMaterialLayerInit};
+
+#[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct LandmassesMaterial {
     #[uniform(0)]
     pub common: super::CommonMaterial,
@@ -26,27 +28,45 @@ pub struct LandmassesMaterial {
     pub color4: LinearRgba,
 }
 
+#[derive(serde::Deserialize, Component, Clone)]
+pub struct LandmassesMaterialConfig {
+    // Common
+    size: f32,
+    octaves: i32,
+    // Material specific
+    light_border_1: f32,
+    light_border_2: f32,
+    land_cutoff: f32,
+    palette: PaletteConfig4,
+}
+
 impl Material2d for LandmassesMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/landmasses.wgsl".into()
     }
 }
 
-impl Default for LandmassesMaterial {
-    fn default() -> Self {
+impl PlanetMaterial for LandmassesMaterial {
+    type Config = LandmassesMaterialConfig;
+
+    fn from_layer_init(
+        layer_init: &PlanetMaterialLayerInit<Self>,
+        _: &mut ResMut<Assets<Image>>,
+    ) -> Self {
+        let config = &layer_init.config;
         Self {
             common: super::CommonMaterial {
-                size: 4.292,
-                octaves: 6,
+                size: config.size * layer_init.scale,
+                octaves: config.octaves,
                 ..Default::default()
             },
-            light_border_1: 0.4,
-            light_border_2: 0.5,
-            land_cutoff: 0.5,
-            color1: Srgba::hex("#c8d45d").unwrap().into(),
-            color2: Srgba::hex("#63ab3f").unwrap().into(),
-            color3: Srgba::hex("#2f5753").unwrap().into(),
-            color4: Srgba::hex("#283540").unwrap().into(),
+            light_border_1: config.light_border_1,
+            light_border_2: config.light_border_2,
+            land_cutoff: config.land_cutoff,
+            color1: Srgba::hex(&config.palette[0]).unwrap().into(),
+            color2: Srgba::hex(&config.palette[1]).unwrap().into(),
+            color3: Srgba::hex(&config.palette[2]).unwrap().into(),
+            color4: Srgba::hex(&config.palette[3]).unwrap().into(),
         }
     }
 }

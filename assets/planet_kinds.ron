@@ -1,0 +1,183 @@
+PlanetsConfig([
+    // EarthLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: Under ((
+                    // Common
+                    size: 5.0,
+                    octaves: 3,
+                    // Material specific
+                    dither_size: 2.0,
+                    light_border_1: 0.4,
+                    light_border_2: 0.6,
+                    palette: ( "#92e8c0", "#4fa4b8", "#2c354d" )
+                ))
+            ),
+            (
+                material: Landmasses ((
+                    // Common
+                    size: 4.0,
+                    octaves: 6,
+                    // Material specific
+                    light_border_1: 0.4,
+                    light_border_2: 0.5,
+                    land_cutoff: 0.5,
+                    palette: ( "#c8d45d", "#63ab3f", "#2f5753", "#283540" )
+                ))
+            ),
+            (
+                material: Clouds ((
+                    // Common
+                    size: 8.0,
+                    octaves: 2,
+                    // Material specific
+                    cloud_cover: 0.415,
+                    stretch: 2.0,
+                    cloud_curve: 1.3,
+                    light_border_1: 0.5,
+                    light_border_2: 0.6,
+                    palette: ( "#dfe0e8", "#a3a7c2", "#686f99", "#404973" )
+                ))
+            ),
+        ]
+    ),
+    // MoonLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: Under ((
+                    // Common
+                    size: 8.0,
+                    octaves: 4,
+                    // Material specific
+                    dither_size: 2.0,
+                    light_border_1: 0.6,
+                    light_border_2: 0.7,
+                    palette: ( "#a3a7c2", "#4c6885", "#3a3f5e" )
+                ))
+            ),
+            (
+                material: Craters ((
+                    // Common
+                    size: 5.0,
+                    octaves: 4,
+                    // Material specific
+                    light_border: 0.5,
+                    palette: ( "#4c6885", "#3a3f5e" )
+                ))
+            )
+        ]
+    ),
+    // MarsLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: DryTerrain ((
+                    // Common
+                    size: 8.0,
+                    octaves: 3,
+                    // Material specific
+                    dither_size: 2.0,
+                    light_distance_1: 0.4,
+                    light_distance_2: 0.5,
+                    colors: (
+                        offsets: [0.0, 0.25, 0.5, 0.75, 1.0],
+                        colors: ["#ff8933", "#e64539", "#ad2f45", "#52333f", "#3d2936"],
+                    )
+                ))
+            )
+        ]
+    ),
+    // IceWorld
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: Under ((
+                    // Common
+                    size: 8.0,
+                    octaves: 2,
+                    // Material specific
+                    dither_size: 2.0,
+                    light_border_1: 0.5,
+                    light_border_2: 0.6,
+                    palette: ( "#faffff", "#c7d4e1", "#928fb8" )
+                ))
+            ),
+            (
+                material: Lakes ((
+                    // Common
+                    size: 10.0,
+                    octaves: 3,
+                    // Material specific
+                    light_border_1: 0.02,
+                    light_border_2: 0.05,
+                    lake_cutoff: 0.55,
+                    palette: ( "#4fa4b8", "#4c6885", "#3a3f5e" )
+                ))
+            ),
+            (
+                material: Clouds ((
+                    // Common
+                    size: 4.0,
+                    octaves: 4,
+                    // Material specific
+                    cloud_cover: 0.5,
+                    stretch: 2.5,
+                    cloud_curve: 1.3,
+                    light_border_1: 0.6,
+                    light_border_2: 0.8,
+                    palette: ( "#e1f2ff", "#c0e3ff", "#5e70a5", "#404973" )
+                ))
+            ),
+        ]
+    ),
+    // SaturnLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: GasLayers ((
+                    // Common
+                    size: 10.0,
+                    octaves: 3,
+                    // Material specific
+                    bands: 0.892,
+                    colorscheme: (
+                        offsets: [0.0, 0.49, 1.0],
+                        colors: ["#eec39a", "#d9a066", "#8f563b"],
+                    ),
+                    dark_colorscheme: (
+                        offsets: [0.0, 0.5, 1.0],
+                        colors: ["#663931", "#45283c", "#222034"],
+                    )
+                ))
+            ),
+            (
+                scale: Some(3.0),
+                material: Ring ((
+                    // Common
+                    size: 15.0,
+                    octaves: 4,
+                    rotation: 0.7,
+                    // Material specific
+                    ring_width: 0.13,
+                    ring_perspective: 6.0,
+                    scale_rel_to_planet: 6.0,
+                    colorscheme: (
+                        offsets: [0.0, 0.49, 1.0],
+                        colors: ["#eec39a", "#d9a066", "#8f563b"],
+                    ),
+                    dark_colorscheme: (
+                        offsets: [0.0, 0.5, 1.0],
+                        colors: ["#663931", "#45283c", "#222034"],
+                    )
+                ))
+            )
+        ]
+    ),
+])
