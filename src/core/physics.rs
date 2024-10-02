@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
-#[derive(Component, Debug, Reflect)]
+#[derive(Component, Debug, Reflect, Clone)]
 pub struct Position(pub Vec2);
 
-#[derive(Component, Debug, Reflect)]
+#[derive(Component, Debug, Reflect, Clone)]
 pub struct Velocity(pub Vec2);
 
-#[derive(Component, Debug, Reflect)]
+#[derive(Component, Debug, Reflect, Clone)]
 pub struct Rotation(pub f32);
 
 pub struct PhysicsPlugin;
