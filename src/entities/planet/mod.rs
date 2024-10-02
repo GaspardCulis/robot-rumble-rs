@@ -60,7 +60,7 @@ fn handle_spawn_planet_event(
 ) {
     for event in events.read() {
         if let Some(config) = planet_configs.get(planet_config.0.id()) {
-            if let Some(kind) = config.0.get(4) {
+            if let Some(kind) = config.0.choose(&mut rand::thread_rng()) {
                 // Spawn the planet
                 let mut planet = commands.spawn((
                     Name::new("Planet"),
