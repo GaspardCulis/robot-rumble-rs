@@ -36,10 +36,10 @@ fn camera_movement(
 
     let screen_size = window.size();
     let cursor_position = window.cursor_position().unwrap_or(screen_size / 2.);
+    let max_cursor_offset = screen_size * 0.2;
+    let offset = (cursor_position / screen_size - 0.5) * Vec2::new(1., -1.) * max_cursor_offset;
 
-    let mut dest = target_transform.translation.xy();
-    // Add mouse deviation
-    dest += (cursor_position / screen_size - 0.5) * Vec2::new(-1., 1.) * -500.;
+    let dest = target_transform.translation.xy() + offset;
 
     camera_transform.translation = math::lerp(
         camera_transform.translation,
