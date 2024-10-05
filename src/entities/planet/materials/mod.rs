@@ -109,16 +109,21 @@ fn instance_layer_material<M: PlanetMaterial>(
         .scale(layer.scale);
 
         let mesh_bundle_entity = commands
-            .spawn(MaterialMesh2dBundle {
-                mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
-                transform: Transform::from_scale(Vec3::splat(layer.scale)).with_translation(Vec3 {
-                    x: 0.,
-                    y: 0.,
-                    z: layer.z_index,
-                }),
-                material: material.add(M::from_config(common, &layer.config, &mut images)),
-                ..default()
-            })
+            .spawn((
+                Name::new(M::short_type_path()),
+                MaterialMesh2dBundle {
+                    mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
+                    transform: Transform::from_scale(Vec3::splat(layer.scale)).with_translation(
+                        Vec3 {
+                            x: 0.,
+                            y: 0.,
+                            z: layer.z_index,
+                        },
+                    ),
+                    material: material.add(M::from_config(common, &layer.config, &mut images)),
+                    ..default()
+                },
+            ))
             .id();
 
         commands
