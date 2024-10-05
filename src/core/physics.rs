@@ -17,7 +17,7 @@ impl Plugin for PhysicsPlugin {
             .register_type::<Velocity>()
             .register_type::<Rotation>()
             .add_systems(Update, update_position)
-            .add_systems(Update, update_spatial_bundles);
+            .add_systems(PreUpdate, update_spatial_bundles);
     }
 }
 
