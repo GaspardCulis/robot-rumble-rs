@@ -15,7 +15,7 @@ use crate::{
 use super::planet::{Planet, Radius};
 
 const PLAYER_MASS: u32 = 800;
-const PLAYER_VELOCITY: f32 = 500.;
+const PLAYER_VELOCITY: f32 = 600.;
 const PLAYER_RADIUS: f32 = 16.;
 
 #[derive(Component)]
@@ -86,7 +86,7 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
             rotation: Rotation(PI),
             sprite_bundle: SpriteBundle {
                 texture: sprite.player.clone(),
-                transform: Transform::from_scale(Vec3::splat(0.1)),
+                transform: Transform::from_scale(Vec3::splat(0.2)),
                 ..default()
             },
             ..Default::default()
@@ -112,7 +112,7 @@ fn handle_keys(
     if keyboard_input.any_pressed([KeyCode::Space, KeyCode::KeyW])
         && *player_state.get() == PlayerState::OnGround
     {
-        velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY;
+        velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
         // Immediately update position
         position.0 += velocity.0 * delta;
     }

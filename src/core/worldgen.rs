@@ -30,16 +30,16 @@ pub struct WorldgenConfig {
 
 // TODO: Actual ron config file
 const WORLDGEN_CONFIG: WorldgenConfig = WorldgenConfig {
-    central_star_radius: 200,
+    central_star_radius: 400,
 
     min_planets: 8,
     max_planets: 10,
 
-    min_planet_radius: 50,
-    max_planet_radius: 100,
+    min_planet_radius: 80,
+    max_planet_radius: 400,
 
-    max_planet_surface_distance: 1000,
-    min_planet_surface_distance: 100,
+    max_planet_surface_distance: 4000,
+    min_planet_surface_distance: 300,
 };
 
 #[derive(Event)]
