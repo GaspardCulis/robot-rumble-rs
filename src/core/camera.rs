@@ -39,11 +39,11 @@ fn camera_movement(
     let max_cursor_offset = screen_size * 0.2;
     let offset = (cursor_position / screen_size - 0.5) * Vec2::new(1., -1.) * max_cursor_offset;
 
-    let dest = target_transform.translation.xy() + offset;
+    let dest = target_transform.translation.xy() + offset * camera_transform.scale.xy();
 
     camera_transform.translation = math::lerp(
         camera_transform.translation,
         Vec3::new(dest.x, dest.y, 0.),
-        time.delta_seconds(),
+        time.delta_seconds() * 5.,
     );
 }
