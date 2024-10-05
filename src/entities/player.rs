@@ -5,6 +5,7 @@ use bevy_asset_loader::prelude::*;
 
 use crate::{
     core::{
+        camera::CameraFollowTarget,
         gravity::Mass,
         physics::{Position, Rotation, Velocity},
     },
@@ -90,6 +91,7 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
             },
             ..Default::default()
         },
+        CameraFollowTarget,
     ));
 }
 
