@@ -30,7 +30,7 @@ PlanetsConfig([
             (
                 material: Clouds ((
                     // Common
-                    size: 8.0,
+                    size: 7.745,
                     octaves: 2,
                     // Material specific
                     cloud_cover: 0.415,

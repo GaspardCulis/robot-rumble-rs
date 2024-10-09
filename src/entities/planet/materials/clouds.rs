@@ -35,6 +35,7 @@ pub struct CloudsMaterial {
 #[derive(Component, serde::Deserialize, Clone)]
 pub struct CloudsMaterialConfig {
     // Common
+    size: f32,
     octaves: i32,
     // Material specific
     cloud_cover: f32,
@@ -60,6 +61,7 @@ impl PlanetMaterial for CloudsMaterial {
         _: &mut ResMut<Assets<Image>>,
     ) -> Self {
         common.octaves = config.octaves;
+        common.size = config.size;
 
         Self {
             common,
