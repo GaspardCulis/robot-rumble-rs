@@ -102,7 +102,7 @@ fn instance_layer_material<M: PlanetMaterial>(
 ) {
     for (entity, radius, layer) in query.iter() {
         let common = CommonMaterial {
-            pixels: radius.0 as f32 / 4.,
+            pixels: f32::min(radius.0 as f32 / 2., 200.),
             seed: rand::thread_rng().gen(),
             ..Default::default()
         }
