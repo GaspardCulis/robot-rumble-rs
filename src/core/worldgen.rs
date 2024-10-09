@@ -38,8 +38,8 @@ const WORLDGEN_CONFIG: WorldgenConfig = WorldgenConfig {
     min_planet_radius: 80,
     max_planet_radius: 400,
 
-    max_planet_surface_distance: 4000,
-    min_planet_surface_distance: 300,
+    max_planet_surface_distance: 2000,
+    min_planet_surface_distance: 100,
 };
 
 #[derive(Event)]
