@@ -81,7 +81,7 @@ fn handle_spawn_planet_event(
                 // Spawn the planet's material layers
                 for (i, layer) in kind.layers.iter().enumerate() {
                     let scale = layer.scale.unwrap_or(1.0);
-                    let z_index = i as f32;
+                    let z_index = i as f32 * 0.001;
                     match layer.material.clone() {
                         config::PlanetLayerMaterialConfig::Under(config) => {
                             planet.insert(PlanetMaterialLayerInit::<materials::UnderMaterial> {
