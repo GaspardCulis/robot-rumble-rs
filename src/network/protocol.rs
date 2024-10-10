@@ -1,3 +1,4 @@
+use crate::core::gravity::{Mass, Passive, Static};
 use crate::core::physics::{Position, Rotation, Velocity};
 use bevy::prelude::*;
 use lightyear::client::components::ComponentSyncMode;
@@ -20,5 +21,15 @@ impl Plugin for ProtocolPlugin {
 
         app.register_component::<Velocity>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Full);
+
+        // Gravity
+        app.register_component::<Mass>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
+
+        app.register_component::<Passive>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
+
+        app.register_component::<Static>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
     }
 }
