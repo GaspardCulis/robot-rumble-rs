@@ -2,6 +2,8 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use leafwing_input_manager::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     core::{
@@ -23,6 +25,14 @@ pub struct Player;
 
 #[derive(Component, Debug, Reflect)]
 pub struct PlayerInputVelocity(Vec2);
+
+#[derive(Actionlike, Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
+pub enum PlayerAction {
+    Jump,
+    Sneak,
+    Left,
+    Right,
+}
 
 #[derive(AssetCollection, Resource)]
 struct PlayerAssets {
@@ -68,7 +78,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_collection::<PlayerAssets>()
+        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
+            .init_collection::<PlayerAssets>()
             .init_state::<PlayerState>()
             .register_type::<PlayerInputVelocity>()
             .add_systems(Startup, spawn_player)
@@ -78,6 +89,17 @@ impl Plugin for PlayerPlugin {
 }
 
 fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
+    let input_map = InputMap::new([
+        // Jump
+        (PlayerAction::Jump, KeyCode::Space),
+        (PlayerAction::Jump, KeyCode::KeyW),
+        // Sneak
+        (PlayerAction::Sneak, KeyCode::ShiftLeft),
+        (PlayerAction::Sneak, KeyCode::KeyS),
+        // Directions
+        (PlayerAction::Right, KeyCode::KeyD),
+        (PlayerAction::Left, KeyCode::KeyA),
+    ]);
     commands.spawn((
         Name::new("Player"),
         PlayerBundle {
@@ -91,6 +113,7 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
             },
             ..Default::default()
         },
+        InputManagerBundle::with_map(input_map),
         CameraFollowTarget,
     ));
 }
@@ -101,30 +124,29 @@ fn handle_keys(
         &mut PlayerInputVelocity,
         &mut Velocity,
         &Rotation,
+        &ActionState<PlayerAction>,
     )>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
     player_state: Res<State<PlayerState>>,
     time: Res<Time>,
 ) {
-    let (mut position, mut input_velocity, mut velocity, rotation) = query.single_mut();
+    let (mut position, mut input_velocity, mut velocity, rotation, action_state) =
+        query.single_mut();
     let delta = time.delta_seconds();
 
-    if keyboard_input.any_pressed([KeyCode::Space, KeyCode::KeyW])
-        && *player_state.get() == PlayerState::OnGround
-    {
+    if action_state.pressed(&PlayerAction::Jump) && *player_state.get() == PlayerState::OnGround {
         velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
         // Immediately update position
         position.0 += velocity.0 * delta;
     }
 
-    if keyboard_input.pressed(KeyCode::KeyD) {
+    if action_state.pressed(&PlayerAction::Right) {
         input_velocity.0.x = math::lerp(input_velocity.0.x, PLAYER_VELOCITY, delta * 2.);
     }
-    if keyboard_input.pressed(KeyCode::KeyA) {
+    if action_state.pressed(&PlayerAction::Left) {
         input_velocity.0.x = math::lerp(input_velocity.0.x, -PLAYER_VELOCITY, delta * 2.);
     }
 
-    if !(keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::KeyA)) {
+    if !(action_state.pressed(&PlayerAction::Right) || action_state.pressed(&PlayerAction::Left)) {
         let mut slow_down_rate = 6.;
         if *player_state.get() == PlayerState::InAir {
             slow_down_rate = 1.;
@@ -132,7 +154,7 @@ fn handle_keys(
         input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * slow_down_rate);
     }
 
-    if keyboard_input.pressed(KeyCode::KeyS) {
+    if action_state.pressed(&PlayerAction::Sneak) {
         input_velocity.0.y = math::lerp(input_velocity.0.y, -PLAYER_VELOCITY, delta);
     } else {
         input_velocity.0.y = math::lerp(input_velocity.0.y, 0., delta * 10.);
