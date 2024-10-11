@@ -18,6 +18,28 @@ mod utils;
 
 const SERVER_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 5000);
 
+#[derive(Resource, Default)]
+struct ClientsRecord(HashMap<ClientId, Entity>);
+
+fn init(mut commands: Commands) {
+    commands.start_server();
+}
+
+fn handle_connections(
+    mut connections: EventReader<ConnectEvent>,
+    mut clients: ResMut<ClientsRecord>,
+    mut commands: Commands,
+) {
+    for connection in connections.read() {
+        let client_id = connection.client_id;
+        let replicate = Replicate::default();
+        let entity = commands.spawn((PlayerBundle::new(client_id), replicate));
+        clients.0.insert(client_id, entity.id());
+
+        info!("Create entity {:?} for client {:?}", entity.id(), client_id);
+    }
+}
+
 fn main() {
     let netcode_config = NetcodeConfig::default().with_protocol_id(PROTOCOL_ID);
 
@@ -52,10 +74,8 @@ fn main() {
             ..default()
         })
         .add_plugins(server_plugin)
+        .init_resource::<ClientsRecord>()
         .add_systems(Startup, init)
+        .add_systems(Update, handle_connections)
         .run();
-}
-
-fn init(mut commands: Commands) {
-    commands.start_server();
 }
