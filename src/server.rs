@@ -1,14 +1,15 @@
+use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::time::Duration;
 
 use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
-use lightyear::connection::server::{IoConfig, NetConfig};
+use entities::player::PlayerBundle;
+use lightyear::prelude::server::*;
 use lightyear::prelude::*;
-use lightyear::server::config::NetcodeConfig;
-use network::{shared_config, PROTOCOL_ID};
-use server::ServerCommands as _;
+use network::protocol::PROTOCOL_ID;
+use network::shared_config;
 
 mod core;
 mod entities;

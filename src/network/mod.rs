@@ -2,9 +2,7 @@ use std::time::Duration;
 
 use lightyear::prelude::*;
 
-mod protocol;
-
-pub const PROTOCOL_ID: u64 = 1;
+pub mod protocol;
 
 pub fn shared_config(mode: Mode) -> SharedConfig {
     SharedConfig {
