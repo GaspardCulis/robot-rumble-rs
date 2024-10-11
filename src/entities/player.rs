@@ -86,7 +86,6 @@ impl Plugin for PlayerPlugin {
             .init_collection::<PlayerAssets>()
             .init_state::<PlayerState>()
             .register_type::<PlayerInputVelocity>()
-            .add_systems(Startup, spawn_player)
             .add_systems(Update, handle_keys)
             .add_systems(Update, player_physics);
     }

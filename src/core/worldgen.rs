@@ -9,7 +9,6 @@ pub struct WorldgenPlugin;
 impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<GenerateWorldEvent>()
-            .add_systems(Startup, test_worldgen)
             .add_systems(Update, handle_genworld_event);
     }
 }
@@ -90,8 +89,4 @@ fn handle_genworld_event(
             planet_spawn_events.send(spawn_event);
         });
     }
-}
-
-fn test_worldgen(mut events: EventWriter<GenerateWorldEvent>) {
-    events.send(GenerateWorldEvent);
 }
