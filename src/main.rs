@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use client::{IoConfig, NetConfig, NetcodeConfig};
+use client::{ClientCommands as _, IoConfig, NetConfig, NetcodeConfig};
 use lightyear::prelude::*;
 use network::shared_config;
 
@@ -52,11 +52,16 @@ fn main() {
     )
     .add_plugins(client_plugins)
     .add_plugins(CorePlugins)
-    .add_plugins(EntitiesPlugins);
+    .add_plugins(EntitiesPlugins)
+    .add_systems(Startup, init);
 
     if cfg!(debug_assertions) {
         app.add_plugins(WorldInspectorPlugin::new());
     }
 
     app.run();
+}
+
+fn init(mut commands: Commands) {
+    commands.connect_client();
 }
