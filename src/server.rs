@@ -6,6 +6,7 @@ use lightyear::connection::server::{IoConfig, NetConfig};
 use lightyear::prelude::*;
 use lightyear::server::config::NetcodeConfig;
 use network::{shared_config, PROTOCOL_ID};
+use server::ServerCommands as _;
 
 mod core;
 mod entities;
@@ -41,5 +42,11 @@ fn main() {
 
     let mut app = App::new();
 
-    app.add_plugins(server_plugin).run();
+    app.add_plugins(server_plugin)
+        .add_systems(Startup, init)
+        .run();
+}
+
+fn init(mut commands: Commands) {
+    commands.start_server();
 }
