@@ -12,6 +12,7 @@ mod entities;
 mod network;
 mod utils;
 
+use core::gravity::GravityPlugin;
 use core::physics::PhysicsPlugin;
 use entities::player::PlayerBundle;
 
@@ -66,6 +67,7 @@ fn main() {
         })
         .add_plugins(ServerNetworkPlugin)
         .add_plugins(PhysicsPlugin)
+        .add_plugins(GravityPlugin)
         .init_resource::<ClientsRecord>()
         .add_systems(Startup, init)
         .add_systems(Update, (handle_connections, handle_disconnections))
