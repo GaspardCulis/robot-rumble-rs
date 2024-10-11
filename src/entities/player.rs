@@ -21,11 +21,8 @@ const PLAYER_MASS: u32 = 800;
 const PLAYER_VELOCITY: f32 = 600.;
 const PLAYER_RADIUS: f32 = 16.;
 
-#[derive(Component)]
-pub struct Player;
-
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct PlayerId(ClientId);
+pub struct Player(ClientId);
 
 #[derive(Component, Debug, Reflect)]
 pub struct PlayerInputVelocity(Vec2);
@@ -52,7 +49,8 @@ enum PlayerState {
 }
 
 #[derive(Bundle)]
-struct PlayerBundle {
+pub struct PlayerBundle {
+    name: Name,
     marker: Player,
     position: Position,
     velocity: Velocity,
@@ -62,10 +60,11 @@ struct PlayerBundle {
     sprite_bundle: SpriteBundle,
 }
 
-impl Default for PlayerBundle {
-    fn default() -> Self {
+impl PlayerBundle {
+    pub fn new(client_id: ClientId) -> Self {
         Self {
-            marker: Player,
+            name: Name::new("Player"),
+            marker: Player(client_id),
             position: Position(Vec2::ZERO),
             velocity: Velocity(Vec2::ZERO),
             rotation: Rotation(0.),
@@ -90,7 +89,7 @@ impl Plugin for PlayerPlugin {
             .add_systems(Update, player_physics);
     }
 }
-
+/*
 fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
     let input_map = InputMap::new([
         // Jump
@@ -120,7 +119,7 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
         CameraFollowTarget,
     ));
 }
-
+*/
 fn handle_keys(
     mut query: Query<(
         &mut Position,
