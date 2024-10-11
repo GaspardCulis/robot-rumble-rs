@@ -132,6 +132,11 @@ fn handle_keys(
     player_state: Res<State<PlayerState>>,
     time: Res<Time>,
 ) {
+    // TODO: Run system when specific state instead of checking
+    if query.is_empty() {
+        return;
+    };
+
     let (mut position, mut input_velocity, mut velocity, rotation, action_state) =
         query.single_mut();
     let delta = time.delta_seconds();
@@ -178,6 +183,11 @@ fn player_physics(
     mut player_state: ResMut<NextState<PlayerState>>,
     time: Res<Time>,
 ) {
+    // TODO: Run system when specific state instead of checking
+    if player_query.is_empty() {
+        return;
+    };
+
     let (mut player_position, mut player_rotation, mut velocity, input_velocity) =
         player_query.single_mut();
 
