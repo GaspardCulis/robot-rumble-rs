@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
-use entities::player::PlayerBundle;
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
 use network::ServerNetworkPlugin;
@@ -12,6 +11,9 @@ mod core;
 mod entities;
 mod network;
 mod utils;
+
+use core::physics::PhysicsPlugin;
+use entities::player::PlayerBundle;
 
 #[derive(Resource, Default)]
 struct ClientsRecord(HashMap<ClientId, Entity>);
@@ -63,6 +65,7 @@ fn main() {
             ..default()
         })
         .add_plugins(ServerNetworkPlugin)
+        .add_plugins(PhysicsPlugin)
         .init_resource::<ClientsRecord>()
         .add_systems(Startup, init)
         .add_systems(Update, (handle_connections, handle_disconnections))
