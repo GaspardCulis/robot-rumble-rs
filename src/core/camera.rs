@@ -30,6 +30,11 @@ fn camera_movement(
     target: Query<&Transform, With<CameraFollowTarget>>,
     time: Res<Time>,
 ) {
+    // TODO: Run system when specific state instead of checking
+    if target.is_empty() {
+        return;
+    };
+
     let mut camera_transform = camera.single_mut();
     let window = window.single();
     let target_transform = target.single();
