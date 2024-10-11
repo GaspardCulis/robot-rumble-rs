@@ -5,10 +5,11 @@ use std::{
 
 use bevy::prelude::*;
 use lightyear::prelude::*;
+use rand::Rng;
 
 pub mod protocol;
 
-const CLIENT_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 4000);
+const CLIENT_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 0);
 const SERVER_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 5000);
 
 struct SharedNetworkPlugin;
@@ -23,7 +24,7 @@ impl Plugin for ClientNetworkPlugin {
     fn build(&self, app: &mut App) {
         let auth = client::Authentication::Manual {
             server_addr: SERVER_ADDR,
-            client_id: 0,
+            client_id: rand::thread_rng().gen(),
             private_key: Key::default(),
             protocol_id: protocol::PROTOCOL_ID,
         };
