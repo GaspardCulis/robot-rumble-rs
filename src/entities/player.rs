@@ -81,8 +81,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .init_collection::<PlayerAssets>()
+        app.init_collection::<PlayerAssets>()
             .init_state::<PlayerState>()
             .register_type::<PlayerInputVelocity>()
             .add_systems(Update, handle_keys)
