@@ -1,5 +1,6 @@
 use crate::core::gravity::{Mass, Passive, Static};
 use crate::core::physics::{Position, Rotation, Velocity};
+use crate::entities::player::{PlayerAction, PlayerId};
 use bevy::prelude::*;
 use lightyear::client::components::ComponentSyncMode;
 use lightyear::prelude::*;
@@ -31,5 +32,12 @@ impl Plugin for ProtocolPlugin {
 
         app.register_component::<Static>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once);
+
+        // Player
+        app.add_plugins(LeafwingInputPlugin::<PlayerAction>::default());
+
+        app.register_component::<PlayerId>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once)
+            .add_interpolation(ComponentSyncMode::Once);
     }
 }
