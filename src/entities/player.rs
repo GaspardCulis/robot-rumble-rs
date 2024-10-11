@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use leafwing_input_manager::prelude::*;
+use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -22,6 +23,9 @@ const PLAYER_RADIUS: f32 = 16.;
 
 #[derive(Component)]
 pub struct Player;
+
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct PlayerId(ClientId);
 
 #[derive(Component, Debug, Reflect)]
 pub struct PlayerInputVelocity(Vec2);
