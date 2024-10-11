@@ -40,6 +40,24 @@ fn handle_connections(
     }
 }
 
+// FIX: Does not seem to trigger
+fn handle_disconnections(
+    mut disconnections: EventReader<DisconnectEvent>,
+    mut clients: ResMut<ClientsRecord>,
+    mut commands: Commands,
+) {
+    for disconnection in disconnections.read() {
+        info!("Client {:?} disconnected", disconnection.client_id);
+        if let Some(client_entity) = clients.0.remove(&disconnection.client_id) {
+            debug!(
+                "Despawning entity {:?} after client {:?} disconnection",
+                client_entity, disconnection.client_id
+            );
+            commands.entity(client_entity).despawn();
+        }
+    }
+}
+
 fn main() {
     let netcode_config = NetcodeConfig::default().with_protocol_id(PROTOCOL_ID);
 
@@ -76,6 +94,6 @@ fn main() {
         .add_plugins(server_plugin)
         .init_resource::<ClientsRecord>()
         .add_systems(Startup, init)
-        .add_systems(Update, handle_connections)
+        .add_systems(Update, (handle_connections, handle_disconnections))
         .run();
 }
