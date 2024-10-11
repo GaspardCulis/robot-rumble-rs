@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     core::{
         camera::CameraFollowTarget,
-        gravity::Mass,
+        gravity::{Mass, Passive},
         physics::{Position, Rotation, Velocity},
     },
     utils::math::{self, RAD},
@@ -57,6 +57,7 @@ pub struct PlayerBundle {
     rotation: Rotation,
     input_velocity: PlayerInputVelocity,
     mass: Mass,
+    passive: Passive,
     sprite_bundle: SpriteBundle,
 }
 
@@ -70,6 +71,7 @@ impl PlayerBundle {
             rotation: Rotation(0.),
             input_velocity: PlayerInputVelocity(Vec2::ZERO),
             mass: Mass(PLAYER_MASS),
+            passive: Passive,
             sprite_bundle: SpriteBundle {
                 ..Default::default()
             },
