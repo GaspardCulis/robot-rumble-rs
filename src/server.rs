@@ -1,7 +1,9 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::time::Duration;
 
+use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
+use bevy::state::app::StatesPlugin;
 use lightyear::connection::server::{IoConfig, NetConfig};
 use lightyear::prelude::*;
 use lightyear::server::config::NetcodeConfig;
@@ -13,9 +15,9 @@ mod entities;
 mod network;
 mod utils;
 
-fn main() {
-    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
+const SERVER_ADDR: SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 5000);
 
+fn main() {
     let netcode_config = NetcodeConfig::default().with_protocol_id(PROTOCOL_ID);
 
     let link_conditioner = LinkConditionerConfig {
@@ -24,7 +26,7 @@ fn main() {
         incoming_loss: 0.00,
     };
 
-    let io_config = IoConfig::from_transport(server::ServerTransport::UdpSocket(addr))
+    let io_config = IoConfig::from_transport(server::ServerTransport::UdpSocket(SERVER_ADDR))
         .with_conditioner(link_conditioner);
 
     let net_config = NetConfig::Netcode {
@@ -42,7 +44,13 @@ fn main() {
 
     let mut app = App::new();
 
-    app.add_plugins(server_plugin)
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .add_plugins(LogPlugin {
+            level: Level::INFO,
+            filter: "wgpu=error,bevy_render=info,bevy_ecs=warn".to_string(),
+            ..default()
+        })
+        .add_plugins(server_plugin)
         .add_systems(Startup, init)
         .run();
 }
