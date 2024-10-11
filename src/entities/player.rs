@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use leafwing_input_manager::prelude::*;
-use lightyear::prelude::*;
+use lightyear::{prelude::*, shared::events::components::EntitySpawnEvent};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -66,7 +66,7 @@ impl PlayerBundle {
             name: Name::new("Player"),
             marker: Player(client_id),
             position: Position(Vec2::ZERO),
-            velocity: Velocity(Vec2::ZERO),
+            velocity: Velocity(Vec2::X * 5.),
             rotation: Rotation(0.),
             input_velocity: PlayerInputVelocity(Vec2::ZERO),
             mass: Mass(PLAYER_MASS),
@@ -85,11 +85,27 @@ impl Plugin for PlayerPlugin {
             .init_state::<PlayerState>()
             .register_type::<PlayerInputVelocity>()
             .add_systems(Update, handle_keys)
-            .add_systems(Update, player_physics);
+            .add_systems(Update, (player_physics, insert_sprite));
     }
 }
-/*
-fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
+
+fn insert_sprite(
+    mut commands: Commands,
+    query: Query<Entity, Added<Player>>,
+    sprite: Res<PlayerAssets>,
+) {
+    for entity in query.iter() {
+        let mut entity_commands = commands.entity(entity);
+
+        entity_commands.insert(SpriteBundle {
+            texture: sprite.player.clone(),
+            transform: Transform::from_scale(Vec3::splat(0.2)),
+            ..default()
+        });
+    }
+
+    /*
+    TODO
     let input_map = InputMap::new([
         // Jump
         (PlayerAction::Jump, KeyCode::Space),
@@ -100,25 +116,9 @@ fn spawn_player(mut commands: Commands, sprite: Res<PlayerAssets>) {
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
-    ]);
-    commands.spawn((
-        Name::new("Player"),
-        PlayerBundle {
-            position: Position(Vec2 { x: 0., y: 500. }),
-            velocity: Velocity(Vec2 { x: 0., y: 0. }),
-            rotation: Rotation(PI),
-            sprite_bundle: SpriteBundle {
-                texture: sprite.player.clone(),
-                transform: Transform::from_scale(Vec3::splat(0.2)),
-                ..default()
-            },
-            ..Default::default()
-        },
-        InputManagerBundle::with_map(input_map),
-        CameraFollowTarget,
-    ));
+    ]); + CameraFollowTarget*/
 }
-*/
+
 fn handle_keys(
     mut query: Query<(
         &mut Position,
