@@ -7,6 +7,8 @@ use lightyear::prelude::*;
 
 pub struct ProtocolPlugin;
 
+pub const PROTOCOL_ID: u64 = 1;
+
 impl Plugin for ProtocolPlugin {
     fn build(&self, app: &mut App) {
         // Core physics

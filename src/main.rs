@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use lightyear::prelude::client::*;
 use lightyear::prelude::*;
-use network::{shared_config, PROTOCOL_ID};
+use network::{protocol::PROTOCOL_ID, shared_config};
 
 use core::CorePlugins;
 use entities::EntitiesPlugins;
