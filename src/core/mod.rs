@@ -14,13 +14,13 @@ pub enum CorePlugins {
 impl Plugin for CorePlugins {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins(gravity::GravityPlugin)
-            .add_plugins(physics::PhysicsPlugin);
+            .add_plugins(physics::PhysicsPlugin)
+            .add_plugins(worldgen::WorldgenPlugin);
 
         match self {
             CorePlugins::Client => {
                 app.add_plugins(camera::CameraPlugin)
-                    .add_plugins(spritesheet::AnimatedSpritePlugin)
-                    .add_plugins(worldgen::WorldgenPlugin);
+                    .add_plugins(spritesheet::AnimatedSpritePlugin);
             }
             CorePlugins::Server => (),
         };
