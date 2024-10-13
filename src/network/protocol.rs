@@ -9,11 +9,6 @@ pub struct ProtocolPlugin;
 
 pub const PROTOCOL_ID: u64 = 2;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct GenerateSystemMessage {
-    pub seed: u64,
-}
-
 impl Plugin for ProtocolPlugin {
     fn build(&self, app: &mut App) {
         // Core physics
@@ -46,8 +41,5 @@ impl Plugin for ProtocolPlugin {
         app.register_component::<Player>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once)
             .add_interpolation(ComponentSyncMode::Once);
-
-        // Worldgen
-        app.register_message::<GenerateSystemMessage>(ChannelDirection::ServerToClient);
     }
 }
