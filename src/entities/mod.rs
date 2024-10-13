@@ -12,10 +12,10 @@ pub enum EntitiesPlugins {
 
 impl Plugin for EntitiesPlugins {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins(PlayerPlugin);
-
         match self {
-            EntitiesPlugins::Client => app.add_plugins(PlanetPlugin::Client),
+            EntitiesPlugins::Client => app
+                .add_plugins(PlanetPlugin::Client)
+                .add_plugins(PlayerPlugin),
             EntitiesPlugins::Server => app.add_plugins(PlanetPlugin::Server),
         };
     }
