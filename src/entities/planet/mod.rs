@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use materials::PlanetMaterialLayerInit;
 use rand::seq::SliceRandom;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
 mod config;
@@ -10,10 +11,10 @@ mod materials;
 
 const DEFAULT_RADIUS: u32 = 128;
 
-#[derive(Component)]
+#[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Planet;
 
-#[derive(Component, Reflect, Clone)]
+#[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Radius(pub u32);
 
 #[derive(Bundle)]
