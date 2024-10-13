@@ -1,5 +1,6 @@
 use crate::core::{gravity::Mass, physics::Position};
 use bevy::prelude::*;
+use lightyear::prelude::server::Replicate;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
@@ -25,7 +26,6 @@ struct PlanetBundle {
     position: Position,
     radius: Radius,
     mass: Mass,
-    spatial: SpatialBundle,
 }
 
 impl PlanetBundle {
@@ -36,10 +36,6 @@ impl PlanetBundle {
             name: Name::new("Planet"),
             marker: Planet,
             mass: Mass(radius_to_mass(radius)),
-            spatial: SpatialBundle {
-                transform: Transform::from_scale(Vec3::splat((radius * 2).0 as f32)),
-                ..Default::default()
-            },
         }
     }
 }
@@ -57,7 +53,8 @@ impl Plugin for PlanetPlugin {
         match self {
             PlanetPlugin::Client => {
                 app.add_plugins(materials::PlanetMaterialsPlugin)
-                    .add_plugins(config::PlanetsConfigPlugin);
+                    .add_plugins(config::PlanetsConfigPlugin)
+                    .add_systems(Update, add_spacial_bundle);
             }
             PlanetPlugin::Server => (),
         };
@@ -66,7 +63,20 @@ impl Plugin for PlanetPlugin {
 
 fn handle_spawn_planet_event(mut events: EventReader<SpawnPlanetEvent>, mut commands: Commands) {
     for event in events.read() {
-        commands.spawn(PlanetBundle::new(event.position.clone(), event.radius));
+        commands.spawn((
+            PlanetBundle::new(event.position.clone(), event.radius),
+            Replicate::default(),
+        ));
+    }
+}
+
+fn add_spacial_bundle(mut commands: Commands, query: Query<(Entity, &Radius), Added<Planet>>) {
+    for (planet_entity, radius) in query.iter() {
+        let mut planet_commands = commands.entity(planet_entity);
+        planet_commands.insert(SpatialBundle {
+            transform: Transform::from_scale(Vec3::splat((radius * 2).0 as f32)),
+            ..Default::default()
+        });
     }
 }
 
@@ -90,7 +100,7 @@ impl std::ops::Mul for Radius {
     }
 }
 
-impl std::ops::Mul<u32> for Radius {
+impl std::ops::Mul<u32> for &Radius {
     type Output = Radius;
 
     fn mul(self, rhs: u32) -> Self::Output {
