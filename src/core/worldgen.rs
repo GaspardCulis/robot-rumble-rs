@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rand::{rngs::StdRng, Rng, SeedableRng};
+use serde::{Deserialize, Serialize};
 
 use crate::entities::planet::{Radius, SpawnPlanetEvent};
 
@@ -41,6 +42,9 @@ const WORLDGEN_CONFIG: WorldgenConfig = WorldgenConfig {
     min_planet_surface_distance: 100,
 };
 
+#[derive(Component, Debug, Reflect, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GenerationSeed(pub u64);
+
 #[derive(Event)]
 pub struct GenerateWorldEvent {
     pub seed: u64,
@@ -56,6 +60,7 @@ fn handle_genworld_event(
         planets.push(SpawnPlanetEvent {
             position: Position(Vec2::ZERO),
             radius: Radius(WORLDGEN_CONFIG.central_star_radius),
+            seed: rng.gen(),
         });
 
         let num_planets: u32 =
@@ -81,7 +86,11 @@ fn handle_genworld_event(
                 });
 
                 if !collision {
-                    planets.push(SpawnPlanetEvent { position, radius });
+                    planets.push(SpawnPlanetEvent {
+                        position,
+                        radius,
+                        seed: rng.gen(),
+                    });
                     break;
                 }
             }

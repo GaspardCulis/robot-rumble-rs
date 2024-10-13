@@ -1,4 +1,4 @@
-use crate::core::{gravity::Mass, physics::Position};
+use crate::core::{gravity::Mass, physics::Position, worldgen::GenerationSeed};
 use bevy::prelude::*;
 use lightyear::prelude::server::Replicate;
 use serde::{Deserialize, Serialize};
@@ -17,6 +17,7 @@ pub struct Radius(pub u32);
 pub struct SpawnPlanetEvent {
     pub position: Position,
     pub radius: Radius,
+    pub seed: u64,
 }
 
 #[derive(Bundle)]
@@ -65,6 +66,7 @@ fn handle_spawn_planet_event(mut events: EventReader<SpawnPlanetEvent>, mut comm
     for event in events.read() {
         commands.spawn((
             PlanetBundle::new(event.position.clone(), event.radius),
+            GenerationSeed(event.seed),
             Replicate::default(),
         ));
     }
