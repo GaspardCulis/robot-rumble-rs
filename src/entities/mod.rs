@@ -15,8 +15,10 @@ impl Plugin for EntitiesPlugins {
         match self {
             EntitiesPlugins::Client => app
                 .add_plugins(PlanetPlugin::Client)
-                .add_plugins(PlayerPlugin),
-            EntitiesPlugins::Server => app.add_plugins(PlanetPlugin::Server),
+                .add_plugins(PlayerPlugin::Client),
+            EntitiesPlugins::Server => app
+                .add_plugins(PlanetPlugin::Server)
+                .add_plugins(PlayerPlugin::Server),
         };
     }
 }
