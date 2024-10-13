@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::Rng;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::entities::planet::{Radius, SpawnPlanetEvent};
 
@@ -42,14 +42,16 @@ const WORLDGEN_CONFIG: WorldgenConfig = WorldgenConfig {
 };
 
 #[derive(Event)]
-pub struct GenerateWorldEvent;
+pub struct GenerateWorldEvent {
+    pub seed: u64,
+}
 
 fn handle_genworld_event(
     mut events: EventReader<GenerateWorldEvent>,
     mut planet_spawn_events: EventWriter<SpawnPlanetEvent>,
 ) {
-    for _ in events.read() {
-        let mut rng = rand::thread_rng();
+    for GenerateWorldEvent { seed } in events.read() {
+        let mut rng = StdRng::seed_from_u64(*seed);
         let mut planets = Vec::new();
         planets.push(SpawnPlanetEvent {
             position: Position(Vec2::ZERO),
