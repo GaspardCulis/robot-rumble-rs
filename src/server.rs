@@ -1,11 +1,11 @@
-use core::worldgen::{GenerateWorldEvent, WorldgenPlugin};
+use core::physics::Position;
+use core::worldgen::GenerateWorldEvent;
 use core::CorePlugins;
 use std::collections::HashMap;
 
 use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
-use entities::planet::PlanetPlugin;
 use entities::EntitiesPlugins;
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
@@ -17,6 +17,7 @@ mod network;
 mod utils;
 
 use entities::player::PlayerBundle;
+use rand::Rng;
 
 #[derive(Resource, Default)]
 struct ClientsRecord(HashMap<ClientId, Entity>);
@@ -34,7 +35,13 @@ fn handle_connections(
     for connection in connections.read() {
         let client_id = connection.client_id;
         let replicate = Replicate::default();
-        let entity = commands.spawn((PlayerBundle::new(client_id), replicate));
+        let entity = commands.spawn((
+            PlayerBundle::new(
+                client_id,
+                Position(Vec2::from_angle(rand::thread_rng().gen()) * 240.),
+            ),
+            replicate,
+        ));
         clients.0.insert(client_id, entity.id());
 
         info!("Create entity {:?} for client {:?}", entity.id(), client_id);
