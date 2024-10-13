@@ -77,7 +77,7 @@ fn handle_genworld_event(
                 let mut collision = false;
                 planets.iter().for_each(|planet| {
                     collision |= planet.position.0.distance(position.0)
-                        < (planet.radius.0 + radius.0) as f32 * 1.5
+                        < (planet.radius + radius).0 as f32 * 1.5
                 });
 
                 if !collision {
