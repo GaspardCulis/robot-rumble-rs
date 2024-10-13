@@ -1,5 +1,6 @@
 use crate::core::gravity::{Mass, Passive, Static};
 use crate::core::physics::{Position, Rotation, Velocity};
+use crate::entities::planet::{Planet, Radius};
 use crate::entities::player::{Player, PlayerAction};
 use bevy::prelude::*;
 use lightyear::client::components::ComponentSyncMode;
@@ -41,5 +42,12 @@ impl Plugin for ProtocolPlugin {
         app.register_component::<Player>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once)
             .add_interpolation(ComponentSyncMode::Once);
+
+        // Planet
+        app.register_component::<Planet>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
+
+        app.register_component::<Radius>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
     }
 }
