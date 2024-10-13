@@ -1,8 +1,12 @@
+use core::worldgen::{GenerateWorldEvent, WorldgenPlugin};
+use core::CorePlugins;
 use std::collections::HashMap;
 
 use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
+use entities::planet::PlanetPlugin;
+use entities::EntitiesPlugins;
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
 use network::ServerNetworkPlugin;
@@ -12,8 +16,6 @@ mod entities;
 mod network;
 mod utils;
 
-use core::gravity::GravityPlugin;
-use core::physics::PhysicsPlugin;
 use entities::player::PlayerBundle;
 
 #[derive(Resource, Default)]
@@ -27,6 +29,7 @@ fn handle_connections(
     mut connections: EventReader<ConnectEvent>,
     mut clients: ResMut<ClientsRecord>,
     mut commands: Commands,
+    mut worldgen_events: EventWriter<GenerateWorldEvent>,
 ) {
     for connection in connections.read() {
         let client_id = connection.client_id;
@@ -35,6 +38,10 @@ fn handle_connections(
         clients.0.insert(client_id, entity.id());
 
         info!("Create entity {:?} for client {:?}", entity.id(), client_id);
+
+        if clients.0.len() >= 2 {
+            worldgen_events.send(GenerateWorldEvent { seed: 42 });
+        }
     }
 }
 
@@ -59,15 +66,15 @@ fn handle_disconnections(
 fn main() {
     let mut app = App::new();
 
-    app.add_plugins((MinimalPlugins, StatesPlugin))
+    app.add_plugins((MinimalPlugins, StatesPlugin, AssetPlugin::default()))
         .add_plugins(LogPlugin {
             level: Level::INFO,
             filter: "wgpu=error,bevy_render=info,bevy_ecs=warn".to_string(),
             ..default()
         })
         .add_plugins(ServerNetworkPlugin)
-        .add_plugins(PhysicsPlugin)
-        .add_plugins(GravityPlugin)
+        .add_plugins(CorePlugins::Server)
+        .add_plugins(EntitiesPlugins::Server)
         .init_resource::<ClientsRecord>()
         .add_systems(Startup, init)
         .add_systems(Update, (handle_connections, handle_disconnections))

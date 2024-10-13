@@ -44,14 +44,23 @@ impl PlanetBundle {
     }
 }
 
-pub struct PlanetPlugin;
+pub enum PlanetPlugin {
+    Client,
+    Server,
+}
 
 impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(materials::PlanetMaterialsPlugin)
-            .add_plugins(config::PlanetsConfigPlugin)
-            .add_event::<SpawnPlanetEvent>()
+        app.add_event::<SpawnPlanetEvent>()
             .add_systems(Update, handle_spawn_planet_event);
+
+        match self {
+            PlanetPlugin::Client => {
+                app.add_plugins(materials::PlanetMaterialsPlugin)
+                    .add_plugins(config::PlanetsConfigPlugin);
+            }
+            PlanetPlugin::Server => (),
+        };
     }
 }
 
