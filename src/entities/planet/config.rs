@@ -1,6 +1,11 @@
 use bevy::prelude::*;
+use bevy_common_assets::ron::RonAssetPlugin;
+use rand::seq::SliceRandom;
 
-use super::materials::*;
+use super::{
+    materials::{self, *},
+    Planet,
+};
 
 pub mod types {
     pub type ColorConfig = String;
@@ -53,7 +58,9 @@ pub struct PlanetsConfigPlugin;
 
 impl Plugin for PlanetsConfigPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, load_planets_config);
+        app.add_plugins(RonAssetPlugin::<PlanetsConfig>::new(&[]))
+            .add_systems(Startup, load_planets_config)
+            .add_systems(Update, spawn_config_layers);
     }
 }
 
@@ -62,5 +69,88 @@ fn load_planets_config(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(planets_config);
 }
 
+fn spawn_config_layers(
+    mut commands: Commands,
+    planet_config: Res<PlanetsConfigHandle>,
+    planet_configs: Res<Assets<PlanetsConfig>>,
+    query: Query<Entity, Added<Planet>>,
+) {
+    for planet_entity in query.iter() {
+        let mut planet = commands.entity(planet_entity);
+        // Get config
+        if let Some(config) = planet_configs.get(planet_config.0.id()) {
+            if let Some(kind) = config.0.choose(&mut rand::thread_rng()) {
+                // Spawn the planet's material layers
+                for (i, layer) in kind.layers.iter().enumerate() {
+                    let scale = layer.scale.unwrap_or(1.0);
+                    let z_index = i as f32 * 0.001;
+                    match layer.material.clone() {
+                        PlanetLayerMaterialConfig::Under(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::UnderMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        PlanetLayerMaterialConfig::Landmasses(config) => planet.insert(
+                            PlanetMaterialLayerInit::<materials::LandmassesMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            },
+                        ),
+                        PlanetLayerMaterialConfig::Clouds(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::CloudsMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        PlanetLayerMaterialConfig::Craters(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::CratersMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        PlanetLayerMaterialConfig::DryTerrain(config) => planet.insert(
+                            PlanetMaterialLayerInit::<materials::DryTerrainMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            },
+                        ),
+                        PlanetLayerMaterialConfig::Lakes(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::LakesMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        PlanetLayerMaterialConfig::GasLayers(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::GasLayersMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                        PlanetLayerMaterialConfig::Ring(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<materials::RingMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+                    };
+                }
+            } else {
+                warn!("Received SpawnPlanetEvent on an empty PlanetKindConfig set");
+            }
+        } else {
+            warn!("Received SpawnPlanetEvent with no PlanetsConfig asset available");
+        }
+    }
+}
+
 #[derive(Resource)]
-pub struct PlanetsConfigHandle(pub Handle<PlanetsConfig>);
+struct PlanetsConfigHandle(Handle<PlanetsConfig>);
