@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use rand::seq::SliceRandom;
+use rand::{seq::SliceRandom, SeedableRng};
+
+use crate::core::worldgen::GenerationSeed;
 
 use super::{
     materials::{self, *},
@@ -73,13 +75,18 @@ fn spawn_config_layers(
     mut commands: Commands,
     planet_config: Res<PlanetsConfigHandle>,
     planet_configs: Res<Assets<PlanetsConfig>>,
-    query: Query<Entity, Added<Planet>>,
+    query: Query<(Entity, Option<&GenerationSeed>), Added<Planet>>,
 ) {
-    for planet_entity in query.iter() {
+    for (planet_entity, generation_seed) in query.iter() {
         let mut planet = commands.entity(planet_entity);
+        let mut rng = match generation_seed {
+            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed.0),
+            None => rand::rngs::StdRng::from_entropy(),
+        };
+
         // Get config
         if let Some(config) = planet_configs.get(planet_config.0.id()) {
-            if let Some(kind) = config.0.choose(&mut rand::thread_rng()) {
+            if let Some(kind) = config.0.choose(&mut rng) {
                 // Spawn the planet's material layers
                 for (i, layer) in kind.layers.iter().enumerate() {
                     let scale = layer.scale.unwrap_or(1.0);

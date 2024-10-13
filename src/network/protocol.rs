@@ -1,5 +1,6 @@
 use crate::core::gravity::{Mass, Passive, Static};
 use crate::core::physics::{Position, Rotation, Velocity};
+use crate::core::worldgen::GenerationSeed;
 use crate::entities::planet::{Planet, Radius};
 use crate::entities::player::{Player, PlayerAction};
 use bevy::prelude::*;
@@ -8,7 +9,7 @@ use lightyear::prelude::*;
 
 pub struct ProtocolPlugin;
 
-pub const PROTOCOL_ID: u64 = 2;
+pub const PROTOCOL_ID: u64 = 3;
 
 impl Plugin for ProtocolPlugin {
     fn build(&self, app: &mut App) {
@@ -48,6 +49,10 @@ impl Plugin for ProtocolPlugin {
             .add_prediction(ComponentSyncMode::Once);
 
         app.register_component::<Radius>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
+
+        // Worldgen
+        app.register_component::<GenerationSeed>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once);
     }
 }
