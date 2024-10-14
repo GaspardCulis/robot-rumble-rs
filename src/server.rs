@@ -22,15 +22,18 @@ use rand::Rng;
 #[derive(Resource, Default)]
 struct ClientsRecord(HashMap<ClientId, Entity>);
 
-fn init(mut commands: Commands) {
+fn init(mut commands: Commands, mut worldgen_events: EventWriter<GenerateWorldEvent>) {
     commands.start_server();
+
+    worldgen_events.send(GenerateWorldEvent {
+        seed: rand::thread_rng().gen(),
+    });
 }
 
 fn handle_connections(
     mut connections: EventReader<ConnectEvent>,
     mut clients: ResMut<ClientsRecord>,
     mut commands: Commands,
-    mut worldgen_events: EventWriter<GenerateWorldEvent>,
 ) {
     for connection in connections.read() {
         let client_id = connection.client_id;
@@ -45,10 +48,6 @@ fn handle_connections(
         clients.0.insert(client_id, entity.id());
 
         info!("Create entity {:?} for client {:?}", entity.id(), client_id);
-
-        if clients.0.len() >= 2 {
-            worldgen_events.send(GenerateWorldEvent { seed: 42 });
-        }
     }
 }
 
