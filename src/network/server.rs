@@ -5,7 +5,7 @@ use lightyear::prelude::*;
 
 use super::{
     protocol,
-    shared::{shared_config, SharedNetworkPlugin},
+    shared::{shared_config, SharedNetworkPlugin, REPLICATION_SEND_INTERVAL},
     SERVER_ADDR,
 };
 
@@ -33,6 +33,10 @@ impl Plugin for ServerNetworkPlugin {
         let server_config = server::ServerConfig {
             shared: shared_config(Mode::Separate),
             net: vec![net_config],
+            replication: ReplicationConfig {
+                send_interval: REPLICATION_SEND_INTERVAL,
+                ..Default::default()
+            },
             ..Default::default()
         };
 
