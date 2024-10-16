@@ -7,6 +7,7 @@ use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
 use entities::EntitiesPlugins;
+use leafwing_input_manager::prelude::*;
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
 use network::ServerNetworkPlugin;
@@ -16,7 +17,7 @@ mod entities;
 mod network;
 mod utils;
 
-use entities::player::PlayerBundle;
+use entities::player::{PlayerAction, PlayerBundle};
 use rand::Rng;
 
 #[derive(Resource, Default)]
@@ -52,6 +53,7 @@ fn handle_connections(
                         * 240.,
                 ),
             ),
+            ActionState::<PlayerAction>::default(),
             replicate,
         ));
         clients.0.insert(client_id, entity.id());
