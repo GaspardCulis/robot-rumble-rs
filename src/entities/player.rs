@@ -3,7 +3,10 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use leafwing_input_manager::prelude::*;
-use lightyear::{prelude::*, shared::replication::components::Controlled};
+use lightyear::{
+    inputs::leafwing::input_buffer::InputBuffer, prelude::*,
+    shared::replication::components::Controlled,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -23,9 +26,6 @@ const PLAYER_RADIUS: f32 = 16.;
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Player(ClientId);
-
-#[derive(Component, Debug, Reflect)]
-pub struct PlayerInputVelocity(Vec2);
 
 #[derive(Actionlike, Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
 pub enum PlayerAction {
@@ -81,20 +81,22 @@ pub enum PlayerPlugin {
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<PlayerState>()
-            .add_systems(Update, player_physics);
+            .add_systems(FixedUpdate, shared_player_physics);
 
         match self {
             PlayerPlugin::Client => {
                 app.init_collection::<PlayerAssets>()
-                    .register_type::<PlayerInputVelocity>()
-                    .add_systems(Update, handle_new_player);
+                    .add_systems(Update, client_new_player_handling)
+                    .add_systems(FixedUpdate, client_player_movement);
             }
-            PlayerPlugin::Server => (),
+            PlayerPlugin::Server => {
+                app.add_systems(FixedUpdate, server_player_movement);
+            }
         };
     }
 }
 
-fn handle_new_player(
+fn client_new_player_handling(
     mut commands: Commands,
     player_query: Query<(Entity, Has<Controlled>), Added<Player>>,
     sprite: Res<PlayerAssets>,
@@ -129,32 +131,87 @@ fn handle_new_player(
     }
 }
 
-fn handle_keys(
-    mut query: Query<(
-        &mut Position,
-        &mut PlayerInputVelocity,
-        &mut Velocity,
-        &Rotation,
-        &ActionState<PlayerAction>,
-    )>,
-    player_state: Res<State<PlayerState>>,
-    time: Res<Time>,
+#[derive(bevy::ecs::query::QueryData)]
+#[query_data(mutable, derive(Debug))]
+struct SharedApplyInputsQuery {
+    position: &'static mut Position,
+    velocity: &'static mut Velocity,
+    rotation: &'static Rotation,
+}
+
+fn server_player_movement(
+    mut query: Query<(&ActionState<PlayerAction>, SharedApplyInputsQuery)>,
+    tick_manager: Res<TickManager>,
+) {
+    let tick = tick_manager.tick();
+    for (action_state, mut saiq) in query.iter_mut() {
+        shared_movement_behaviour(action_state, &mut saiq, tick);
+    }
+}
+fn client_player_movement(
+    mut query: Query<
+        (
+            &ActionState<PlayerAction>,
+            &InputBuffer<PlayerAction>,
+            SharedApplyInputsQuery,
+        ),
+        (With<Player>, With<client::Predicted>),
+    >,
+    tick_manager: Res<TickManager>,
+    rollback: Option<Res<client::Rollback>>,
+) {
+    // max number of stale inputs to predict before default inputs used
+    const MAX_STALE_TICKS: u16 = 6;
+    // get the tick, even if during rollback
+    let tick = rollback
+        .as_ref()
+        .map(|rb| tick_manager.tick_or_rollback_tick(rb))
+        .unwrap_or(tick_manager.tick());
+
+    for (action_state, input_buffer, mut aiq) in query.iter_mut() {
+        // is the current ActionState for real?
+        if input_buffer.get(tick).is_some() {
+            // Got an exact input for this tick, staleness = 0, the happy path.
+            shared_movement_behaviour(action_state, &mut aiq, tick);
+            continue;
+        }
+
+        // if the true input is missing, this will be leftover from a previous tick, or the default().
+        if let Some((prev_tick, prev_input)) = input_buffer.get_last_with_tick() {
+            let staleness = (tick - prev_tick).max(0) as u16;
+            if staleness > MAX_STALE_TICKS {
+                // input too stale, apply default input (ie, nothing pressed)
+                shared_movement_behaviour(&ActionState::default(), &mut aiq, tick);
+            } else {
+                // apply a stale input within our acceptable threshold.
+                // we could use the staleness to decay movement forces as desired.
+                shared_movement_behaviour(prev_input, &mut aiq, tick);
+            }
+        } else {
+            // no inputs in the buffer yet, can happen during initial connection.
+            // apply the default input (ie, nothing pressed)
+            shared_movement_behaviour(action_state, &mut aiq, tick);
+        }
+    }
+}
+
+fn shared_movement_behaviour(
+    action_state: &ActionState<PlayerAction>,
+    saiq: &mut SharedApplyInputsQueryItem,
+    _tick: Tick,
 ) {
     // TODO: Run system when specific state instead of checking
-    if query.is_empty() {
-        return;
-    };
 
-    let (mut position, mut input_velocity, mut velocity, rotation, action_state) =
-        query.single_mut();
-    let delta = time.delta_seconds();
+    let delta = 1. / 60.;
 
-    if action_state.pressed(&PlayerAction::Jump) && *player_state.get() == PlayerState::OnGround {
-        velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
+    if action_state.pressed(&PlayerAction::Jump) {
+        //&& *player_state.get() == PlayerState::OnGround {
+        saiq.velocity.0 = Vec2::from_angle(saiq.rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
         // Immediately update position
-        position.0 += velocity.0 * delta;
+        saiq.position.0 += saiq.velocity.0 * delta;
     }
 
+    /*
     if action_state.pressed(&PlayerAction::Right) {
         input_velocity.0.x = math::lerp(input_velocity.0.x, PLAYER_VELOCITY, delta * 2.);
     }
@@ -175,10 +232,14 @@ fn handle_keys(
     } else {
         input_velocity.0.y = math::lerp(input_velocity.0.y, 0., delta * 10.);
     }
+    */
 }
 
-fn player_physics(
-    mut player_query: Query<(&mut Position, &mut Rotation, &mut Velocity), Without<Planet>>,
+fn shared_player_physics(
+    mut player_query: Query<
+        (&mut Position, &mut Rotation, &mut Velocity),
+        (With<Player>, Without<Planet>),
+    >,
     planet_query: Query<(&Position, &Radius), With<Planet>>,
     mut player_state: ResMut<NextState<PlayerState>>,
     time: Res<Time>,
