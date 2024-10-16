@@ -27,6 +27,9 @@ const PLAYER_RADIUS: f32 = 16.;
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Player(ClientId);
 
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]
+pub struct PlayerInputVelocity(Vec2);
+
 #[derive(Actionlike, Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
 pub enum PlayerAction {
     Jump,
@@ -55,6 +58,7 @@ pub struct PlayerBundle {
     position: Position,
     velocity: Velocity,
     rotation: Rotation,
+    input_velocity: PlayerInputVelocity,
     mass: Mass,
     passive: Passive,
 }
@@ -67,6 +71,7 @@ impl PlayerBundle {
             marker: Player(client_id),
             velocity: Velocity(Vec2::X * 5.),
             rotation: Rotation(0.),
+            input_velocity: PlayerInputVelocity(Vec2::ZERO),
             mass: Mass(PLAYER_MASS),
             passive: Passive,
         }
@@ -136,6 +141,7 @@ fn client_new_player_handling(
 struct SharedApplyInputsQuery {
     position: &'static mut Position,
     velocity: &'static mut Velocity,
+    input_velocity: &'static mut PlayerInputVelocity,
     rotation: &'static Rotation,
 }
 
@@ -211,40 +217,46 @@ fn shared_movement_behaviour(
         saiq.position.0 += saiq.velocity.0 * delta;
     }
 
-    /*
     if action_state.pressed(&PlayerAction::Right) {
-        input_velocity.0.x = math::lerp(input_velocity.0.x, PLAYER_VELOCITY, delta * 2.);
+        saiq.input_velocity.0.x = math::lerp(saiq.input_velocity.0.x, PLAYER_VELOCITY, delta * 2.);
     }
     if action_state.pressed(&PlayerAction::Left) {
-        input_velocity.0.x = math::lerp(input_velocity.0.x, -PLAYER_VELOCITY, delta * 2.);
+        saiq.input_velocity.0.x = math::lerp(saiq.input_velocity.0.x, -PLAYER_VELOCITY, delta * 2.);
     }
 
+    /*
     if !(action_state.pressed(&PlayerAction::Right) || action_state.pressed(&PlayerAction::Left)) {
         let mut slow_down_rate = 6.;
         if *player_state.get() == PlayerState::InAir {
             slow_down_rate = 1.;
         }
-        input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * slow_down_rate);
-    }
+        saiq.input_velocity.0.x = math::lerp(saiq.input_velocity.0.x, 0., delta * slow_down_rate);
+    }*/
 
     if action_state.pressed(&PlayerAction::Sneak) {
-        input_velocity.0.y = math::lerp(input_velocity.0.y, -PLAYER_VELOCITY, delta);
+        saiq.input_velocity.0.y = math::lerp(saiq.input_velocity.0.y, -PLAYER_VELOCITY, delta);
     } else {
-        input_velocity.0.y = math::lerp(input_velocity.0.y, 0., delta * 10.);
+        saiq.input_velocity.0.y = math::lerp(saiq.input_velocity.0.y, 0., delta * 10.);
     }
-    */
 }
 
 fn shared_player_physics(
     mut player_query: Query<
-        (&mut Position, &mut Rotation, &mut Velocity),
+        (
+            &mut Position,
+            &mut Rotation,
+            &mut Velocity,
+            &PlayerInputVelocity,
+        ),
         (With<Player>, Without<Planet>),
     >,
     planet_query: Query<(&Position, &Radius), With<Planet>>,
     mut player_state: ResMut<NextState<PlayerState>>,
     time: Res<Time>,
 ) {
-    for (mut player_position, mut player_rotation, mut velocity) in player_query.iter_mut() {
+    for (mut player_position, mut player_rotation, mut velocity, input_velocity) in
+        player_query.iter_mut()
+    {
         // Find nearest planet (asserts that one planet exists)
         let mut nearest_position = Vec2::ZERO;
         let mut nearest_radius: u32 = 0;
@@ -265,6 +277,9 @@ fn shared_player_physics(
         let mut short_angle = (target_angle - player_rotation.0) % RAD;
         short_angle = (2. * short_angle) % RAD - short_angle;
         player_rotation.0 += short_angle * time.delta_seconds() * 6.;
+
+        player_position.0 +=
+            Vec2::from_angle(player_rotation.0).rotate(input_velocity.0) * time.delta_seconds();
 
         // Check if collides
         if nearest_distance - PLAYER_RADIUS <= 0. {
