@@ -41,7 +41,10 @@ fn handle_connections(
         let entity = commands.spawn((
             PlayerBundle::new(
                 client_id,
-                Position(Vec2::from_angle(rand::thread_rng().gen()) * 240.),
+                Position(
+                    Vec2::from_angle(rand::thread_rng().gen::<f32>() * 2. * std::f32::consts::PI)
+                        * 240.,
+                ),
             ),
             replicate,
         ));
