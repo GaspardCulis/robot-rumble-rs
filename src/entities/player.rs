@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use leafwing_input_manager::prelude::*;
-use lightyear::prelude::*;
+use lightyear::{prelude::*, shared::replication::components::Controlled};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -87,20 +87,39 @@ impl Plugin for PlayerPlugin {
             PlayerPlugin::Client => {
                 app.init_collection::<PlayerAssets>()
                     .register_type::<PlayerInputVelocity>()
-                    .add_systems(Update, (insert_sprite, handle_keys));
+                    .add_systems(Update, handle_new_player);
             }
             PlayerPlugin::Server => (),
         };
     }
 }
 
-fn insert_sprite(
+fn handle_new_player(
     mut commands: Commands,
-    query: Query<Entity, Added<Player>>,
+    player_query: Query<(Entity, Has<Controlled>), Added<Player>>,
     sprite: Res<PlayerAssets>,
 ) {
-    for entity in query.iter() {
+    for (entity, is_controlled) in player_query.iter() {
         let mut entity_commands = commands.entity(entity);
+
+        if is_controlled {
+            info!("Own player replicated to us, adding inputmap to {entity:?}");
+            let input_map = InputMap::new([
+                // Jump
+                (PlayerAction::Jump, KeyCode::Space),
+                (PlayerAction::Jump, KeyCode::KeyW),
+                // Sneak
+                (PlayerAction::Sneak, KeyCode::ShiftLeft),
+                (PlayerAction::Sneak, KeyCode::KeyS),
+                // Directions
+                (PlayerAction::Right, KeyCode::KeyD),
+                (PlayerAction::Left, KeyCode::KeyA),
+            ]);
+
+            entity_commands.insert((input_map, CameraFollowTarget));
+        } else {
+            info!("Remote player replicated to us: {entity:?}");
+        }
 
         entity_commands.insert(SpriteBundle {
             texture: sprite.player.clone(),
@@ -108,20 +127,6 @@ fn insert_sprite(
             ..default()
         });
     }
-
-    /*
-    TODO
-    let input_map = InputMap::new([
-        // Jump
-        (PlayerAction::Jump, KeyCode::Space),
-        (PlayerAction::Jump, KeyCode::KeyW),
-        // Sneak
-        (PlayerAction::Sneak, KeyCode::ShiftLeft),
-        (PlayerAction::Sneak, KeyCode::KeyS),
-        // Directions
-        (PlayerAction::Right, KeyCode::KeyD),
-        (PlayerAction::Left, KeyCode::KeyA),
-    ]); + CameraFollowTarget*/
 }
 
 fn handle_keys(
