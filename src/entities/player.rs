@@ -44,12 +44,8 @@ struct PlayerAssets {
     player: Handle<Image>,
 }
 
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-enum PlayerState {
-    #[default]
-    InAir,
-    OnGround,
-}
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]
+struct InAir;
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -85,17 +81,22 @@ pub enum PlayerPlugin {
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<PlayerState>()
-            .add_systems(FixedUpdate, shared_player_physics);
+        app.add_systems(FixedUpdate, shared_player_physics);
 
         match self {
             PlayerPlugin::Client => {
                 app.init_collection::<PlayerAssets>()
                     .add_systems(Update, client_new_player_handling)
-                    .add_systems(FixedUpdate, client_player_movement);
+                    .add_systems(
+                        FixedUpdate,
+                        client_player_movement.after(shared_player_physics),
+                    );
             }
             PlayerPlugin::Server => {
-                app.add_systems(FixedUpdate, server_player_movement);
+                app.add_systems(
+                    FixedUpdate,
+                    server_player_movement.after(shared_player_physics),
+                );
             }
         };
     }
@@ -143,6 +144,7 @@ struct SharedApplyInputsQuery {
     velocity: &'static mut Velocity,
     input_velocity: &'static mut PlayerInputVelocity,
     rotation: &'static Rotation,
+    in_air: Has<InAir>,
 }
 
 fn server_player_movement(
@@ -210,8 +212,7 @@ fn shared_movement_behaviour(
 
     let delta = 1. / 60.;
 
-    if action_state.pressed(&PlayerAction::Jump) {
-        //&& *player_state.get() == PlayerState::OnGround {
+    if action_state.pressed(&PlayerAction::Jump) && !saiq.in_air {
         saiq.velocity.0 = Vec2::from_angle(saiq.rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
         // Immediately update position
         saiq.position.0 += saiq.velocity.0 * delta;
@@ -224,14 +225,13 @@ fn shared_movement_behaviour(
         saiq.input_velocity.0.x = math::lerp(saiq.input_velocity.0.x, -PLAYER_VELOCITY, delta * 2.);
     }
 
-    /*
     if !(action_state.pressed(&PlayerAction::Right) || action_state.pressed(&PlayerAction::Left)) {
         let mut slow_down_rate = 6.;
-        if *player_state.get() == PlayerState::InAir {
+        if saiq.in_air {
             slow_down_rate = 1.;
         }
         saiq.input_velocity.0.x = math::lerp(saiq.input_velocity.0.x, 0., delta * slow_down_rate);
-    }*/
+    }
 
     if action_state.pressed(&PlayerAction::Sneak) {
         saiq.input_velocity.0.y = math::lerp(saiq.input_velocity.0.y, -PLAYER_VELOCITY, delta);
@@ -241,8 +241,10 @@ fn shared_movement_behaviour(
 }
 
 fn shared_player_physics(
+    mut commands: Commands,
     mut player_query: Query<
         (
+            Entity,
             &mut Position,
             &mut Rotation,
             &mut Velocity,
@@ -251,10 +253,9 @@ fn shared_player_physics(
         (With<Player>, Without<Planet>),
     >,
     planet_query: Query<(&Position, &Radius), With<Planet>>,
-    mut player_state: ResMut<NextState<PlayerState>>,
     time: Res<Time>,
 ) {
-    for (mut player_position, mut player_rotation, mut velocity, input_velocity) in
+    for (player_entity, mut player_position, mut player_rotation, mut velocity, input_velocity) in
         player_query.iter_mut()
     {
         // Find nearest planet (asserts that one planet exists)
@@ -302,9 +303,9 @@ fn shared_player_physics(
                 velocity.0 = Vec2::ZERO;
             }
 
-            player_state.set(PlayerState::OnGround);
+            commands.entity(player_entity).remove::<InAir>();
         } else {
-            player_state.set(PlayerState::InAir);
+            commands.entity(player_entity).insert(InAir);
         }
     }
 }
