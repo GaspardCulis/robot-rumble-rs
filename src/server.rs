@@ -37,7 +37,13 @@ fn handle_connections(
 ) {
     for connection in connections.read() {
         let client_id = connection.client_id;
-        let replicate = Replicate::default();
+        let replicate = Replicate {
+            controlled_by: ControlledBy {
+                target: NetworkTarget::Single(client_id),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
         let entity = commands.spawn((
             PlayerBundle::new(
                 client_id,
