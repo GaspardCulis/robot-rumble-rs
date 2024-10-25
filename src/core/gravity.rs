@@ -19,7 +19,7 @@ pub struct GravityPlugin;
 impl Plugin for GravityPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Mass>()
-            .add_systems(Update, apply_forces);
+            .add_systems(FixedUpdate, apply_forces);
     }
 }
 

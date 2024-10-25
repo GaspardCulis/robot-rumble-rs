@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize, Deref, DerefMut)]
 pub struct Position(pub Vec2);
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize, Deref, DerefMut)]
 pub struct Velocity(pub Vec2);
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize, Deref, DerefMut)]
@@ -17,8 +17,8 @@ impl Plugin for PhysicsPlugin {
         app.register_type::<Position>()
             .register_type::<Velocity>()
             .register_type::<Rotation>()
-            .add_systems(Update, update_position)
-            .add_systems(PreUpdate, update_spatial_bundles);
+            .add_systems(FixedUpdate, update_position)
+            .add_systems(Last, update_spatial_bundles);
     }
 }
 
@@ -30,8 +30,8 @@ fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>
 
 fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
     for (mut transform, position, rotation) in query.iter_mut() {
-        transform.translation.x = position.0.x;
-        transform.translation.y = position.0.y;
+        transform.translation.x = position.x;
+        transform.translation.y = position.y;
 
         if rotation.is_some() {
             transform.rotation = Quat::from_rotation_z(rotation.unwrap().0);

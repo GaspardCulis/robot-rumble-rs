@@ -86,32 +86,26 @@ impl Plugin for PlayerPlugin {
         match self {
             PlayerPlugin::Client => {
                 app.init_collection::<PlayerAssets>()
-                    .add_systems(Update, client_new_player_handling)
-                    .add_systems(
-                        FixedUpdate,
-                        client_player_movement.after(shared_player_physics),
-                    );
+                    .add_systems(Update, client_handle_new_player)
+                    .add_systems(FixedUpdate, client_movement);
             }
             PlayerPlugin::Server => {
-                app.add_systems(
-                    FixedUpdate,
-                    server_player_movement.after(shared_player_physics),
-                );
+                app.add_systems(FixedUpdate, server_movement);
             }
         };
     }
 }
 
-fn client_new_player_handling(
+fn client_handle_new_player(
     mut commands: Commands,
-    player_query: Query<(Entity, Has<Controlled>), Added<Player>>,
+    player_query: Query<(Entity, Has<Controlled>), (Added<client::Predicted>, With<Player>)>,
     sprite: Res<PlayerAssets>,
 ) {
-    for (entity, is_controlled) in player_query.iter() {
-        let mut entity_commands = commands.entity(entity);
+    for (player_entity, is_controlled) in player_query.iter() {
+        let mut player_commands = commands.entity(player_entity);
 
         if is_controlled {
-            info!("Own player replicated to us, adding inputmap to {entity:?}");
+            info!("Own player replicated to us, adding inputmap to {player_entity:?}");
             let input_map = InputMap::new([
                 // Jump
                 (PlayerAction::Jump, KeyCode::Space),
@@ -124,12 +118,12 @@ fn client_new_player_handling(
                 (PlayerAction::Left, KeyCode::KeyA),
             ]);
 
-            entity_commands.insert((input_map, CameraFollowTarget));
+            player_commands.insert((input_map, CameraFollowTarget));
         } else {
-            info!("Remote player replicated to us: {entity:?}");
+            info!("Remote player replicated to us: {player_entity:?}");
         }
 
-        entity_commands.insert(SpriteBundle {
+        player_commands.insert(SpriteBundle {
             texture: sprite.player.clone(),
             transform: Transform::from_scale(Vec3::splat(0.2)),
             ..default()
@@ -140,6 +134,7 @@ fn client_new_player_handling(
 #[derive(bevy::ecs::query::QueryData)]
 #[query_data(mutable, derive(Debug))]
 struct SharedApplyInputsQuery {
+    player: &'static Player,
     position: &'static mut Position,
     velocity: &'static mut Velocity,
     input_velocity: &'static mut PlayerInputVelocity,
@@ -147,8 +142,8 @@ struct SharedApplyInputsQuery {
     in_air: Has<InAir>,
 }
 
-fn server_player_movement(
-    mut query: Query<(&ActionState<PlayerAction>, SharedApplyInputsQuery)>,
+fn server_movement(
+    mut query: Query<(&ActionState<PlayerAction>, SharedApplyInputsQuery), With<Player>>,
     tick_manager: Res<TickManager>,
 ) {
     let tick = tick_manager.tick();
@@ -156,7 +151,7 @@ fn server_player_movement(
         shared_movement_behaviour(action_state, &mut saiq, tick);
     }
 }
-fn client_player_movement(
+fn client_movement(
     mut query: Query<
         (
             &ActionState<PlayerAction>,
@@ -176,11 +171,11 @@ fn client_player_movement(
         .map(|rb| tick_manager.tick_or_rollback_tick(rb))
         .unwrap_or(tick_manager.tick());
 
-    for (action_state, input_buffer, mut aiq) in query.iter_mut() {
+    for (action_state, input_buffer, mut saiq) in query.iter_mut() {
         // is the current ActionState for real?
         if input_buffer.get(tick).is_some() {
             // Got an exact input for this tick, staleness = 0, the happy path.
-            shared_movement_behaviour(action_state, &mut aiq, tick);
+            shared_movement_behaviour(action_state, &mut saiq, tick);
             continue;
         }
 
@@ -189,16 +184,16 @@ fn client_player_movement(
             let staleness = (tick - prev_tick).max(0) as u16;
             if staleness > MAX_STALE_TICKS {
                 // input too stale, apply default input (ie, nothing pressed)
-                shared_movement_behaviour(&ActionState::default(), &mut aiq, tick);
+                shared_movement_behaviour(&ActionState::default(), &mut saiq, tick);
             } else {
                 // apply a stale input within our acceptable threshold.
                 // we could use the staleness to decay movement forces as desired.
-                shared_movement_behaviour(prev_input, &mut aiq, tick);
+                shared_movement_behaviour(prev_input, &mut saiq, tick);
             }
         } else {
             // no inputs in the buffer yet, can happen during initial connection.
             // apply the default input (ie, nothing pressed)
-            shared_movement_behaviour(action_state, &mut aiq, tick);
+            shared_movement_behaviour(action_state, &mut saiq, tick);
         }
     }
 }
@@ -206,9 +201,16 @@ fn client_player_movement(
 fn shared_movement_behaviour(
     action_state: &ActionState<PlayerAction>,
     saiq: &mut SharedApplyInputsQueryItem,
-    _tick: Tick,
+    tick: Tick,
 ) {
     // TODO: Run system when specific state instead of checking
+    if !action_state.get_pressed().is_empty() {
+        info!(
+            "🎹 {:?} {tick:?} = {:?}",
+            saiq.player,
+            action_state.get_pressed(),
+        );
+    }
 
     let delta = 1. / 60.;
 
@@ -307,5 +309,23 @@ fn shared_player_physics(
         } else {
             commands.entity(player_entity).insert(InAir);
         }
+    }
+}
+
+// Chore ops implementations
+
+impl std::ops::Add for PlayerInputVelocity {
+    type Output = Self;
+    #[inline]
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0.add(rhs.0))
+    }
+}
+
+impl std::ops::Mul<f32> for &PlayerInputVelocity {
+    type Output = PlayerInputVelocity;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        PlayerInputVelocity(self.0 * rhs)
     }
 }

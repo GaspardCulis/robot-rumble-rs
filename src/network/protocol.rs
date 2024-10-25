@@ -9,6 +9,10 @@ use lightyear::prelude::*;
 
 pub struct ProtocolPlugin;
 
+// For prediction, we want everything entity that is predicted to be part of the same replication group
+// This will make sure that they will be replicated in the same message and that all the entities in the group
+// will always be consistent (= on the same tick)
+pub const PLAYER_REPLICATION_GROUP: ReplicationGroup = ReplicationGroup::new_id(1);
 pub const PROTOCOL_ID: u64 = 4;
 
 impl Plugin for ProtocolPlugin {
@@ -16,13 +20,13 @@ impl Plugin for ProtocolPlugin {
         // Core physics
         app.register_component::<Position>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Full)
-            .add_interpolation(ComponentSyncMode::Full)
-            .add_linear_interpolation_fn();
+            .add_interpolation_fn(Position::lerp)
+            .add_correction_fn(Position::lerp);
 
         app.register_component::<Rotation>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Full)
-            .add_interpolation(ComponentSyncMode::Full)
-            .add_linear_interpolation_fn();
+            .add_interpolation_fn(Rotation::lerp)
+            .add_correction_fn(Rotation::lerp);
 
         app.register_component::<Velocity>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Full);
@@ -45,8 +49,10 @@ impl Plugin for ProtocolPlugin {
             .add_interpolation(ComponentSyncMode::Once);
 
         app.register_component::<PlayerInputVelocity>(ChannelDirection::ServerToClient)
-            .add_prediction(ComponentSyncMode::Once)
-            .add_interpolation(ComponentSyncMode::Once);
+            .add_prediction(ComponentSyncMode::Full)
+            .add_interpolation(ComponentSyncMode::Full)
+            .add_interpolation_fn(PlayerInputVelocity::lerp)
+            .add_correction_fn(PlayerInputVelocity::lerp);
 
         // Planet
         app.register_component::<Planet>(ChannelDirection::ServerToClient)
