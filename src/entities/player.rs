@@ -13,7 +13,7 @@ use crate::{
     core::{
         camera::CameraFollowTarget,
         gravity::{Mass, Passive},
-        physics::{Position, Rotation, Velocity},
+        physics::{PhysicsSet, Position, Rotation, Velocity},
     },
     utils::math::{self, RAD},
 };
@@ -81,16 +81,24 @@ pub enum PlayerPlugin {
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, shared_player_physics);
-
         match self {
             PlayerPlugin::Client => {
                 app.init_collection::<PlayerAssets>()
                     .add_systems(Update, client_handle_new_player)
-                    .add_systems(FixedUpdate, client_movement);
+                    .add_systems(
+                        FixedUpdate,
+                        (client_movement, shared_player_physics)
+                            .chain()
+                            .before(PhysicsSet),
+                    );
             }
             PlayerPlugin::Server => {
-                app.add_systems(FixedUpdate, server_movement);
+                app.add_systems(
+                    FixedUpdate,
+                    (server_movement, shared_player_physics)
+                        .chain()
+                        .before(PhysicsSet),
+                );
             }
         };
     }

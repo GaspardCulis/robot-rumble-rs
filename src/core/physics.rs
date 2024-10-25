@@ -10,19 +10,21 @@ pub struct Velocity(pub Vec2);
 #[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize, Deref, DerefMut)]
 pub struct Rotation(pub f32);
 
-pub struct PhysicsPlugin;
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct PhysicsSet;
 
+pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Position>()
             .register_type::<Velocity>()
             .register_type::<Rotation>()
-            .add_systems(FixedUpdate, update_position)
+            .add_systems(FixedUpdate, update_position.in_set(PhysicsSet))
             .add_systems(Last, update_spatial_bundles);
     }
 }
 
-fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
+pub fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
     for (mut position, velocity) in query.iter_mut() {
         position.0 += velocity.0 * time.delta_seconds()
     }

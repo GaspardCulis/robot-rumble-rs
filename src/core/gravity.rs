@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use super::physics::{Position, Velocity};
+use super::physics::{self, Position, Velocity};
 
 const G: f32 = 800.;
 
@@ -18,8 +18,12 @@ pub struct GravityPlugin;
 
 impl Plugin for GravityPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Mass>()
-            .add_systems(FixedUpdate, apply_forces);
+        app.register_type::<Mass>().add_systems(
+            FixedUpdate,
+            apply_forces
+                .in_set(physics::PhysicsSet)
+                .before(physics::update_position),
+        );
     }
 }
 
