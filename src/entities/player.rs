@@ -65,7 +65,7 @@ impl PlayerBundle {
             position,
             name: Name::new("Player"),
             marker: Player(client_id),
-            velocity: Velocity(Vec2::X * 5.),
+            velocity: Velocity(Vec2::ZERO),
             rotation: Rotation(0.),
             input_velocity: PlayerInputVelocity(Vec2::ZERO),
             mass: Mass(PLAYER_MASS),
