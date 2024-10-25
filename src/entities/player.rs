@@ -89,7 +89,7 @@ impl Plugin for PlayerPlugin {
                         FixedUpdate,
                         (client_movement, shared_player_physics)
                             .chain()
-                            .before(PhysicsSet),
+                            .after(PhysicsSet),
                     );
             }
             PlayerPlugin::Server => {
@@ -97,7 +97,7 @@ impl Plugin for PlayerPlugin {
                     FixedUpdate,
                     (server_movement, shared_player_physics)
                         .chain()
-                        .before(PhysicsSet),
+                        .after(PhysicsSet),
                 );
             }
         };
