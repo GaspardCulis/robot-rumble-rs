@@ -5,7 +5,7 @@ use lightyear::prelude::*;
 
 use super::protocol;
 
-pub const REPLICATION_SEND_INTERVAL: Duration = Duration::from_millis(40);
+pub const REPLICATION_SEND_INTERVAL: Duration = Duration::from_millis(20);
 
 pub struct SharedNetworkPlugin;
 impl Plugin for SharedNetworkPlugin {

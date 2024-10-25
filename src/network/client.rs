@@ -2,9 +2,14 @@ use bevy::prelude::*;
 use lightyear::prelude::*;
 use rand::Rng;
 
+use crate::{
+    core::physics::{Position, Rotation},
+    entities::planet::Planet,
+};
+
 use super::{
     protocol,
-    shared::{shared_config, SharedNetworkPlugin},
+    shared::{self, shared_config, SharedNetworkPlugin},
     CLIENT_ADDR, SERVER_ADDR,
 };
 
@@ -30,10 +35,41 @@ impl Plugin for ClientNetworkPlugin {
                 config: netcode_config,
                 io: io_config,
             },
+            replication: ReplicationConfig {
+                send_interval: shared::REPLICATION_SEND_INTERVAL,
+                ..Default::default()
+            },
+            prediction: client::PredictionConfig {
+                minimum_input_delay_ticks: 6,
+                maximum_predicted_ticks: 100,
+                correction_ticks_factor: 1.5,
+                ..Default::default()
+            },
             ..default()
         };
 
         app.add_plugins(client::ClientPlugins::new(client_config))
-            .add_plugins(SharedNetworkPlugin);
+            .add_plugins(SharedNetworkPlugin)
+            .add_plugins(client::VisualInterpolationPlugin::<Position>::default())
+            .add_plugins(client::VisualInterpolationPlugin::<Rotation>::default())
+            .observe(add_visual_interpolation_components::<Position>)
+            .observe(add_visual_interpolation_components::<Rotation>);
     }
+}
+
+fn add_visual_interpolation_components<T: Component>(
+    trigger: Trigger<OnAdd, T>,
+    q: Query<Entity, (With<T>, Without<Planet>, With<client::Predicted>)>,
+    mut commands: Commands,
+) {
+    if !q.contains(trigger.entity()) {
+        return;
+    }
+    debug!("Adding visual interp component to {:?}", trigger.entity());
+    commands
+        .entity(trigger.entity())
+        .insert(client::VisualInterpolateStatus::<T> {
+            trigger_change_detection: true,
+            ..default()
+        });
 }

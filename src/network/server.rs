@@ -16,7 +16,7 @@ impl Plugin for ServerNetworkPlugin {
             server::NetcodeConfig::default().with_protocol_id(protocol::PROTOCOL_ID);
 
         let link_conditioner = LinkConditionerConfig {
-            incoming_latency: Duration::from_millis(100),
+            incoming_latency: Duration::from_millis(50),
             incoming_jitter: Duration::from_millis(0),
             incoming_loss: 0.00,
         };

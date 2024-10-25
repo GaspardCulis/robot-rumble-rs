@@ -30,7 +30,7 @@ pub struct WorldgenConfig {
 
 // TODO: Actual ron config file
 const WORLDGEN_CONFIG: WorldgenConfig = WorldgenConfig {
-    central_star_radius: 400,
+    central_star_radius: 100,
 
     min_planets: 8,
     max_planets: 10,
