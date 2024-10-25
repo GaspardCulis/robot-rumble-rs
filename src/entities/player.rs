@@ -131,11 +131,21 @@ fn client_handle_new_player(
             info!("Remote player replicated to us: {player_entity:?}");
         }
 
-        player_commands.insert(SpriteBundle {
-            texture: sprite.player.clone(),
-            transform: Transform::from_scale(Vec3::splat(0.2)),
-            ..default()
-        });
+        player_commands.insert((
+            Name::new(format!(
+                "{} Player",
+                if is_controlled {
+                    "Controlled"
+                } else {
+                    "Remote"
+                }
+            )),
+            SpriteBundle {
+                texture: sprite.player.clone(),
+                transform: Transform::from_scale(Vec3::splat(0.2)),
+                ..default()
+            },
+        ));
     }
 }
 
