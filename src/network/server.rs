@@ -17,8 +17,8 @@ impl Plugin for ServerNetworkPlugin {
 
         let link_conditioner = LinkConditionerConfig {
             incoming_latency: Duration::from_millis(50),
-            incoming_jitter: Duration::from_millis(0),
-            incoming_loss: 0.00,
+            incoming_jitter: Duration::from_millis(2),
+            incoming_loss: 0.005,
         };
 
         let io_config =
