@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use rand::Rng;
+use rand::{rngs::StdRng, Rng, SeedableRng};
+use serde::{Deserialize, Serialize};
 
 use crate::entities::planet::{Radius, SpawnPlanetEvent};
 
@@ -9,7 +10,6 @@ pub struct WorldgenPlugin;
 impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<GenerateWorldEvent>()
-            .add_systems(Startup, test_worldgen)
             .add_systems(Update, handle_genworld_event);
     }
 }
@@ -30,7 +30,7 @@ pub struct WorldgenConfig {
 
 // TODO: Actual ron config file
 const WORLDGEN_CONFIG: WorldgenConfig = WorldgenConfig {
-    central_star_radius: 400,
+    central_star_radius: 100,
 
     min_planets: 8,
     max_planets: 10,
@@ -42,19 +42,25 @@ const WORLDGEN_CONFIG: WorldgenConfig = WorldgenConfig {
     min_planet_surface_distance: 100,
 };
 
+#[derive(Component, Debug, Reflect, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GenerationSeed(pub u64);
+
 #[derive(Event)]
-pub struct GenerateWorldEvent;
+pub struct GenerateWorldEvent {
+    pub seed: u64,
+}
 
 fn handle_genworld_event(
     mut events: EventReader<GenerateWorldEvent>,
     mut planet_spawn_events: EventWriter<SpawnPlanetEvent>,
 ) {
-    for _ in events.read() {
-        let mut rng = rand::thread_rng();
+    for GenerateWorldEvent { seed } in events.read() {
+        let mut rng = StdRng::seed_from_u64(*seed);
         let mut planets = Vec::new();
         planets.push(SpawnPlanetEvent {
             position: Position(Vec2::ZERO),
             radius: Radius(WORLDGEN_CONFIG.central_star_radius),
+            seed: rng.gen(),
         });
 
         let num_planets: u32 =
@@ -76,11 +82,15 @@ fn handle_genworld_event(
                 let mut collision = false;
                 planets.iter().for_each(|planet| {
                     collision |= planet.position.0.distance(position.0)
-                        < (planet.radius.0 + radius.0) as f32 * 1.5
+                        < (planet.radius + radius).0 as f32 * 1.5
                 });
 
                 if !collision {
-                    planets.push(SpawnPlanetEvent { position, radius });
+                    planets.push(SpawnPlanetEvent {
+                        position,
+                        radius,
+                        seed: rng.gen(),
+                    });
                     break;
                 }
             }
@@ -90,8 +100,4 @@ fn handle_genworld_event(
             planet_spawn_events.send(spawn_event);
         });
     }
-}
-
-fn test_worldgen(mut events: EventWriter<GenerateWorldEvent>) {
-    events.send(GenerateWorldEvent);
 }
