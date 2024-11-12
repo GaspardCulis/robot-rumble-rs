@@ -1,0 +1,15 @@
+[package]
+name = "robot-rumble-client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { workspace = true, default-features = true, features = ["wayland"] }
+robot-rumble-common = { path = "../common" }
+bevy_common_assets = { workspace = true }
+leafwing-input-manager = { workspace = true }
+lightyear = { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true }
+bevy-inspector-egui = "0.26"
+bevy_asset_loader = { version = "0.21", features = ["2d"] }
