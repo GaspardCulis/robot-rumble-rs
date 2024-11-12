@@ -28,7 +28,7 @@ _Brief overview_
     - [ ] Implement all shader types
     - [x] Create modular planet config system using [ron](https://github.com/ron-rs/ron)
   - [ ] Map generation
-- [ ] Multiplayer (using [SpacetimeDB](https://spacetimedb.com/) ?)
+- [x] Multiplayer using [lightyear](https://docs.rs/lightyear)
 - [ ] UI
   - [ ] Main menu
   - [ ] Server browser menu
