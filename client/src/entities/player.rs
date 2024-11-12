@@ -11,6 +11,7 @@ use lightyear::{
 use robot_rumble_common::entities::player::*;
 
 use crate::core::camera::CameraFollowTarget;
+use crate::network;
 
 #[derive(AssetCollection, Resource)]
 struct PlayerAssets {
@@ -85,7 +86,7 @@ fn client_movement(
     rollback: Option<Res<Rollback>>,
 ) {
     // max number of stale inputs to predict before default inputs used
-    const MAX_STALE_TICKS: u16 = 6;
+    const MAX_STALE_TICKS: u16 = network::INPUT_DELAY_TICKS;
     // get the tick, even if during rollback
     let tick = rollback
         .as_ref()
