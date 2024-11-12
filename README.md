@@ -22,19 +22,19 @@ The Rust rewrite of [Robot Rumble](https://github.com/GaspardCulis/robot-rumble)
       - [ ] BlackHole
         - [ ] [BlackHole](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/BlackHole/BlackHole.gdshader)
         - [ ] [BlackHoleRing](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/BlackHole/BlackHoleRing.gdshader)
-      - [ ] [DryTerrain](https://github.com/Deep-Fold/PixelPlanets/tree/main/Planets/DryTerran) ?
+      - [x] [DryTerrain](https://github.com/Deep-Fold/PixelPlanets/tree/main/Planets/DryTerran) ?
       - [ ] [Galaxy](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Galaxy/Galaxy.gdshader)
       - [ ] [GasPlanet](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/GasPlanet/GasPlanet.gdshader)
-      - [ ] SaturnLike
-        - [ ] [GasLayers](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/GasPlanetLayers/GasLayers.gdshader)
-        - [ ] [Ring](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/GasPlanetLayers/Ring.gdshader)
-      - [ ] [IceWorld](https://github.com/Deep-Fold/PixelPlanets/tree/main/Planets/IceWorld) ?
-      - [ ] [Clouds](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/LandMasses/Clouds.gdshader)
-      - [ ] [PlanetLandmass](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/LandMasses/PlanetLandmass.gdshader)
-      - [ ] [PlanetUnder](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/LandMasses/PlanetUnder.gdshader)
+      - [x] SaturnLike
+        - [x] [GasLayers](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/GasPlanetLayers/GasLayers.gdshader)
+        - [x] [Ring](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/GasPlanetLayers/Ring.gdshader)
+      - [x] [IceWorld](https://github.com/Deep-Fold/PixelPlanets/tree/main/Planets/IceWorld) ?
+      - [x] [Clouds](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/LandMasses/Clouds.gdshader)
+      - [x] [PlanetLandmass](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/LandMasses/PlanetLandmass.gdshader)
+      - [x] [PlanetUnder](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/LandMasses/PlanetUnder.gdshader)
       - [ ] [Rivers](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/LavaWorld/Rivers.gdshader)
-      - [ ] [Craters](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/NoAtmosphere/Craters.gdshader)
-      - [ ] [NoAtmosphere](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/NoAtmosphere/NoAtmosphere.gdshader)
+      - [x] [Craters](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/NoAtmosphere/Craters.gdshader)
+      - [x] [NoAtmosphere](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/NoAtmosphere/NoAtmosphere.gdshader)
       - [ ] [LandRivers](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Rivers/LandRivers.gdshader)
       - [ ] Star
         - [ ] [Star](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Star/Star.gdshader)
