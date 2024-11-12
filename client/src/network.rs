@@ -8,6 +8,8 @@ use robot_rumble_common::{
     network::{protocol, shared_config, CLIENT_ADDR, REPLICATION_SEND_INTERVAL, SERVER_ADDR},
 };
 
+pub const INPUT_DELAY_TICKS: u16 = 2;
+
 pub struct ClientNetworkPlugin;
 impl Plugin for ClientNetworkPlugin {
     fn build(&self, app: &mut App) {
@@ -35,7 +37,7 @@ impl Plugin for ClientNetworkPlugin {
                 ..Default::default()
             },
             prediction: client::PredictionConfig {
-                minimum_input_delay_ticks: 6,
+                minimum_input_delay_ticks: INPUT_DELAY_TICKS,
                 maximum_predicted_ticks: 100,
                 correction_ticks_factor: 1.5,
                 ..Default::default()
