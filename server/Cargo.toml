@@ -1,0 +1,11 @@
+[package]
+name = "robot-rumble-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+robot-rumble-common = { path = "../common" }
+bevy = { workspace = true }
+leafwing-input-manager = { workspace = true }
+lightyear = { workspace = true }
+rand = { workspace = true }
