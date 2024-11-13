@@ -11,6 +11,7 @@
   in {
     devShells.${system}.default = with pkgs; mkShell rec {
     nativeBuildInputs = [
+      pkg-config
       rustc
       cargo
       rustfmt
