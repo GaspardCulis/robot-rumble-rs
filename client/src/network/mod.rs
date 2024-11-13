@@ -20,7 +20,7 @@ pub const INPUT_DELAY_TICKS: u16 = 2;
 pub struct ClientNetworkPlugin;
 impl Plugin for ClientNetworkPlugin {
     fn build(&self, app: &mut App) {
-        let config_str = fs::read_to_string("./assets/config/network.ron")
+        let config_str = fs::read_to_string("client/assets/config/network.ron")
             .expect("Failed to read client network config file");
         let config = ron::de::from_str::<config::ClientNetworkConfig>(config_str.as_str())
             .expect("Could not parse the network settings file");
