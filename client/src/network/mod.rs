@@ -1,3 +1,8 @@
+use std::{
+    fs,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+};
+
 use bevy::prelude::*;
 use lightyear::prelude::*;
 use rand::Rng;
@@ -5,16 +10,23 @@ use rand::Rng;
 use robot_rumble_common::{
     core::physics::{Position, Rotation},
     entities::planet::Planet,
-    network::{protocol, shared_config, CLIENT_ADDR, REPLICATION_SEND_INTERVAL, SERVER_ADDR},
+    network::{protocol, shared_config, REPLICATION_SEND_INTERVAL},
 };
+
+mod config;
 
 pub const INPUT_DELAY_TICKS: u16 = 2;
 
 pub struct ClientNetworkPlugin;
 impl Plugin for ClientNetworkPlugin {
     fn build(&self, app: &mut App) {
+        let config_str = fs::read_to_string("./assets/config/network.ron")
+            .expect("Failed to read client network config file");
+        let config = ron::de::from_str::<config::ClientNetworkConfig>(config_str.as_str())
+            .expect("Could not parse the network settings file");
+
         let auth = client::Authentication::Manual {
-            server_addr: SERVER_ADDR,
+            server_addr: SocketAddr::new(config.server_addr.into(), config.server_port),
             client_id: rand::thread_rng().gen(),
             private_key: Key::default(),
             protocol_id: protocol::PROTOCOL_ID,
@@ -22,8 +34,13 @@ impl Plugin for ClientNetworkPlugin {
 
         let netcode_config = client::NetcodeConfig::default();
 
-        let io_config =
-            client::IoConfig::from_transport(client::ClientTransport::UdpSocket(CLIENT_ADDR));
+        let mut io_config = client::IoConfig::from_transport(client::ClientTransport::UdpSocket(
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.client_port),
+        ));
+
+        if config.conditioner.is_some() && !cfg!(debug_assertions) {
+            io_config = io_config.with_conditioner(config.conditioner.unwrap().into());
+        }
 
         let client_config = client::ClientConfig {
             shared: shared_config(Mode::Separate),
