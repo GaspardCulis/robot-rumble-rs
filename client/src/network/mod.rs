@@ -15,7 +15,7 @@ use robot_rumble_common::{
 
 mod config;
 
-pub const INPUT_DELAY_TICKS: u16 = 2;
+pub const INPUT_DELAY_TICKS: u16 = 0;
 
 pub struct ClientNetworkPlugin;
 impl Plugin for ClientNetworkPlugin {
@@ -55,8 +55,6 @@ impl Plugin for ClientNetworkPlugin {
             },
             prediction: client::PredictionConfig {
                 minimum_input_delay_ticks: INPUT_DELAY_TICKS,
-                maximum_predicted_ticks: 100,
-                correction_ticks_factor: 1.5,
                 ..Default::default()
             },
             ..default()
