@@ -20,16 +20,9 @@ impl Plugin for ServerNetworkPlugin {
         let netcode_config =
             server::NetcodeConfig::default().with_protocol_id(network::protocol::PROTOCOL_ID);
 
-        let link_conditioner = LinkConditionerConfig {
-            incoming_latency: Duration::from_millis(50),
-            incoming_jitter: Duration::from_millis(2),
-            incoming_loss: 0.005,
-        };
-
         let io_config = server::IoConfig::from_transport(server::ServerTransport::UdpSocket(
             network::SERVER_ADDR,
-        ))
-        .with_conditioner(link_conditioner);
+        ));
 
         let net_config = server::NetConfig::Netcode {
             config: netcode_config,
