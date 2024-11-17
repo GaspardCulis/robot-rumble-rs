@@ -3,8 +3,8 @@ ClientNetworkConfig (
     server_addr: "127.0.0.1",
     server_port: 40807,
     conditioner: Some(Conditioner (
-        latency_ms: 50,
-        jitter_ms: 2,
+        latency_ms: 200,
+        jitter_ms: 20,
         packet_loss: 0.005,
     ))
 )

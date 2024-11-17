@@ -23,8 +23,16 @@ pub struct ClientPlayerPlugin;
 impl Plugin for ClientPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_collection::<PlayerAssets>()
-            .add_systems(Update, handle_new_player)
-            .add_systems(FixedUpdate, client_movement.after(player_physics));
+            .add_systems(
+                PreUpdate,
+                handle_new_player
+                    .after(MainSet::Receive)
+                    .before(PredictionSet::SpawnPrediction),
+            )
+            .add_systems(
+                FixedUpdate,
+                client_movement.in_set(PlayerSet).after(player_physics),
+            );
     }
 }
 

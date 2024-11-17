@@ -1,5 +1,8 @@
 use bevy::prelude::*;
+use lightyear::prelude::FixedUpdateSet;
 use serde::{Deserialize, Serialize};
+
+use crate::network::TICK_DURATION;
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize, Deref, DerefMut)]
 pub struct Position(pub Vec2);
@@ -19,8 +22,10 @@ impl Plugin for PhysicsPlugin {
         app.register_type::<Position>()
             .register_type::<Velocity>()
             .register_type::<Rotation>()
+            .insert_resource(Time::new_with(TICK_DURATION))
+            .configure_sets(FixedUpdate, PhysicsSet.in_set(FixedUpdateSet::TickUpdate))
             .add_systems(FixedUpdate, update_position.in_set(PhysicsSet))
-            .add_systems(Last, update_spatial_bundles);
+            .add_systems(Last, update_spatial_bundles.in_set(PhysicsSet));
     }
 }
 

@@ -15,7 +15,7 @@ use robot_rumble_common::{
 
 mod config;
 
-pub const INPUT_DELAY_TICKS: u16 = 0;
+pub const INPUT_DELAY_TICKS: u16 = 2;
 
 pub struct ClientNetworkPlugin;
 impl Plugin for ClientNetworkPlugin {
