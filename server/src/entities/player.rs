@@ -10,7 +10,10 @@ pub struct ServerPlayerPlugin;
 impl Plugin for ServerPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PreUpdate, replicate_inputs.before(MainSet::EmitEvents))
-            .add_systems(FixedUpdate, server_movement.after(player_physics));
+            .add_systems(
+                FixedUpdate,
+                server_movement.in_set(PlayerSet).after(player_physics),
+            );
     }
 }
 

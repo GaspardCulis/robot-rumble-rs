@@ -37,6 +37,9 @@ pub enum PlayerAction {
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]
 struct InAir;
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct PlayerSet;
+
 #[derive(Bundle)]
 pub struct PlayerBundle {
     name: Name,
@@ -67,7 +70,8 @@ impl PlayerBundle {
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, player_physics.after(PhysicsSet));
+        app.configure_sets(FixedUpdate, PlayerSet.after(PhysicsSet))
+            .add_systems(FixedUpdate, player_physics.in_set(PlayerSet));
     }
 }
 
