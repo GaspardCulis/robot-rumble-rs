@@ -35,6 +35,9 @@ pub enum PlayerAction {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]
+pub struct PlayerSkin(pub String);
+
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]
 struct InAir;
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]

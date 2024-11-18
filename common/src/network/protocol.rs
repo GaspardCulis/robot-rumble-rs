@@ -2,7 +2,7 @@ use crate::core::gravity::{Mass, Passive, Static};
 use crate::core::physics::{Position, Rotation, Velocity};
 use crate::core::worldgen::GenerationSeed;
 use crate::entities::planet::{Planet, Radius};
-use crate::entities::player::{Player, PlayerAction, PlayerInputVelocity};
+use crate::entities::player::{Player, PlayerAction, PlayerInputVelocity, PlayerSkin};
 use bevy::prelude::*;
 use lightyear::client::components::ComponentSyncMode;
 use lightyear::prelude::*;
@@ -13,7 +13,7 @@ pub struct ProtocolPlugin;
 // This will make sure that they will be replicated in the same message and that all the entities in the group
 // will always be consistent (= on the same tick)
 pub const PLAYER_REPLICATION_GROUP: ReplicationGroup = ReplicationGroup::new_id(1);
-pub const PROTOCOL_ID: u64 = 4;
+pub const PROTOCOL_ID: u64 = 5;
 
 impl Plugin for ProtocolPlugin {
     fn build(&self, app: &mut App) {
@@ -47,6 +47,9 @@ impl Plugin for ProtocolPlugin {
         app.register_component::<Player>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once)
             .add_interpolation(ComponentSyncMode::Once);
+
+        app.register_component::<PlayerSkin>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
 
         app.register_component::<PlayerInputVelocity>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Full)
