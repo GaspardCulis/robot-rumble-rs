@@ -15,7 +15,7 @@ struct AnimationsConfig {
     idle: Animation,
     run: Animation,
     jump: Animation,
-    in_air: Animation,
+    fall: Animation,
 }
 
 #[derive(serde::Deserialize)]
@@ -34,7 +34,7 @@ struct SkinAnimationsHandle {
     pub idle: Handle<Image>,
     pub run: Handle<Image>,
     pub jump: Handle<Image>,
-    pub in_air: Handle<Image>,
+    pub fall: Handle<Image>,
 }
 
 pub struct SkinPlugin;
@@ -69,7 +69,7 @@ fn load_skin_on_player(
                     idle: asset_server.load(&skin.idle.spritesheet),
                     run: asset_server.load(&skin.run.spritesheet),
                     jump: asset_server.load(&skin.jump.spritesheet),
-                    in_air: asset_server.load(&skin.in_air.spritesheet),
+                    fall: asset_server.load(&skin.fall.spritesheet),
                 };
                 let target_anim = &skin.idle;
 

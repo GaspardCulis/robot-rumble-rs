@@ -18,7 +18,7 @@
             spritesheet: "skins/laika/idle.png",
             frame_duration: 0.1,
         ),
-        in_air: (
+        fall: (
             rows: 1,
             columns: 6,
             spritesheet: "skins/laika/idle.png",
