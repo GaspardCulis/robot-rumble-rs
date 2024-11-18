@@ -1,0 +1,28 @@
+({
+    "laika": (
+        idle: (
+            rows: 1,
+            columns: 6,
+            spritesheet: "skins/laika/idle.png",
+            frame_duration: 0.1,
+        ),
+        run: (
+            rows: 1,
+            columns: 6,
+            spritesheet: "skins/laika/idle.png",
+            frame_duration: 0.1,
+        ),
+        jump: (
+            rows: 1,
+            columns: 6,
+            spritesheet: "skins/laika/idle.png",
+            frame_duration: 0.1,
+        ),
+        in_air: (
+            rows: 1,
+            columns: 6,
+            spritesheet: "skins/laika/idle.png",
+            frame_duration: 0.1,
+        ),
+    ),
+})

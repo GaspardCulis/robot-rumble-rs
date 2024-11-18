@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_asset_loader::prelude::*;
 use leafwing_input_manager::prelude::*;
 
 use lightyear::prelude::client::*;
@@ -13,16 +12,12 @@ use robot_rumble_common::entities::player::*;
 use crate::core::camera::CameraFollowTarget;
 use crate::network;
 
-#[derive(AssetCollection, Resource)]
-struct PlayerAssets {
-    #[asset(path = "img/player.png")]
-    player: Handle<Image>,
-}
+mod skin;
 
 pub struct ClientPlayerPlugin;
 impl Plugin for ClientPlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.init_collection::<PlayerAssets>()
+        app.add_plugins(skin::SkinPlugin)
             .add_systems(
                 PreUpdate,
                 handle_new_player
@@ -39,7 +34,6 @@ impl Plugin for ClientPlayerPlugin {
 fn handle_new_player(
     mut commands: Commands,
     player_query: Query<(Entity, Has<Controlled>), (Added<Predicted>, With<Player>)>,
-    sprite: Res<PlayerAssets>,
 ) {
     for (player_entity, is_controlled) in player_query.iter() {
         let mut player_commands = commands.entity(player_entity);
@@ -63,21 +57,14 @@ fn handle_new_player(
             info!("Remote player replicated to us: {player_entity:?}");
         }
 
-        player_commands.insert((
-            Name::new(format!(
-                "{} Player",
-                if is_controlled {
-                    "Controlled"
-                } else {
-                    "Remote"
-                }
-            )),
-            SpriteBundle {
-                texture: sprite.player.clone(),
-                transform: Transform::from_scale(Vec3::splat(0.2)),
-                ..default()
-            },
-        ));
+        player_commands.insert(Name::new(format!(
+            "{} Player",
+            if is_controlled {
+                "Controlled"
+            } else {
+                "Remote"
+            }
+        )));
     }
 }
 
