@@ -23,7 +23,7 @@ pub const PLAYER_RADIUS: f32 = 16.;
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Player(ClientId);
 
-#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect, Deref)]
 pub struct PlayerInputVelocity(Vec2);
 
 #[derive(Actionlike, Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
@@ -38,7 +38,7 @@ pub enum PlayerAction {
 pub struct PlayerSkin(pub String);
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]
-struct InAir;
+pub struct InAir;
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PlayerSet;
