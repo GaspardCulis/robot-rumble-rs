@@ -7,6 +7,8 @@ use robot_rumble_common::entities::player::{Player, PlayerSkin};
 
 use crate::utils::spritesheet;
 
+pub const PLAYER_SKIN_SCALE: f32 = 3.;
+
 #[derive(serde::Deserialize, Asset, TypePath, Deref)]
 struct SkinsConfig(HashMap<String, AnimationsConfig>);
 
@@ -30,11 +32,18 @@ struct Animation {
 struct SkinConfigHandle(pub Handle<SkinsConfig>);
 
 #[derive(Component)]
-struct SkinAnimationsHandle {
-    pub idle: Handle<Image>,
-    pub run: Handle<Image>,
-    pub jump: Handle<Image>,
-    pub fall: Handle<Image>,
+pub struct SkinAnimationsHandle {
+    pub idle: AnimationHandle,
+    pub run: AnimationHandle,
+    pub jump: AnimationHandle,
+    pub fall: AnimationHandle,
+}
+
+pub struct AnimationHandle {
+    pub texture: Handle<Image>,
+    pub atlas_layout: Handle<TextureAtlasLayout>,
+    pub indices: spritesheet::AnimationIndices,
+    pub timer: spritesheet::AnimationTimer,
 }
 
 pub struct SkinPlugin;
@@ -62,45 +71,37 @@ fn load_skin_on_player(
     asset_server: Res<AssetServer>,
 ) {
     for (player_entity, player_skin) in query.iter() {
-        info!("Loading skin animations");
+        info!("Loading skin animations for {:?}", player_entity);
         if let Some(skin_config) = skins_config.get(config_handle.0.id()) {
             if let Some(skin) = skin_config.get(&player_skin.0) {
                 let animations_handle = SkinAnimationsHandle {
-                    idle: asset_server.load(&skin.idle.spritesheet),
-                    run: asset_server.load(&skin.run.spritesheet),
-                    jump: asset_server.load(&skin.jump.spritesheet),
-                    fall: asset_server.load(&skin.fall.spritesheet),
+                    idle: skin
+                        .idle
+                        .build_handle(&asset_server, &mut texture_atlas_layouts),
+                    run: skin
+                        .run
+                        .build_handle(&asset_server, &mut texture_atlas_layouts),
+                    jump: skin
+                        .jump
+                        .build_handle(&asset_server, &mut texture_atlas_layouts),
+                    fall: skin
+                        .fall
+                        .build_handle(&asset_server, &mut texture_atlas_layouts),
                 };
-                let target_anim = &skin.idle;
+                let default_anim = &animations_handle.idle;
 
-                let layout = TextureAtlasLayout::from_grid(
-                    UVec2::splat(32),
-                    target_anim.columns,
-                    target_anim.rows,
-                    None,
-                    None,
-                );
-                let texture_atlas_layout = texture_atlas_layouts.add(layout);
-                let indices = spritesheet::AnimationIndices {
-                    first: 0,
-                    last: (target_anim.columns * target_anim.rows - 1) as usize,
-                };
-                let timer = spritesheet::AnimationTimer(Timer::from_seconds(
-                    target_anim.frame_duration,
-                    TimerMode::Repeating,
-                ));
                 commands.entity(player_entity).insert((
                     SpriteBundle {
-                        transform: Transform::from_scale(Vec3::splat(3.0)),
-                        texture: animations_handle.idle.clone(),
+                        transform: Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE)),
+                        texture: default_anim.texture.clone(),
                         ..default()
                     },
                     TextureAtlas {
-                        layout: texture_atlas_layout,
-                        index: indices.first,
+                        layout: default_anim.atlas_layout.clone(),
+                        index: default_anim.indices.first,
                     },
-                    indices,
-                    timer,
+                    default_anim.indices.clone(),
+                    default_anim.timer.clone(),
                     animations_handle,
                 ));
             } else {
@@ -108,6 +109,34 @@ fn load_skin_on_player(
             };
         } else {
             warn!("Skin config not loaded yet");
+        }
+    }
+}
+
+impl Animation {
+    fn build_handle(
+        &self,
+        asset_server: &Res<AssetServer>,
+        texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
+    ) -> AnimationHandle {
+        let texture = asset_server.load(self.spritesheet.clone());
+        let layout =
+            TextureAtlasLayout::from_grid(UVec2::splat(32), self.columns, self.rows, None, None);
+        let atlas_layout = texture_atlas_layouts.add(layout);
+        let indices = spritesheet::AnimationIndices {
+            first: 0,
+            last: (self.columns * self.rows - 1) as usize,
+        };
+        let timer = spritesheet::AnimationTimer(Timer::from_seconds(
+            self.frame_duration,
+            TimerMode::Repeating,
+        ));
+
+        AnimationHandle {
+            texture,
+            atlas_layout,
+            indices,
+            timer,
         }
     }
 }

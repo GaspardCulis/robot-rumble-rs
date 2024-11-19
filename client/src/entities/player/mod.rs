@@ -12,12 +12,14 @@ use robot_rumble_common::entities::player::*;
 use crate::core::camera::CameraFollowTarget;
 use crate::network;
 
+mod animation;
 mod skin;
 
 pub struct ClientPlayerPlugin;
 impl Plugin for ClientPlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(skin::SkinPlugin)
+            .add_plugins(animation::PlayerAnimationPlugin)
             .add_systems(
                 PreUpdate,
                 handle_new_player
