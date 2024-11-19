@@ -8,21 +8,21 @@
         ),
         run: (
             rows: 1,
-            columns: 6,
-            spritesheet: "skins/laika/idle.png",
-            frame_duration: 0.1,
+            columns: 8,
+            spritesheet: "skins/laika/run.png",
+            frame_duration: 0.0625,
         ),
         jump: (
             rows: 1,
-            columns: 6,
-            spritesheet: "skins/laika/idle.png",
+            columns: 3,
+            spritesheet: "skins/laika/jump.png",
             frame_duration: 0.1,
         ),
         fall: (
             rows: 1,
             columns: 6,
-            spritesheet: "skins/laika/idle.png",
-            frame_duration: 0.1,
+            spritesheet: "skins/laika/fall.png",
+            frame_duration: 0.125,
         ),
     ),
 })
