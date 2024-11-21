@@ -1,0 +1,107 @@
+use bevy::prelude::*;
+use leafwing_input_manager::prelude::ActionState;
+use lightyear::prelude::client::Predicted;
+use robot_rumble_common::entities::player::{InAir, Player, PlayerAction};
+
+use crate::utils::spritesheet;
+
+use super::skin::{SkinAnimationsHandle, PLAYER_SKIN_SCALE};
+
+#[derive(Component, Reflect, Default, PartialEq, Eq)]
+pub enum PlayerAnimationState {
+    #[default]
+    Idle,
+    Run,
+    Jump,
+    Fall,
+}
+
+pub struct PlayerAnimationPlugin;
+impl Plugin for PlayerAnimationPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<PlayerAnimationState>().add_systems(
+            Update,
+            (
+                add_animation_state_on_player,
+                update_sprite_texture,
+                update_animation_state,
+                update_orientation,
+            )
+                .chain(),
+        );
+    }
+}
+
+fn add_animation_state_on_player(
+    mut commands: Commands,
+    query: Query<Entity, (Added<Predicted>, With<Player>)>,
+) {
+    for player_entity in query.iter() {
+        commands
+            .entity(player_entity)
+            .insert(PlayerAnimationState::default());
+    }
+}
+
+fn update_sprite_texture(
+    mut query: Query<
+        (
+            &PlayerAnimationState,
+            &SkinAnimationsHandle,
+            &mut Handle<Image>,
+            &mut TextureAtlas,
+            &mut spritesheet::AnimationIndices,
+            &mut spritesheet::AnimationTimer,
+        ),
+        Changed<PlayerAnimationState>,
+    >,
+) {
+    for (state, animations, mut texture, mut atlas, mut indices, mut timer) in query.iter_mut() {
+        let anim_handle = match state {
+            PlayerAnimationState::Idle => &animations.idle,
+            PlayerAnimationState::Run => &animations.run,
+            PlayerAnimationState::Jump => &animations.jump,
+            PlayerAnimationState::Fall => &animations.fall,
+        };
+        *texture = anim_handle.texture.clone();
+        *indices = anim_handle.indices.clone();
+        *timer = anim_handle.timer.clone();
+        atlas.layout = anim_handle.atlas_layout.clone();
+        atlas.index = 0;
+    }
+}
+
+fn update_animation_state(
+    mut query: Query<
+        (
+            &mut PlayerAnimationState,
+            &ActionState<PlayerAction>,
+            Has<InAir>,
+        ),
+        With<Player>,
+    >,
+) {
+    for (mut state, inputs, in_air) in query.iter_mut() {
+        let new_state = if in_air {
+            PlayerAnimationState::Fall
+        } else if inputs.pressed(&PlayerAction::Right) || inputs.pressed(&PlayerAction::Left) {
+            PlayerAnimationState::Run
+        } else {
+            PlayerAnimationState::Idle
+        };
+
+        if new_state != *state {
+            *state = new_state;
+        }
+    }
+}
+
+fn update_orientation(mut query: Query<(&mut Transform, &ActionState<PlayerAction>)>) {
+    for (mut transform, inputs) in query.iter_mut() {
+        if inputs.just_pressed(&PlayerAction::Right) {
+            transform.scale.x = PLAYER_SKIN_SCALE;
+        } else if inputs.just_pressed(&PlayerAction::Left) {
+            transform.scale.x = -PLAYER_SKIN_SCALE;
+        }
+    }
+}

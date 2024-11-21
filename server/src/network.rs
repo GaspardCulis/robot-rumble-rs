@@ -71,6 +71,7 @@ fn handle_connections(
                         * 240.,
                 ),
             ),
+            player::PlayerSkin("laika".into()),
             ActionState::<player::PlayerAction>::default(),
             replicate,
         ));
