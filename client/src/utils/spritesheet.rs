@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Reflect, Clone)]
 pub struct AnimationIndices {
     pub first: usize,
     pub last: usize,
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Clone, Deref, DerefMut)]
 pub struct AnimationTimer(pub Timer);
 
 fn animate_sprite(
@@ -29,6 +29,7 @@ pub struct AnimatedSpritePlugin;
 
 impl Plugin for AnimatedSpritePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, animate_sprite);
+        app.register_type::<AnimationIndices>()
+            .add_systems(Update, animate_sprite);
     }
 }
