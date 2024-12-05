@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -44,6 +44,7 @@ pub struct AnimationHandle {
     pub atlas_layout: Handle<TextureAtlasLayout>,
     pub indices: spritesheet::AnimationIndices,
     pub timer: spritesheet::AnimationTimer,
+    pub duration: Duration,
 }
 
 pub struct SkinPlugin;
@@ -131,12 +132,15 @@ impl Animation {
             self.frame_duration,
             TimerMode::Repeating,
         ));
+        let duration =
+            Duration::from_secs_f32(self.frame_duration * (self.columns * self.rows) as f32);
 
         AnimationHandle {
             texture,
             atlas_layout,
             indices,
             timer,
+            duration,
         }
     }
 }
