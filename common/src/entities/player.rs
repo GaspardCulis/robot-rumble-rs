@@ -18,7 +18,7 @@ use super::planet::{Planet, Radius};
 // TODO: Move to config file
 pub const PLAYER_MASS: u32 = 800;
 pub const PLAYER_VELOCITY: f32 = 600.;
-pub const PLAYER_RADIUS: f32 = 16.;
+pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Player(ClientId);
