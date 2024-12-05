@@ -8,11 +8,11 @@ use crate::utils::spritesheet;
 use super::skin::{SkinAnimationsHandle, PLAYER_SKIN_SCALE};
 
 #[derive(Component, Reflect, Default, PartialEq, Eq)]
-pub enum PlayerAnimationState {
+enum PlayerAnimationState {
     #[default]
     Idle,
     Run,
-    Jump,
+    Jump(Timer),
     Fall,
 }
 
@@ -60,7 +60,7 @@ fn update_sprite_texture(
         let anim_handle = match state {
             PlayerAnimationState::Idle => &animations.idle,
             PlayerAnimationState::Run => &animations.run,
-            PlayerAnimationState::Jump => &animations.jump,
+            PlayerAnimationState::Jump(_) => &animations.jump,
             PlayerAnimationState::Fall => &animations.fall,
         };
         *texture = anim_handle.texture.clone();
@@ -75,15 +75,31 @@ fn update_animation_state(
     mut query: Query<
         (
             &mut PlayerAnimationState,
+            &SkinAnimationsHandle,
             &ActionState<PlayerAction>,
             Has<InAir>,
         ),
         With<Player>,
     >,
+    time: Res<Time>,
 ) {
-    for (mut state, inputs, in_air) in query.iter_mut() {
+    for (mut state, anims, inputs, in_air) in query.iter_mut() {
+        match state.bypass_change_detection() {
+            PlayerAnimationState::Jump(timer) => {
+                timer.tick(time.delta());
+                if !timer.just_finished() {
+                    // Let animation finish
+                    continue;
+                }
+            }
+            _ => (),
+        };
+
         let new_state = if in_air {
             PlayerAnimationState::Fall
+        } else if inputs.just_pressed(&PlayerAction::Jump) {
+            let timer = Timer::new(anims.jump.duration, TimerMode::Once);
+            PlayerAnimationState::Jump(timer)
         } else if inputs.pressed(&PlayerAction::Right) || inputs.pressed(&PlayerAction::Left) {
             PlayerAnimationState::Run
         } else {

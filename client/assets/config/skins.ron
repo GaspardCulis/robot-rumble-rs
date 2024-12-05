@@ -16,7 +16,7 @@
             rows: 1,
             columns: 3,
             spritesheet: "skins/laika/jump.png",
-            frame_duration: 0.1,
+            frame_duration: 0.04,
         ),
         fall: (
             rows: 1,
