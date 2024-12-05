@@ -1,2 +1,0 @@
-[keys.normal]
-backspace = { r = ":sh cargo run --features bevy/dynamic_linking" }
