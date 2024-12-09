@@ -3,11 +3,12 @@ use client::is_in_rollback;
 use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::*;
 
-pub const BULLET_SPEED: f32 = 600.;
+pub const BULLET_SPEED: f32 = 1200.;
+pub const BULLET_MASS: u32 = 20;
 
 use crate::{
     core::{
-        gravity::Mass,
+        gravity::{Mass, Passive},
         physics::{Position, Velocity},
     },
     network::protocol::PLAYER_REPLICATION_GROUP,
@@ -28,6 +29,7 @@ pub struct BulletBundle {
     pub position: Position,
     pub velocity: Velocity,
     pub mass: Mass,
+    pub passive: Passive,
 }
 
 impl BulletBundle {
@@ -35,8 +37,9 @@ impl BulletBundle {
         Self {
             name: Name::new("Bullet"),
             marker: Bullet,
-            mass: Mass(5),
             velocity: Velocity(direction * BULLET_SPEED),
+            mass: Mass(BULLET_MASS),
+            passive: Passive,
             position,
         }
     }
