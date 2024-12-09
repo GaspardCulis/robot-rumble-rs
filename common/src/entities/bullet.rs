@@ -23,29 +23,6 @@ use super::{
 #[derive(Component)]
 pub struct Bullet;
 
-#[derive(Bundle)]
-pub struct BulletBundle {
-    pub name: Name,
-    pub marker: Bullet,
-    pub position: Position,
-    pub velocity: Velocity,
-    pub mass: Mass,
-    pub passive: Passive,
-}
-
-impl BulletBundle {
-    fn new(position: Position, direction: Vec2) -> Self {
-        Self {
-            name: Name::new("Bullet"),
-            marker: Bullet,
-            velocity: Velocity(direction * BULLET_SPEED),
-            mass: Mass(BULLET_MASS),
-            passive: Passive,
-            position,
-        }
-    }
-}
-
 pub struct BulletPlugin;
 impl Plugin for BulletPlugin {
     fn build(&self, app: &mut App) {
@@ -76,18 +53,34 @@ fn shoot_bullet(
     tick_manager: Res<TickManager>,
     identity: NetworkIdentity,
     mut query: Query<
-        (&Player, &Position, &mut ActionState<PlayerAction>),
+        (
+            &Player,
+            &Position,
+            &Velocity,
+            &mut ActionState<PlayerAction>,
+        ),
         Or<(With<client::Predicted>, With<ReplicationTarget>)>,
     >,
 ) {
     let tick = tick_manager.tick();
-    for (player, position, action) in query.iter_mut() {
+    for (player, player_position, player_velocity, action) in query.iter_mut() {
         if let Some(axis_data) = action.dual_axis_data(&PlayerAction::Shoot) {
             if axis_data.update_pair.length() > 0.8 {
                 let mut rng = StdRng::seed_from_u64(tick.0 as u64);
                 let random_angle = Vec2::from_angle(rng.gen_range(-0.04..0.04));
-                let bullet =
-                    BulletBundle::new(position.clone(), axis_data.update_pair.rotate(random_angle));
+
+                let bullet = (
+                    Bullet,
+                    Name::new("Bullet"),
+                    Position(player_position.0),
+                    Velocity(
+                        axis_data.update_pair.rotate(random_angle) * BULLET_SPEED
+                            + player_velocity.0,
+                    ),
+                    Mass(BULLET_MASS),
+                    Passive,
+                );
+
                 if identity.is_server() {
                     commands.spawn((
                         bullet,
