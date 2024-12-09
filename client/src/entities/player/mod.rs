@@ -132,7 +132,6 @@ fn handle_shoot_click(
     let window = windows.single();
     let (camera, view) = query_view.single();
     let Ok((player_world_pos, mut action_state)) = player_query.get_single_mut() else {
-        warn!("Action state not found");
         return;
     };
     if let Some(world_position) = window
