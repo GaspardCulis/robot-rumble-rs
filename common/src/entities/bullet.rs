@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use client::is_in_rollback;
 use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::*;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 
 pub const BULLET_SPEED: f32 = 1200.;
 pub const BULLET_MASS: u32 = 20;
@@ -79,12 +80,14 @@ fn shoot_bullet(
         Or<(With<client::Predicted>, With<ReplicationTarget>)>,
     >,
 ) {
-    let _tick = tick_manager.tick();
+    let tick = tick_manager.tick();
     for (player, position, action) in query.iter_mut() {
         if let Some(axis_data) = action.dual_axis_data(&PlayerAction::Shoot) {
             if axis_data.update_pair.length() > 0.8 {
-                let bullet = BulletBundle::new(position.clone(), axis_data.update_pair);
-                println!("Pew");
+                let mut rng = StdRng::seed_from_u64(tick.0 as u64);
+                let random_angle = Vec2::from_angle(rng.gen_range(-0.04..0.04));
+                let bullet =
+                    BulletBundle::new(position.clone(), axis_data.update_pair.rotate(random_angle));
                 if identity.is_server() {
                     commands.spawn((
                         bullet,
