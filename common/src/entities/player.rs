@@ -21,7 +21,7 @@ pub const PLAYER_VELOCITY: f32 = 600.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct Player(ClientId);
+pub struct Player(pub ClientId);
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect, Deref)]
 pub struct PlayerInputVelocity(Vec2);
@@ -32,6 +32,7 @@ pub enum PlayerAction {
     Sneak,
     Left,
     Right,
+    #[actionlike(DualAxis)]
     Shoot,
 }
 

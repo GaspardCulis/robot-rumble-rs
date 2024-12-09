@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use leafwing_input_manager::plugin::InputManagerSystem;
 use leafwing_input_manager::prelude::*;
 
 use lightyear::prelude::client::*;
@@ -27,6 +28,10 @@ impl Plugin for ClientPlayerPlugin {
                     .before(PredictionSet::SpawnPrediction),
             )
             .add_systems(
+                PreUpdate,
+                handle_shoot_click.after(InputManagerSystem::ManualControl),
+            )
+            .add_systems(
                 FixedUpdate,
                 client_movement.in_set(PlayerSet).after(player_physics),
             );
@@ -53,7 +58,7 @@ fn handle_new_player(
                 (PlayerAction::Right, KeyCode::KeyD),
                 (PlayerAction::Left, KeyCode::KeyA),
             ])
-            .with(PlayerAction::Shoot, MouseButton::Left);
+            .with_dual_axis(PlayerAction::Shoot, GamepadStick::RIGHT);
 
             player_commands.insert((input_map, CameraFollowTarget));
         } else {
@@ -114,6 +119,31 @@ fn client_movement(
             // no inputs in the buffer yet, can happen during initial connection.
             // apply the default input (ie, nothing pressed)
             movement_behaviour(action_state, &mut saiq, tick);
+        }
+    }
+}
+
+fn handle_shoot_click(
+    windows: Query<&Window>,
+    query_view: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
+    mouse: Res<ButtonInput<MouseButton>>,
+    mut player_query: Query<(&GlobalTransform, &mut ActionState<PlayerAction>), With<Predicted>>,
+) {
+    let window = windows.single();
+    let (camera, view) = query_view.single();
+    let Ok((player_world_pos, mut action_state)) = player_query.get_single_mut() else {
+        warn!("Action state not found");
+        return;
+    };
+    if let Some(world_position) = window
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(view, cursor))
+        .map(|ray| ray.origin.truncate())
+    {
+        if mouse.pressed(MouseButton::Left) {
+            let shoot_direction =
+                (world_position - player_world_pos.translation().xy()).normalize();
+            action_state.set_axis_pair(&PlayerAction::Shoot, shoot_direction);
         }
     }
 }
