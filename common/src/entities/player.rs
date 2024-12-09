@@ -32,6 +32,7 @@ pub enum PlayerAction {
     Sneak,
     Left,
     Right,
+    Shoot,
 }
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]

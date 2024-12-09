@@ -52,7 +52,8 @@ fn handle_new_player(
                 // Directions
                 (PlayerAction::Right, KeyCode::KeyD),
                 (PlayerAction::Left, KeyCode::KeyA),
-            ]);
+            ])
+            .with(PlayerAction::Shoot, MouseButton::Left);
 
             player_commands.insert((input_map, CameraFollowTarget));
         } else {
