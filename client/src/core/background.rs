@@ -13,7 +13,8 @@ pub struct BackgroundPlugin;
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(Material2dPlugin::<StarsMaterial>::default())
-            .add_systems(Startup, setup);
+            .add_systems(Startup, setup)
+            .add_systems(Update, scale_and_center);
     }
 }
 
@@ -72,10 +73,34 @@ fn setup(
             transform: Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
                 x: 0.,
                 y: 0.,
-                z: 0.,
+                z: -10.,
             }),
             material,
             ..default()
         },
     ));
+}
+
+fn scale_and_center(
+    mut query: Query<&mut Transform, (With<Background>, Without<Camera2d>)>,
+    window: Query<&Window>,
+    camera: Query<&Transform, With<Camera2d>>,
+) {
+    if window.is_empty() || camera.is_empty() {
+        return;
+    }
+
+    let window = window.single();
+    let camera = camera.single();
+    for mut bg_transform in query.iter_mut() {
+        let scale = if window.width() > window.height() {
+            window.width()
+        } else {
+            window.height()
+        };
+
+        bg_transform.translation.x = camera.translation.x;
+        bg_transform.translation.y = camera.translation.y;
+        bg_transform.scale = Vec3::splat(scale);
+    }
 }
