@@ -110,9 +110,23 @@ fn setup(
             transform: Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
                 x: 0.,
                 y: 0.,
-                z: -10.,
+                z: -11.,
             }),
             material: nebulae,
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        Background,
+        MaterialMesh2dBundle {
+            mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
+            transform: Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
+                x: 0.,
+                y: 0.,
+                z: -10.,
+            }),
+            material: stars,
             ..default()
         },
     ));
