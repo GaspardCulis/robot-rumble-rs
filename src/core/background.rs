@@ -12,7 +12,8 @@ struct Background;
 pub struct BackgroundPlugin;
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(Material2dPlugin::<StarsMaterial>::default())
+        app.add_plugins(Material2dPlugin::<NebulaeMaterial>::default())
+            .add_plugins(Material2dPlugin::<StarsMaterial>::default())
             .add_systems(Startup, setup)
             .add_systems(Update, scale_and_center);
     }
@@ -41,10 +42,36 @@ impl Material2d for StarsMaterial {
     }
 }
 
+#[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
+struct NebulaeMaterial {
+    #[uniform(0)]
+    pub size: f32,
+    #[uniform(0)]
+    pub octaves: i32,
+    #[uniform(0)]
+    pub seed: f32,
+    #[uniform(0)]
+    pub pixels: f32,
+    #[uniform(0)]
+    pub uv_correct: Vec2,
+    #[uniform(0)]
+    pub background_color: LinearRgba,
+    #[texture(1)]
+    #[sampler(2)]
+    colorscheme_texture: Option<Handle<Image>>,
+}
+
+impl Material2d for NebulaeMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/background/nebulae.wgsl".into()
+    }
+}
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StarsMaterial>>,
+    mut star_materials: ResMut<Assets<StarsMaterial>>,
+    mut nebulae_materials: ResMut<Assets<NebulaeMaterial>>,
     mut images: ResMut<Assets<Image>>,
 ) {
     let colorscheme = images.add(gradient(
@@ -57,12 +84,22 @@ fn setup(
         .collect(),
     ));
 
-    let material = materials.add(StarsMaterial {
+    let stars = star_materials.add(StarsMaterial {
         size: 10.0,
         octaves: 8,
         seed: 69.42,
         pixels: 500.0,
         uv_correct: Vec2::ONE,
+        colorscheme_texture: Some(colorscheme.clone_weak()),
+    });
+
+    let nebulae = nebulae_materials.add(NebulaeMaterial {
+        size: 8.0,
+        octaves: 8,
+        seed: 69.42,
+        pixels: 500.0,
+        uv_correct: Vec2::ONE,
+        background_color: Srgba::hex("#171711").unwrap().into(),
         colorscheme_texture: Some(colorscheme),
     });
 
@@ -75,7 +112,7 @@ fn setup(
                 y: 0.,
                 z: -10.,
             }),
-            material,
+            material: nebulae,
             ..default()
         },
     ));
