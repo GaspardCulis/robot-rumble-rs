@@ -15,9 +15,6 @@ struct BackgroundStarsMaterial {
 
 fn rand(p_coord: vec2<f32>, tilesize: f32) -> f32 {
     var coord = p_coord;
-	// if (bg_stars.should_tile) {
-	// 	coord = modf( coord / bg_stars.uv_correct, tilesize );
-	// }
 
 	return fract(sin(dot(coord, vec2<f32>(12.9898,78.233))) * (15.5453 + bg_stars.seed));
 }
@@ -56,9 +53,6 @@ fn dither(uv1: vec2<f32>, uv2: vec2<f32>) -> bool {
 
 fn circleNoise(p_uv: vec2<f32>, tilesize: f32) -> f32 {
     var uv = p_uv;
-	// if (bg_stars.should_tile) {
-	// 	uv = modf(uv, tilesize);
-	// }
 	
     let uv_y = floor(uv.y);
     uv.x += uv_y*.31;
@@ -113,11 +107,6 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 	if (dith) {
 		n_dust_lerp *= 1.1;
 	}
-	
-	// choose & apply colors
-	// if (bg_stars.reduce_background) {
-	// 	n_dust_lerp = pow(n_dust_lerp, 0.8) * 0.7;
-	// }
 	
 	let col_value = floor(n_dust_lerp) / 7.0;
 	let col = textureSample(material_colorscheme_texture, material_colorscheme_sampler, vec2<f32>(col_value, 0.0));
