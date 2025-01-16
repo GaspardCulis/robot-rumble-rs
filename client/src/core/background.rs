@@ -27,8 +27,6 @@ struct StarsMaterial {
     pub seed: f32,
     #[uniform(0)]
     pub pixels: f32,
-    // pub should_tile: bool,
-    // pub reduce_background: bool,
     #[uniform(0)]
     pub uv_correct: Vec2,
     #[texture(1)]
@@ -63,8 +61,6 @@ fn setup(
         octaves: 8,
         seed: 69.42,
         pixels: 500.0,
-        // should_tile: false,
-        // reduce_background: false,
         uv_correct: Vec2::ONE,
         colorscheme_texture: Some(colorscheme),
     });
