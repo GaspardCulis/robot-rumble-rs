@@ -1,6 +1,7 @@
 use crate::core::gravity::{Mass, Passive, Static};
 use crate::core::physics::{Position, Rotation, Velocity};
 use crate::core::worldgen::GenerationSeed;
+use crate::entities::bullet::Bullet;
 use crate::entities::planet::{Planet, Radius};
 use crate::entities::player::{Player, PlayerAction, PlayerInputVelocity, PlayerSkin};
 use bevy::prelude::*;
@@ -63,6 +64,11 @@ impl Plugin for ProtocolPlugin {
 
         app.register_component::<Radius>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once);
+
+        // Bullet
+        app.register_component::<Bullet>(ChannelDirection::Bidirectional)
+            .add_prediction(ComponentSyncMode::Once)
+            .add_interpolation(ComponentSyncMode::Once);
 
         // Worldgen
         app.register_component::<GenerationSeed>(ChannelDirection::ServerToClient)
