@@ -127,7 +127,10 @@ fn handle_shoot_click(
     windows: Query<&Window>,
     query_view: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     mouse: Res<ButtonInput<MouseButton>>,
-    mut player_query: Query<(&GlobalTransform, &mut ActionState<PlayerAction>), With<Predicted>>,
+    mut player_query: Query<
+        (&GlobalTransform, &mut ActionState<PlayerAction>),
+        (With<Controlled>, With<Player>),
+    >,
 ) {
     let window = windows.single();
     let (camera, view) = query_view.single();
