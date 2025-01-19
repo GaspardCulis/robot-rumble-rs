@@ -7,12 +7,9 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 pub const BULLET_SPEED: f32 = 1200.;
 pub const BULLET_MASS: u32 = 20;
 
-use crate::{
-    core::{
-        gravity::{Mass, Passive},
-        physics::{Position, Velocity},
-    },
-    network::protocol::PLAYER_REPLICATION_GROUP,
+use crate::core::{
+    gravity::{Mass, Passive},
+    physics::{Position, Velocity},
 };
 
 use super::{
@@ -20,7 +17,7 @@ use super::{
     player::{Player, PlayerAction},
 };
 
-#[derive(Component)]
+#[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Bullet;
 
 pub struct BulletPlugin;
@@ -35,7 +32,20 @@ impl Plugin for BulletPlugin {
 
 fn check_collisions(
     mut commands: Commands,
-    bullet_query: Query<(Entity, &Position), With<Bullet>>,
+    bullet_query: Query<
+        (Entity, &Position),
+        (
+            With<Bullet>,
+            Or<(
+                // move predicted bullets
+                With<client::Predicted>,
+                // move server entities
+                With<ReplicationTarget>,
+                // move prespawned bullets
+                With<PreSpawnedPlayerObject>,
+            )>,
+        ),
+    >,
     planet_query: Query<(&Position, &Radius)>,
 ) {
     for (bullet, bullet_position) in bullet_query.iter() {
@@ -92,8 +102,6 @@ fn shoot_bullet(
                                 // the bullet is interpolated for other clients
                                 interpolation: NetworkTarget::AllExceptSingle(player.0),
                             },
-                            // NOTE: all predicted entities need to have the same replication group
-                            group: PLAYER_REPLICATION_GROUP,
                             ..default()
                         },
                     ));
