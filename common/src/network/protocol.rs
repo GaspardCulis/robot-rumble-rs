@@ -66,7 +66,7 @@ impl Plugin for ProtocolPlugin {
             .add_prediction(ComponentSyncMode::Once);
 
         // Bullet
-        app.register_component::<Bullet>(ChannelDirection::Bidirectional)
+        app.register_component::<Bullet>(ChannelDirection::ServerToClient)
             .add_prediction(ComponentSyncMode::Once)
             .add_interpolation(ComponentSyncMode::Once);
 
