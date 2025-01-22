@@ -9,7 +9,7 @@ pub const BULLET_MASS: u32 = 20;
 
 use crate::core::{
     gravity::{Mass, Passive},
-    physics::{Position, Velocity},
+    physics::{Position, Rotation, Velocity},
 };
 
 use super::{
@@ -94,11 +94,11 @@ fn shoot_bullet(
                 if identity.is_server() {
                     commands.spawn((
                         bullet,
-                        PreSpawnedPlayerObject::default(),
+                        PreSpawnedPlayerObject::default_with_salt(player.0.to_bits()),
                         server::Replicate {
                             sync: server::SyncTarget {
                                 // the bullet is predicted for the client who shot it
-                                prediction: NetworkTarget::Single(player.0),
+                                prediction: NetworkTarget::All,
                                 // the bullet is interpolated for other clients
                                 interpolation: NetworkTarget::AllExceptSingle(player.0),
                             },
@@ -106,7 +106,10 @@ fn shoot_bullet(
                         },
                     ));
                 } else {
-                    commands.spawn((bullet, PreSpawnedPlayerObject::default()));
+                    commands.spawn((
+                        bullet,
+                        PreSpawnedPlayerObject::default_with_salt(player.0.to_bits()),
+                    ));
                 }
             }
         }
