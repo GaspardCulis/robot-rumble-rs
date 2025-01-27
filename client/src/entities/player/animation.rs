@@ -48,26 +48,29 @@ fn update_sprite_texture(
         (
             &PlayerAnimationState,
             &SkinAnimationsHandle,
-            &mut Handle<Image>,
-            &mut TextureAtlas,
+            &mut Sprite,
             &mut spritesheet::AnimationIndices,
             &mut spritesheet::AnimationTimer,
         ),
         Changed<PlayerAnimationState>,
     >,
 ) {
-    for (state, animations, mut texture, mut atlas, mut indices, mut timer) in query.iter_mut() {
+    for (state, animations, mut sprite, mut indices, mut timer) in query.iter_mut() {
         let anim_handle = match state {
             PlayerAnimationState::Idle => &animations.idle,
             PlayerAnimationState::Run => &animations.run,
             PlayerAnimationState::Jump(_) => &animations.jump,
             PlayerAnimationState::Fall => &animations.fall,
         };
-        *texture = anim_handle.texture.clone();
+        sprite.image = anim_handle.texture.clone();
         *indices = anim_handle.indices.clone();
         *timer = anim_handle.timer.clone();
-        atlas.layout = anim_handle.atlas_layout.clone();
-        atlas.index = 0;
+        if let Some(atlas) = &mut sprite.texture_atlas {
+            atlas.layout = anim_handle.atlas_layout.clone();
+            atlas.index = 0;
+        } else {
+            warn!("No atlas attached to sprite");
+        }
     }
 }
 
