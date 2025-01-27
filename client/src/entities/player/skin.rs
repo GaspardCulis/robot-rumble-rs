@@ -92,15 +92,14 @@ fn load_skin_on_player(
                 let default_anim = &animations_handle.idle;
 
                 commands.entity(player_entity).insert((
-                    SpriteBundle {
-                        transform: Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE)),
-                        texture: default_anim.texture.clone(),
-                        ..default()
-                    },
-                    TextureAtlas {
-                        layout: default_anim.atlas_layout.clone(),
-                        index: default_anim.indices.first,
-                    },
+                    Sprite::from_atlas_image(
+                        default_anim.texture.clone(),
+                        TextureAtlas {
+                            layout: default_anim.atlas_layout.clone(),
+                            index: default_anim.indices.first,
+                        },
+                    ),
+                    Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE)),
                     default_anim.indices.clone(),
                     default_anim.timer.clone(),
                     animations_handle,
