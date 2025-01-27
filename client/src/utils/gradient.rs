@@ -1,9 +1,9 @@
 use bevy::{
     color::{ColorToComponents, Srgba},
+    image::Image,
     render::{
         render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat},
-        texture::Image,
     },
 };
 
