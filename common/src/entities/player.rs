@@ -161,10 +161,10 @@ pub fn player_physics(
             + PI / 2.;
         let mut short_angle = (target_angle - player_rotation.0) % RAD;
         short_angle = (2. * short_angle) % RAD - short_angle;
-        player_rotation.0 += short_angle * time.delta_seconds() * 6.;
+        player_rotation.0 += short_angle * time.delta_secs() * 6.;
 
         player_position.0 +=
-            Vec2::from_angle(player_rotation.0).rotate(input_velocity.0) * time.delta_seconds();
+            Vec2::from_angle(player_rotation.0).rotate(input_velocity.0) * time.delta_secs();
 
         // Check if collides
         if nearest_distance - PLAYER_RADIUS <= 0. {
