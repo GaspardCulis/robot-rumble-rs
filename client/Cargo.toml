@@ -12,5 +12,5 @@ lightyear = { workspace = true }
 rand = { workspace = true }
 ron = { workspace = true }
 serde = { workspace = true }
-bevy-inspector-egui = "0.26"
-bevy_asset_loader = { version = "0.21", features = ["2d"] }
+bevy-inspector-egui = "0.29"
+bevy_asset_loader = { version = "0.22", features = ["2d"] }
