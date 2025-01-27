@@ -49,6 +49,6 @@ fn camera_movement(
     camera_transform.translation = math::lerp(
         camera_transform.translation,
         Vec3::new(dest.x, dest.y, 0.),
-        time.delta_seconds() * 5.,
+        time.delta_secs() * 5.,
     );
 }
