@@ -63,8 +63,8 @@ impl Plugin for ClientNetworkPlugin {
         app.add_plugins(client::ClientPlugins::new(client_config))
             .add_plugins(client::VisualInterpolationPlugin::<Position>::default())
             .add_plugins(client::VisualInterpolationPlugin::<Rotation>::default())
-            .observe(add_visual_interpolation_components::<Position>)
-            .observe(add_visual_interpolation_components::<Rotation>);
+            .add_observer(add_visual_interpolation_components::<Position>)
+            .add_observer(add_visual_interpolation_components::<Rotation>);
     }
 }
 
