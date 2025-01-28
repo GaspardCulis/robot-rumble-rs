@@ -41,6 +41,10 @@ impl Material2d for LakesMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/lakes.wgsl".into()
     }
+
+    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
+        bevy::sprite::AlphaMode2d::Blend
+    }
 }
 
 impl PlanetMaterial for LakesMaterial {

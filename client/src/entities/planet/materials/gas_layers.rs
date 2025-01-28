@@ -36,6 +36,10 @@ impl Material2d for GasLayersMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/gas_layers.wgsl".into()
     }
+
+    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
+        bevy::sprite::AlphaMode2d::Blend
+    }
 }
 
 impl PlanetMaterial for GasLayersMaterial {

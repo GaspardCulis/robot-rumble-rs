@@ -44,6 +44,6 @@ fn apply_forces(
             force_vec += force * (b_position.0 - a_position.0).normalize();
         }
 
-        a_velocity.0 += (force_vec / a_mass.0 as f32) * time.delta_seconds();
+        a_velocity.0 += (force_vec / a_mass.0 as f32) * time.delta_secs();
     }
 }

@@ -4,7 +4,7 @@ use bevy::{
     asset::load_internal_asset,
     prelude::*,
     reflect::GetTypeRegistration,
-    sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
+    sprite::{Material2d, Material2dPlugin},
 };
 
 mod clouds;
@@ -111,24 +111,19 @@ fn instance_layer_material<M: PlanetMaterial>(
         let mesh_bundle_entity = commands
             .spawn((
                 Name::new(M::short_type_path()),
-                MaterialMesh2dBundle {
-                    mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
-                    transform: Transform::from_scale(Vec3::splat(layer.scale)).with_translation(
-                        Vec3 {
-                            x: 0.,
-                            y: 0.,
-                            z: layer.z_index,
-                        },
-                    ),
-                    material: material.add(M::from_config(common, &layer.config, &mut images)),
-                    ..default()
-                },
+                Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
+                MeshMaterial2d(material.add(M::from_config(common, &layer.config, &mut images))),
+                Transform::from_scale(Vec3::splat(layer.scale)).with_translation(Vec3 {
+                    x: 0.,
+                    y: 0.,
+                    z: layer.z_index,
+                }),
             ))
             .id();
 
         commands
             .entity(entity)
-            .push_children(&[mesh_bundle_entity])
+            .add_children(&[mesh_bundle_entity])
             .remove::<PlanetMaterialLayerInit<M>>();
     }
 }

@@ -115,10 +115,10 @@ fn spawn_config_layers(
 fn add_spacial_bundle(mut commands: Commands, query: Query<(Entity, &Radius), Added<Planet>>) {
     for (planet_entity, radius) in query.iter() {
         let mut planet_commands = commands.entity(planet_entity);
-        planet_commands.insert(SpatialBundle {
-            transform: Transform::from_scale(Vec3::splat((radius * 2).0 as f32)),
-            ..Default::default()
-        });
+        planet_commands.insert((
+            Transform::from_scale(Vec3::splat((radius * 2).0 as f32)),
+            Visibility::Visible,
+        ));
     }
 }
 
