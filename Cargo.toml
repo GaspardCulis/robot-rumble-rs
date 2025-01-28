@@ -3,12 +3,12 @@ resolver = "2"
 members = ["common", "server", "client"]
 
 [workspace.dependencies]
-bevy = { version = "0.14", default-features = false, features = [
+bevy = { version = "0.15", default-features = false, features = [
     "dynamic_linking",
 ] }
-bevy_common_assets = { version = "0.11", features = ["ron"] }
-leafwing-input-manager = "0.15"
-lightyear = { git = "https://github.com/cBournhonesque/lightyear.git", features = [
+bevy_common_assets = { version = "0.12", features = ["ron"] }
+leafwing-input-manager = "0.16"
+lightyear = { version="0.18", features = [
     "leafwing",
 ] }
 rand = "0.8"

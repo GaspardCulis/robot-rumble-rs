@@ -31,7 +31,7 @@ impl Plugin for PhysicsPlugin {
 
 pub fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
     for (mut position, velocity) in query.iter_mut() {
-        position.0 += velocity.0 * time.delta_seconds()
+        position.0 += velocity.0 * time.delta_secs()
     }
 }
 

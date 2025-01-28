@@ -7,15 +7,7 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, |mut commands: Commands| {
-            commands.spawn(Camera2dBundle {
-                camera: Camera {
-                    clear_color: ClearColorConfig::Custom(Color::Srgba(
-                        Srgba::hex("#171711").unwrap(),
-                    )),
-                    ..Default::default()
-                },
-                ..Default::default()
-            });
+            commands.spawn(Camera2d);
         })
         .add_systems(Update, camera_movement);
     }
@@ -49,6 +41,6 @@ fn camera_movement(
     camera_transform.translation = math::lerp(
         camera_transform.translation,
         Vec3::new(dest.x, dest.y, 0.),
-        time.delta_seconds() * 5.,
+        time.delta_secs() * 5.,
     );
 }

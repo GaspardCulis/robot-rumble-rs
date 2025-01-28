@@ -33,6 +33,10 @@ impl Material2d for CratersMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/craters.wgsl".into()
     }
+
+    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
+        bevy::sprite::AlphaMode2d::Blend
+    }
 }
 
 impl PlanetMaterial for CratersMaterial {
