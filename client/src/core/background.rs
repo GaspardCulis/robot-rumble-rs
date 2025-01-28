@@ -1,7 +1,7 @@
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
+    sprite::{Material2d, Material2dPlugin},
 };
 
 use crate::utils::gradient;
@@ -105,30 +105,24 @@ fn setup(
 
     commands.spawn((
         Background,
-        MaterialMesh2dBundle {
-            mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
-            transform: Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
-                x: 0.,
-                y: 0.,
-                z: -11.,
-            }),
-            material: nebulae,
-            ..default()
-        },
+        Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
+        MeshMaterial2d(nebulae),
+        Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
+            x: 0.,
+            y: 0.,
+            z: -11.,
+        }),
     ));
 
     commands.spawn((
         Background,
-        MaterialMesh2dBundle {
-            mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
-            transform: Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
-                x: 0.,
-                y: 0.,
-                z: -10.,
-            }),
-            material: stars,
-            ..default()
-        },
+        Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
+        MeshMaterial2d(stars),
+        Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
+            x: 0.,
+            y: 0.,
+            z: -10.,
+        }),
     ));
 }
 
