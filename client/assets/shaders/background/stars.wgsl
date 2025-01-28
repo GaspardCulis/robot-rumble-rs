@@ -107,6 +107,11 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 	if (dith) {
 		n_dust_lerp *= 1.1;
 	}
+
+	// bg_nebulae.reduce_background
+	if (false) {
+		n_dust_lerp = pow(n_dust_lerp, 0.8) * 0.7;
+	}
 	
 	let col_value = floor(n_dust_lerp) / 7.0;
 	let col = textureSample(material_colorscheme_texture, material_colorscheme_sampler, vec2<f32>(col_value, 0.0));
