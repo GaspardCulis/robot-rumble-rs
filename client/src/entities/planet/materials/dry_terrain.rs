@@ -38,6 +38,10 @@ impl Material2d for DryTerrainMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/dry_terrain.wgsl".into()
     }
+
+    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
+        bevy::sprite::AlphaMode2d::Blend
+    }
 }
 
 impl PlanetMaterial for DryTerrainMaterial {
