@@ -122,10 +122,10 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
         a2 = step(n2, 0.315);
     }
 
-    // choose colors
-    // if (bg_nebulae.reduce_background) {
-    //     n_dust_lerp = pow(n_dust_lerp, 1.2) * 0.7;
-    // }
+    // bg_nebulae.reduce_background
+    if (false) {
+        n_dust_lerp = pow(n_dust_lerp, 1.2) * 0.7;
+    }
     var col_value = 0.0;
     if (a2 > a) {
         col_value = floor(n_dust_lerp * 35.0) / 7.0;
