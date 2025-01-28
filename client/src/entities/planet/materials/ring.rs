@@ -43,6 +43,10 @@ impl Material2d for RingMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet/ring.wgsl".into()
     }
+
+    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
+        bevy::sprite::AlphaMode2d::Blend
+    }
 }
 
 impl PlanetMaterial for RingMaterial {
