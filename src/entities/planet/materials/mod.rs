@@ -111,11 +111,12 @@ fn instance_layer_material<M: PlanetMaterial>(
                 Name::new(M::short_type_path()),
                 Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
                 MeshMaterial2d(material.add(M::from_config(common, &layer.config, &mut images))),
-                Transform::from_scale(Vec3::splat(layer.scale)).with_translation(Vec3 {
-                    x: 0.,
-                    y: 0.,
-                    z: layer.z_index,
-                }),
+                Transform::from_scale(Vec3::splat((radius.0 as f32 * 2.0) * layer.scale))
+                    .with_translation(Vec3 {
+                        x: 0.,
+                        y: 0.,
+                        z: layer.z_index,
+                    }),
             ))
             .id();
 
