@@ -7,6 +7,7 @@ edition = "2021"
 bevy_common_assets = { version = "0.12", features = ["ron"] }
 bevy_asset_loader = { version = "0.22", features = ["2d"] }
 bevy_ggrs = { version = "0.17", features = ["wasm-bindgen"] }
+bevy_matchbox = { version = "0.11", features = ["ggrs"] }
 bevy-inspector-egui = "0.29"
 leafwing-input-manager = "0.16"
 rand = "0.8"
