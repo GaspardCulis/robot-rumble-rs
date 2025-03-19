@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_ggrs::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use rand::Rng as _;
 
@@ -7,6 +8,8 @@ use bevy_matchbox::prelude::*;
 mod core;
 mod entities;
 mod utils;
+
+type Config = bevy_ggrs::GgrsConfig<u8, PeerId>;
 
 fn main() {
     let mut app = App::new();
@@ -49,7 +52,7 @@ fn start_matchbox_socket(mut commands: Commands) {
     commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
 }
 
-fn wait_for_players(mut socket: ResMut<MatchboxSocket>) {
+fn wait_for_players(mut commands: Commands, mut socket: ResMut<MatchboxSocket>) {
     if socket.get_channel(0).is_err() {
         return; // we've already started
     }
@@ -64,5 +67,24 @@ fn wait_for_players(mut socket: ResMut<MatchboxSocket>) {
     }
 
     info!("All peers have joined, going in-game");
-    // TODO
+
+    let mut session_builder = SessionBuilder::<Config>::new()
+        .with_num_players(num_players)
+        .with_input_delay(2);
+
+    for (i, player) in players.into_iter().enumerate() {
+        session_builder = session_builder
+            .add_player(player, i)
+            .expect("failed to add player");
+    }
+
+    // move the channel out of the socket (required because GGRS takes ownership of it)
+    let channel = socket.take_channel(0).unwrap();
+
+    // start the GGRS session
+    let ggrs_session = session_builder
+        .start_p2p_session(channel)
+        .expect("failed to start session");
+
+    commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
 }
