@@ -69,7 +69,8 @@ impl PlayerBundle {
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(skin::SkinPlugin)
+        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
+            .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_systems(Startup, spawn_player)
             .add_systems(FixedUpdate, (player_physics, player_movement).chain());
@@ -94,6 +95,7 @@ fn spawn_player(mut commands: Commands) {
         PlayerBundle::new(Position(
             Vec2::from_angle(rand::thread_rng().gen::<f32>() * 2. * std::f32::consts::PI) * 240.,
         )),
+        ActionState::<PlayerAction>::default(),
         PlayerSkin("laika".into()),
         camera::CameraFollowTarget,
     ));
