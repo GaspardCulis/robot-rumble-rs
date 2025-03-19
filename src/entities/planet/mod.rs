@@ -14,6 +14,7 @@ use materials::*;
 use rand::{seq::SliceRandom as _, SeedableRng as _};
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq)]
+#[require(Visibility)]
 pub struct Planet;
 
 #[derive(Component, Debug, Reflect, Copy, Clone, PartialEq)]
