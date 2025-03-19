@@ -20,6 +20,7 @@ pub const PLAYER_VELOCITY: f32 = 600.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
 #[derive(Component, Clone, Debug, PartialEq)]
+#[require(Visibility)]
 pub struct Player;
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect, Deref)]
