@@ -12,6 +12,7 @@ mkShell rec {
     clippy
   ];
   buildInputs = [
+    mold
     clang
     llvmPackages.bintools
     udev alsa-lib vulkan-loader
