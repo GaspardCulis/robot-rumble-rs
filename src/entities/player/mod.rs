@@ -90,10 +90,11 @@ fn spawn_player(mut commands: Commands) {
     ]);
 
     commands.spawn((
+        input_map,
         PlayerBundle::new(Position(
             Vec2::from_angle(rand::thread_rng().gen::<f32>() * 2. * std::f32::consts::PI) * 240.,
         )),
-        input_map,
+        PlayerSkin("laika".into()),
         camera::CameraFollowTarget,
     ));
 }
