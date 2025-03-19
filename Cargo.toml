@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.15", features = ["dynamic_linking", "wayland"] }
 bevy_common_assets = { version = "0.12", features = ["ron"] }
 bevy_asset_loader = { version = "0.22", features = ["2d"] }
 bevy-inspector-egui = "0.29"
@@ -12,6 +11,29 @@ leafwing-input-manager = "0.16"
 rand = "0.8"
 ron = "0.8"
 serde = { version = "1.0", features = ["derive"] }
+
+[dependencies.bevy]
+version = "0.15"
+default-features = false
+features = [
+  "multi_threaded",
+  "bevy_asset",
+  "bevy_audio",
+  "bevy_gilrs",
+  "bevy_winit",
+  "bevy_render",
+  "bevy_sprite",
+  "bevy_ui",
+  "default_font",
+
+  "png",
+  "vorbis",
+
+  "x11",
+  "wayland",
+
+  "asset_processor"
+]
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
