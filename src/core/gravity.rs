@@ -18,7 +18,7 @@ pub struct GravityPlugin;
 impl Plugin for GravityPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Mass>().add_systems(
-            FixedUpdate,
+            Update,
             apply_forces
                 .in_set(physics::PhysicsSet)
                 .before(physics::update_position),

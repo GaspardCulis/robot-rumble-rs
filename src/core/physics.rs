@@ -20,7 +20,7 @@ impl Plugin for PhysicsPlugin {
             .register_type::<Velocity>()
             .register_type::<Rotation>()
             .add_systems(
-                FixedUpdate,
+                Update,
                 (update_position, update_spatial_bundles)
                     .chain()
                     .in_set(PhysicsSet),
