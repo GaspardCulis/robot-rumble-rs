@@ -1,3 +1,8 @@
+use crate::core::{
+    gravity::Mass,
+    physics::Position,
+    worldgen::{self, GenerationSeed},
+};
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 
@@ -7,21 +12,64 @@ mod materials;
 use config::*;
 use materials::*;
 use rand::{seq::SliceRandom as _, SeedableRng as _};
-use robot_rumble_common::{core::worldgen, entities::planet::*};
 
-pub struct ClientPlanetPlugin;
-impl Plugin for ClientPlanetPlugin {
+#[derive(Component, Debug, Reflect, Clone, PartialEq)]
+pub struct Planet;
+
+#[derive(Component, Debug, Reflect, Copy, Clone, PartialEq)]
+pub struct Radius(pub u32);
+
+#[derive(Event)]
+pub struct SpawnPlanetEvent {
+    pub position: Position,
+    pub radius: Radius,
+    pub seed: u64,
+}
+
+#[derive(Bundle)]
+struct PlanetBundle {
+    name: Name,
+    marker: Planet,
+    position: Position,
+    radius: Radius,
+    mass: Mass,
+}
+
+impl PlanetBundle {
+    fn new(position: Position, radius: Radius) -> Self {
+        Self {
+            position,
+            radius,
+            name: Name::new("Planet"),
+            marker: Planet,
+            mass: Mass(radius_to_mass(radius)),
+        }
+    }
+}
+
+pub struct PlanetPlugin;
+impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(RonAssetPlugin::<PlanetsConfig>::new(&[]))
             .add_plugins(materials::PlanetMaterialsPlugin)
+            .add_event::<SpawnPlanetEvent>()
             .add_systems(Startup, load_planets_config)
-            .add_systems(Update, (spawn_config_layers, add_spacial_bundle));
+            .add_systems(Update, (handle_spawn_planet_event, spawn_config_layers));
     }
 }
 
 fn load_planets_config(mut commands: Commands, asset_server: Res<AssetServer>) {
     let planets_config = PlanetsConfigHandle(asset_server.load("config/planet_kinds.ron"));
     commands.insert_resource(planets_config);
+}
+
+fn handle_spawn_planet_event(mut events: EventReader<SpawnPlanetEvent>, mut commands: Commands) {
+    for event in events.read() {
+        commands.spawn((
+            PlanetBundle::new(event.position.clone(), event.radius),
+            GenerationSeed(event.seed),
+        ));
+    }
 }
 
 fn spawn_config_layers(
@@ -112,15 +160,9 @@ fn spawn_config_layers(
     }
 }
 
-fn add_spacial_bundle(mut commands: Commands, query: Query<(Entity, &Radius), Added<Planet>>) {
-    for (planet_entity, radius) in query.iter() {
-        let mut planet_commands = commands.entity(planet_entity);
-        planet_commands.insert((
-            Transform::from_scale(Vec3::splat((radius * 2).0 as f32)),
-            Visibility::Visible,
-        ));
-    }
-}
-
 #[derive(Resource)]
 struct PlanetsConfigHandle(Handle<PlanetsConfig>);
+
+fn radius_to_mass(radius: Radius) -> u32 {
+    (std::f64::consts::PI * radius.0.pow(2) as f64) as u32
+}

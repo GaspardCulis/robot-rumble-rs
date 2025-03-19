@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use robot_rumble_common::utils::math;
+use crate::utils::math;
 
 pub struct CameraPlugin;
 
