@@ -1,12 +1,9 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use lightyear::prelude::client::*;
-
-use robot_rumble_common::CommonPlugins;
+use rand::Rng as _;
 
 mod core;
 mod entities;
-mod network;
 mod utils;
 
 fn main() {
@@ -26,8 +23,6 @@ fn main() {
             })
             .build(),
     )
-    .add_plugins(network::ClientNetworkPlugin)
-    .add_plugins(CommonPlugins)
     .add_plugins(core::CorePlugins)
     .add_plugins(entities::ClientEntitiesPlugins)
     .add_systems(Startup, init);
@@ -39,6 +34,8 @@ fn main() {
     app.run();
 }
 
-fn init(mut commands: Commands) {
-    commands.connect_client();
+fn init(mut worldgen_events: EventWriter<core::worldgen::GenerateWorldEvent>) {
+    worldgen_events.send(core::worldgen::GenerateWorldEvent {
+        seed: rand::thread_rng().gen(),
+    });
 }

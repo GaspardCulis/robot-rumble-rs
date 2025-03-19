@@ -1,17 +1,16 @@
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 
 use super::physics::{self, Position, Velocity};
 
 const G: f32 = 800.;
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Component, Debug, Reflect, Clone, PartialEq)]
 pub struct Mass(pub u32);
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Component, Debug, Reflect, Clone, PartialEq)]
 pub struct Passive;
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Component, Debug, Reflect, Clone, PartialEq)]
 pub struct Static;
 
 pub struct GravityPlugin;

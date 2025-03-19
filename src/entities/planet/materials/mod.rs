@@ -1,11 +1,12 @@
-use std::marker::PhantomData;
-
+use super::Radius;
 use bevy::{
     asset::load_internal_asset,
     prelude::*,
     reflect::GetTypeRegistration,
     sprite::{Material2d, Material2dPlugin},
 };
+use rand::Rng;
+use std::marker::PhantomData;
 
 mod clouds;
 mod common;
@@ -23,11 +24,8 @@ pub use dry_terrain::DryTerrainMaterial;
 pub use gas_layers::GasLayersMaterial;
 pub use lakes::LakesMaterial;
 pub use landmasses::LandmassesMaterial;
-use rand::Rng;
 pub use ring::RingMaterial;
 pub use under::UnderMaterial;
-
-use robot_rumble_common::entities::planet::Radius;
 
 pub struct PlanetMaterialsPlugin;
 

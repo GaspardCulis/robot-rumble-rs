@@ -1,11 +1,11 @@
+use super::{
+    skin::{SkinAnimationsHandle, PLAYER_SKIN_SCALE},
+    InAir, Player, PlayerAction,
+};
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
-use lightyear::prelude::client::Predicted;
-use robot_rumble_common::entities::player::{InAir, Player, PlayerAction};
 
 use crate::utils::spritesheet;
-
-use super::skin::{SkinAnimationsHandle, PLAYER_SKIN_SCALE};
 
 #[derive(Component, Reflect, Default, PartialEq, Eq)]
 enum PlayerAnimationState {
@@ -32,10 +32,7 @@ impl Plugin for PlayerAnimationPlugin {
     }
 }
 
-fn add_animation_state_on_player(
-    mut commands: Commands,
-    query: Query<Entity, (Added<Predicted>, With<Player>)>,
-) {
+fn add_animation_state_on_player(mut commands: Commands, query: Query<Entity, Added<Player>>) {
     for player_entity in query.iter() {
         commands
             .entity(player_entity)

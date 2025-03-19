@@ -1,11 +1,10 @@
-use std::{collections::HashMap, time::Duration};
-
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use lightyear::prelude::client::Predicted;
-use robot_rumble_common::entities::player::{Player, PlayerSkin};
+use std::{collections::HashMap, time::Duration};
 
 use crate::utils::spritesheet;
+
+use super::{Player, PlayerSkin};
 
 pub const PLAYER_SKIN_SCALE: f32 = 3.;
 
@@ -66,7 +65,7 @@ fn load_skin_config(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn load_skin_on_player(
     mut commands: Commands,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    query: Query<(Entity, &PlayerSkin), (Added<Predicted>, With<Player>)>,
+    query: Query<(Entity, &PlayerSkin), Added<Player>>,
     config_handle: Res<SkinConfigHandle>,
     skins_config: Res<Assets<SkinsConfig>>,
     asset_server: Res<AssetServer>,
