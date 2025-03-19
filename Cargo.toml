@@ -1,16 +1,14 @@
-[workspace]
-resolver = "2"
-members = ["common", "server", "client"]
+[package]
+name = "robot-rumble-client"
+version = "0.1.0"
+edition = "2021"
 
-[workspace.dependencies]
-bevy = { version = "0.15", default-features = false, features = [
-    "dynamic_linking",
-] }
+[dependencies]
+bevy = { version = "0.15", features = ["dynamic_linking", "wayland"] }
 bevy_common_assets = { version = "0.12", features = ["ron"] }
+bevy_asset_loader = { version = "0.22", features = ["2d"] }
+bevy-inspector-egui = "0.29"
 leafwing-input-manager = "0.16"
-lightyear = { version="0.18", features = [
-    "leafwing",
-] }
 rand = "0.8"
 ron = "0.8"
 serde = { version = "1.0", features = ["derive"] }
