@@ -66,8 +66,8 @@ impl PlayerBundle {
     }
 }
 
-pub struct ClientPlayerPlugin;
-impl Plugin for ClientPlayerPlugin {
+pub struct PlayerPlugin;
+impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)

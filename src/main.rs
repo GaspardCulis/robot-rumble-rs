@@ -24,7 +24,7 @@ fn main() {
             .build(),
     )
     .add_plugins(core::CorePlugins)
-    .add_plugins(entities::ClientEntitiesPlugins)
+    .add_plugins(entities::EntitiesPlugins)
     .add_systems(Startup, init);
 
     if cfg!(debug_assertions) {
