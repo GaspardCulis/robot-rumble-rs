@@ -1,86 +1,56 @@
-use std::{
-    fs,
-    net::{IpAddr, Ipv4Addr, SocketAddr},
-};
-
 use bevy::prelude::*;
-use lightyear::prelude::*;
-use rand::Rng;
+use bevy_ggrs::prelude::*;
+use bevy_matchbox::prelude::*;
 
-use robot_rumble_common::{
-    core::physics::{Position, Rotation},
-    entities::planet::Planet,
-    network::{protocol, shared_config, REPLICATION_SEND_INTERVAL},
-};
+type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
 
-mod config;
-
-pub const INPUT_DELAY_TICKS: u16 = 2;
-
-pub struct ClientNetworkPlugin;
-impl Plugin for ClientNetworkPlugin {
+pub struct NetworkPlugin;
+impl Plugin for NetworkPlugin {
     fn build(&self, app: &mut App) {
-        let config_str = fs::read_to_string("client/assets/config/network.ron")
-            .expect("Failed to read client network config file");
-        let config = ron::de::from_str::<config::ClientNetworkConfig>(config_str.as_str())
-            .expect("Could not parse the network settings file");
-
-        let auth = client::Authentication::Manual {
-            server_addr: SocketAddr::new(config.server_addr.into(), config.server_port),
-            client_id: rand::thread_rng().gen(),
-            private_key: Key::default(),
-            protocol_id: protocol::PROTOCOL_ID,
-        };
-
-        let netcode_config = client::NetcodeConfig::default();
-
-        let mut io_config = client::IoConfig::from_transport(client::ClientTransport::UdpSocket(
-            SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.client_port),
-        ));
-
-        if config.conditioner.is_some() && !cfg!(debug_assertions) {
-            io_config = io_config.with_conditioner(config.conditioner.unwrap().into());
-        }
-
-        let client_config = client::ClientConfig {
-            shared: shared_config(Mode::Separate),
-            net: client::NetConfig::Netcode {
-                auth,
-                config: netcode_config,
-                io: io_config,
-            },
-            replication: ReplicationConfig {
-                send_interval: REPLICATION_SEND_INTERVAL,
-                ..Default::default()
-            },
-            prediction: client::PredictionConfig {
-                minimum_input_delay_ticks: INPUT_DELAY_TICKS,
-                ..Default::default()
-            },
-            ..default()
-        };
-
-        app.add_plugins(client::ClientPlugins::new(client_config))
-            .add_plugins(client::VisualInterpolationPlugin::<Position>::default())
-            .add_plugins(client::VisualInterpolationPlugin::<Rotation>::default())
-            .add_observer(add_visual_interpolation_components::<Position>)
-            .add_observer(add_visual_interpolation_components::<Rotation>);
+        app.add_systems(Startup, start_matchbox_socket)
+            .add_systems(Update, wait_for_players);
     }
 }
 
-fn add_visual_interpolation_components<T: Component>(
-    trigger: Trigger<OnAdd, T>,
-    q: Query<Entity, (With<T>, Without<Planet>, With<client::Predicted>)>,
-    mut commands: Commands,
-) {
-    if !q.contains(trigger.entity()) {
-        return;
+fn start_matchbox_socket(mut commands: Commands) {
+    let room_url = "ws://127.0.0.1:3536/extreme_bevy?next=2";
+    info!("connecting to matchbox server: {room_url}");
+    commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
+}
+
+fn wait_for_players(mut commands: Commands, mut socket: ResMut<MatchboxSocket>) {
+    if socket.get_channel(0).is_err() {
+        return; // we've already started
     }
-    debug!("Adding visual interp component to {:?}", trigger.entity());
-    commands
-        .entity(trigger.entity())
-        .insert(client::VisualInterpolateStatus::<T> {
-            trigger_change_detection: true,
-            ..default()
-        });
+
+    // Check for new connections
+    socket.update_peers();
+    let players = socket.players();
+
+    let num_players = 2;
+    if players.len() < num_players {
+        return; // wait for more players
+    }
+
+    info!("All peers have joined, going in-game");
+
+    let mut session_builder = SessionBuilder::<SessionConfig>::new()
+        .with_num_players(num_players)
+        .with_input_delay(2);
+
+    for (i, player) in players.into_iter().enumerate() {
+        session_builder = session_builder
+            .add_player(player, i)
+            .expect("failed to add player");
+    }
+
+    // move the channel out of the socket (required because GGRS takes ownership of it)
+    let channel = socket.take_channel(0).unwrap();
+
+    // start the GGRS session
+    let ggrs_session = session_builder
+        .start_p2p_session(channel)
+        .expect("failed to start session");
+
+    commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
 }
