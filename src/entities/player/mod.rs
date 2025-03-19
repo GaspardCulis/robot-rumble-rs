@@ -73,7 +73,7 @@ impl Plugin for PlayerPlugin {
             .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_systems(Startup, spawn_player)
-            .add_systems(FixedUpdate, (player_physics, player_movement).chain());
+            .add_systems(Update, (player_physics, player_movement).chain());
     }
 }
 
