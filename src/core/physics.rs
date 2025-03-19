@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq, Deref, DerefMut)]
+#[require(Transform)]
 pub struct Position(pub Vec2);
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq, Deref, DerefMut)]
