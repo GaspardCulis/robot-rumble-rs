@@ -1,14 +1,22 @@
-use bevy::prelude::*;
-use bevy_ggrs::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
+use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
+use inputs::GgrsSessionInput as _;
+use leafwing_input_manager::prelude::ActionState;
+
+use crate::entities::player::PlayerAction;
+
+mod inputs;
 
 type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
 
 pub struct NetworkPlugin;
 impl Plugin for NetworkPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, start_matchbox_socket)
-            .add_systems(Update, wait_for_players);
+        app.add_plugins(GgrsPlugin::<SessionConfig>::default())
+            .add_systems(Startup, start_matchbox_socket)
+            .add_systems(Update, wait_for_players)
+            .add_systems(ReadInputs, read_local_inputs);
     }
 }
 
@@ -34,7 +42,7 @@ fn wait_for_players(mut commands: Commands, mut socket: ResMut<MatchboxSocket>) 
 
     info!("All peers have joined, going in-game");
 
-    let mut session_builder = SessionBuilder::<SessionConfig>::new()
+    let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(num_players)
         .with_input_delay(2);
 
@@ -53,4 +61,21 @@ fn wait_for_players(mut commands: Commands, mut socket: ResMut<MatchboxSocket>) 
         .expect("failed to start session");
 
     commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
+}
+
+fn read_local_inputs(
+    mut commands: Commands,
+    query: Query<&ActionState<PlayerAction>>,
+    local_players: Res<LocalPlayers>,
+) {
+    let mut local_inputs = HashMap::new();
+
+    for handle in &local_players.0 {
+        let action_state = query.single();
+        let input = action_state.as_ggrs_session_input();
+
+        local_inputs.insert(*handle, input);
+    }
+
+    commands.insert_resource(LocalInputs::<SessionConfig>(local_inputs));
 }
