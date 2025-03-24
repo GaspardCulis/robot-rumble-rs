@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_ggrs::GgrsSchedule;
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq, Deref, DerefMut)]
 #[require(Transform)]
@@ -19,12 +20,8 @@ impl Plugin for PhysicsPlugin {
         app.register_type::<Position>()
             .register_type::<Velocity>()
             .register_type::<Rotation>()
-            .add_systems(
-                Update,
-                (update_position, update_spatial_bundles)
-                    .chain()
-                    .in_set(PhysicsSet),
-            );
+            .add_systems(GgrsSchedule, update_position.in_set(PhysicsSet))
+            .add_systems(Update, update_spatial_bundles);
     }
 }
 

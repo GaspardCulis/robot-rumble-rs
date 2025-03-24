@@ -1,12 +1,13 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
+use bevy_ggrs::GgrsSchedule;
 use leafwing_input_manager::prelude::*;
 use rand::Rng as _;
 
 use crate::core::camera;
 use crate::core::gravity::{Mass, Passive};
-use crate::core::physics::{Position, Rotation, Velocity};
+use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
 use super::planet;
@@ -73,7 +74,10 @@ impl Plugin for PlayerPlugin {
             .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_systems(Startup, spawn_player)
-            .add_systems(Update, (player_physics, player_movement).chain());
+            .add_systems(
+                GgrsSchedule,
+                (player_physics, player_movement).chain().after(PhysicsSet),
+            );
     }
 }
 

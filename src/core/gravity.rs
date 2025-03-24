@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_ggrs::GgrsSchedule;
 
 use super::physics::{self, Position, Velocity};
 
@@ -18,7 +19,7 @@ pub struct GravityPlugin;
 impl Plugin for GravityPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Mass>().add_systems(
-            Update,
+            GgrsSchedule,
             apply_forces
                 .in_set(physics::PhysicsSet)
                 .before(physics::update_position),
