@@ -13,6 +13,8 @@ use crate::{
     entities::player::{Player, PlayerAction, PlayerBundle, PlayerSkin},
 };
 
+const NUM_PLAYERS: usize = 3;
+
 pub mod inputs;
 
 pub type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
@@ -32,7 +34,7 @@ impl Plugin for NetworkPlugin {
 }
 
 fn start_matchbox_socket(mut commands: Commands) {
-    let room_url = "ws://127.0.0.1:3536/extreme_bevy?next=2";
+    let room_url = format!("ws://127.0.0.1:3536/extreme_bevy?next={NUM_PLAYERS}");
     info!("connecting to matchbox server: {room_url}");
     commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
 }
@@ -46,15 +48,14 @@ fn wait_for_players(mut commands: Commands, mut socket: ResMut<MatchboxSocket>) 
     socket.update_peers();
     let players = socket.players();
 
-    let num_players = 2;
-    if players.len() < num_players {
+    if players.len() < NUM_PLAYERS {
         return; // wait for more players
     }
 
     info!("All peers have joined, going in-game");
 
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
-        .with_num_players(num_players)
+        .with_num_players(NUM_PLAYERS)
         .with_input_delay(2);
 
     for (i, player) in players.into_iter().enumerate() {
