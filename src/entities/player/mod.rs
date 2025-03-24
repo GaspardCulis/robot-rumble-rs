@@ -3,9 +3,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 use leafwing_input_manager::prelude::*;
-use rand::Rng as _;
 
-use crate::core::camera;
 use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
@@ -22,7 +20,9 @@ pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
 #[derive(Component, Clone, Debug, PartialEq)]
 #[require(Visibility)]
-pub struct Player;
+pub struct Player {
+    pub handle: usize,
+}
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect, Deref)]
 pub struct PlayerInputVelocity(Vec2);
@@ -49,18 +49,20 @@ pub struct PlayerBundle {
     velocity: Velocity,
     rotation: Rotation,
     input_velocity: PlayerInputVelocity,
+    action_state: ActionState<PlayerAction>,
     mass: Mass,
     passive: Passive,
 }
 impl PlayerBundle {
-    pub fn new(position: Position) -> Self {
+    pub fn new(handle: usize, position: Position) -> Self {
         Self {
             position,
             name: Name::new("Player"),
-            marker: Player,
+            marker: Player { handle },
             velocity: Velocity(Vec2::ZERO),
             rotation: Rotation(0.),
             input_velocity: PlayerInputVelocity(Vec2::ZERO),
+            action_state: ActionState::default(),
             mass: Mass(PLAYER_MASS),
             passive: Passive,
         }
@@ -73,36 +75,11 @@ impl Plugin for PlayerPlugin {
         app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
-            .add_systems(Startup, spawn_player)
             .add_systems(
                 GgrsSchedule,
                 (player_physics, player_movement).chain().after(PhysicsSet),
             );
     }
-}
-
-fn spawn_player(mut commands: Commands) {
-    let input_map = InputMap::new([
-        // Jump
-        (PlayerAction::Jump, KeyCode::Space),
-        (PlayerAction::Jump, KeyCode::KeyW),
-        // Sneak
-        (PlayerAction::Sneak, KeyCode::ShiftLeft),
-        (PlayerAction::Sneak, KeyCode::KeyS),
-        // Directions
-        (PlayerAction::Right, KeyCode::KeyD),
-        (PlayerAction::Left, KeyCode::KeyA),
-    ]);
-
-    commands.spawn((
-        input_map,
-        PlayerBundle::new(Position(
-            Vec2::from_angle(rand::thread_rng().gen::<f32>() * 2. * std::f32::consts::PI) * 240.,
-        )),
-        ActionState::<PlayerAction>::default(),
-        PlayerSkin("laika".into()),
-        camera::CameraFollowTarget,
-    ));
 }
 
 fn player_movement(
