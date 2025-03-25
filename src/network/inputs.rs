@@ -43,7 +43,7 @@ fn read_local_inputs(
 }
 
 fn update_remote_inputs(
-    mut query: Query<(&Player, &mut ActionState<PlayerAction>), Without<LocalPlayer>>,
+    mut query: Query<(&Player, &mut ActionState<PlayerAction>)>, // Don't filter out LocalPlayer as we don't want his outputs to fire early
     inputs: Res<PlayerInputs<SessionConfig>>,
 ) {
     for (player, mut action_state) in query.iter_mut() {
