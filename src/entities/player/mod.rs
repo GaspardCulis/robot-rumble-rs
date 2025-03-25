@@ -88,7 +88,6 @@ fn player_movement(
     mut query: Query<
         (
             &ActionState<PlayerAction>,
-            &mut Position,
             &mut Velocity,
             &mut PlayerInputVelocity,
             &Rotation,
@@ -100,13 +99,9 @@ fn player_movement(
 ) {
     let delta = time.delta_secs();
 
-    for (action_state, mut position, mut velocity, mut input_velocity, rotation, in_air) in
-        query.iter_mut()
-    {
+    for (action_state, mut velocity, mut input_velocity, rotation, in_air) in query.iter_mut() {
         if action_state.pressed(&PlayerAction::Jump) && !in_air.0 {
             velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
-            // Immediately update position
-            position.0 += velocity.0 * delta;
         }
 
         if action_state.pressed(&PlayerAction::Right) {
