@@ -4,8 +4,8 @@ use bevy_matchbox::prelude::*;
 use leafwing_input_manager::prelude::InputMap;
 
 use crate::{
-    core::{camera, physics::Position},
-    entities::player::{PlayerAction, PlayerBundle, PlayerSkin},
+    core::{camera, physics},
+    entities::player::{self, PlayerAction, PlayerBundle, PlayerSkin},
 };
 
 const NUM_PLAYERS: usize = 2;
@@ -22,6 +22,11 @@ impl Plugin for NetworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(GgrsPlugin::<SessionConfig>::default())
             .add_plugins(inputs::NetworkInputsPlugin)
+            .rollback_component_with_clone::<physics::Position>()
+            .rollback_component_with_clone::<physics::Rotation>()
+            .rollback_component_with_clone::<physics::Velocity>()
+            .rollback_component_with_clone::<player::InAir>()
+            .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .add_systems(Startup, start_matchbox_socket)
             .add_systems(Update, wait_for_players);
     }
@@ -94,20 +99,24 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
             (PlayerAction::Left, KeyCode::KeyA),
         ]);
 
-        commands.spawn((
-            input_map,
-            LocalPlayer,
-            PlayerBundle::new(local_handle, Position(Vec2::ZERO)),
-            PlayerSkin("laika".into()),
-            camera::CameraFollowTarget,
-        ));
+        commands
+            .spawn((
+                input_map,
+                LocalPlayer,
+                PlayerBundle::new(local_handle, physics::Position(Vec2::ZERO)),
+                PlayerSkin("laika".into()),
+                camera::CameraFollowTarget,
+            ))
+            .add_rollback();
     }
 
     // Remote players
     for remote_handle in p2p_session.remote_player_handles() {
-        commands.spawn((
-            PlayerBundle::new(remote_handle, Position(Vec2::ZERO)),
-            PlayerSkin("laika".into()),
-        ));
+        commands
+            .spawn((
+                PlayerBundle::new(remote_handle, physics::Position(Vec2::ZERO)),
+                PlayerSkin("laika".into()),
+            ))
+            .add_rollback();
     }
 }
