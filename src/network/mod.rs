@@ -22,6 +22,9 @@ pub type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
 #[derive(Component, Reflect)]
 pub struct LocalPlayer;
 
+#[derive(Resource, Default, Clone, Copy, Debug, Deref, DerefMut)]
+struct SessionSeed(u64);
+
 pub struct NetworkPlugin;
 impl Plugin for NetworkPlugin {
     fn build(&self, app: &mut App) {
@@ -80,6 +83,15 @@ fn wait_for_players(
     }
 
     info!("All peers have joined, going in-game");
+
+    // determine the seed
+    let id = socket.id().expect("no peer id assigned").0.as_u64_pair();
+    let mut seed = id.0 ^ id.1;
+    for peer in socket.connected_peers() {
+        let peer_id = peer.0.as_u64_pair();
+        seed ^= peer_id.0 ^ peer_id.1;
+    }
+    commands.insert_resource(SessionSeed(seed));
 
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(NUM_PLAYERS)
@@ -147,6 +159,9 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
     }
 }
 
-fn generate_world(mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>) {
-    worldgen_events.send(worldgen::GenerateWorldEvent { seed: 69 });
+fn generate_world(
+    mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>,
+    seed: Res<SessionSeed>,
+) {
+    worldgen_events.send(worldgen::GenerateWorldEvent { seed: seed.0 });
 }
