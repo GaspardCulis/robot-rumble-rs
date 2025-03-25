@@ -35,7 +35,10 @@ impl Plugin for NetworkPlugin {
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
-                start_matchbox_socket.run_if(p2p_mode),
+                (
+                    start_matchbox_socket.run_if(p2p_mode),
+                    start_synctest_session.run_if(synctest_mode),
+                ),
             )
             .add_systems(
                 OnEnter(GameState::InGame),
@@ -48,11 +51,7 @@ impl Plugin for NetworkPlugin {
             )
             .add_systems(
                 Update,
-                (
-                    wait_for_players.run_if(p2p_mode),
-                    start_synctest_session.run_if(synctest_mode),
-                )
-                    .run_if(in_state(GameState::MatchMaking)),
+                wait_for_players.run_if(in_state(GameState::MatchMaking).and(p2p_mode)),
             );
     }
 }
