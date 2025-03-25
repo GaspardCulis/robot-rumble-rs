@@ -77,7 +77,7 @@ fn update_animation_state(
             &mut PlayerAnimationState,
             &SkinAnimationsHandle,
             &ActionState<PlayerAction>,
-            Has<InAir>,
+            &InAir,
         ),
         With<Player>,
     >,
@@ -95,7 +95,7 @@ fn update_animation_state(
             _ => (),
         };
 
-        let new_state = if in_air {
+        let new_state = if in_air.0 {
             PlayerAnimationState::Fall
         } else if inputs.just_pressed(&PlayerAction::Jump) {
             let timer = Timer::new(anims.jump.duration, TimerMode::Once);
