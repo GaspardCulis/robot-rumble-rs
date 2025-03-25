@@ -3,11 +3,12 @@ use std::hash::{BuildHasher as _, Hash, Hasher as _};
 use bevy::{prelude::*, utils::FixedState};
 use bevy_ggrs::{ggrs::GgrsEvent, *};
 use leafwing_input_manager::prelude::InputMap;
+use rand::Rng;
 
 use crate::{
     core::{camera, physics},
     entities::player::{PlayerAction, PlayerBundle, PlayerSkin},
-    network::{LocalPlayer, SessionConfig},
+    network::{LocalPlayer, SessionConfig, SessionSeed},
     Args, GameState,
 };
 
@@ -33,6 +34,7 @@ pub fn start_synctest_session(
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     info!("Starting synctest session");
+    commands.insert_resource(SessionSeed(rand::rng().random()));
 
     let mut session_builder =
         ggrs::SessionBuilder::<SessionConfig>::new().with_num_players(SYNCTEST_NUM_PLAYERS);
