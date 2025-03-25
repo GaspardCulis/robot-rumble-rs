@@ -6,6 +6,7 @@ use leafwing_input_manager::prelude::InputMap;
 use crate::{
     core::{camera, physics},
     entities::player::{self, PlayerAction, PlayerBundle, PlayerSkin},
+    GameState,
 };
 
 const NUM_PLAYERS: usize = 2;
@@ -27,8 +28,12 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
-            .add_systems(Startup, start_matchbox_socket)
-            .add_systems(Update, wait_for_players);
+            .add_systems(OnEnter(GameState::MatchMaking), start_matchbox_socket)
+            .add_systems(OnEnter(GameState::InGame), spawn_players)
+            .add_systems(
+                Update,
+                wait_for_players.run_if(in_state(GameState::MatchMaking)),
+            );
     }
 }
 
@@ -38,7 +43,11 @@ fn start_matchbox_socket(mut commands: Commands) {
     commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
 }
 
-fn wait_for_players(mut commands: Commands, mut socket: ResMut<MatchboxSocket>) {
+fn wait_for_players(
+    mut commands: Commands,
+    mut socket: ResMut<MatchboxSocket>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
     if socket.get_channel(0).is_err() {
         return; // we've already started
     }
@@ -73,9 +82,7 @@ fn wait_for_players(mut commands: Commands, mut socket: ResMut<MatchboxSocket>) 
 
     commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
 
-    // Spawn players
-    let system_id = commands.register_system(spawn_players);
-    commands.run_system(system_id);
+    next_state.set(GameState::InGame);
 }
 
 fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<SessionConfig>>) {

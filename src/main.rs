@@ -7,6 +7,13 @@ mod entities;
 mod network;
 mod utils;
 
+#[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
+pub enum GameState {
+    #[default]
+    MatchMaking,
+    InGame,
+}
+
 fn main() {
     let mut app = App::new();
 
@@ -26,7 +33,8 @@ fn main() {
     )
     .add_plugins(core::CorePlugins)
     .add_plugins(entities::EntitiesPlugins)
-    .add_plugins(network::NetworkPlugin);
+    .add_plugins(network::NetworkPlugin)
+    .init_state::<GameState>();
 
     if cfg!(debug_assertions) {
         app.add_plugins(WorldInspectorPlugin::new());
