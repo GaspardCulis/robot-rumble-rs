@@ -8,10 +8,14 @@ use crate::{
     entities::player::{self, PlayerAction, PlayerBundle, PlayerSkin},
     GameState,
 };
+use synctest::{
+    checksum_position, p2p_mode, spawn_synctest_players, start_synctest_session, synctest_mode,
+};
 
 const NUM_PLAYERS: usize = 2;
 
 mod inputs;
+mod synctest;
 
 pub type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
 
@@ -28,11 +32,25 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
-            .add_systems(OnEnter(GameState::MatchMaking), start_matchbox_socket)
-            .add_systems(OnEnter(GameState::InGame), spawn_players)
+            .checksum_component::<physics::Position>(checksum_position)
+            .add_systems(
+                OnEnter(GameState::MatchMaking),
+                start_matchbox_socket.run_if(p2p_mode),
+            )
+            .add_systems(
+                OnEnter(GameState::InGame),
+                (
+                    spawn_players.run_if(p2p_mode),
+                    spawn_synctest_players.run_if(synctest_mode),
+                ),
+            )
             .add_systems(
                 Update,
-                wait_for_players.run_if(in_state(GameState::MatchMaking)),
+                (
+                    wait_for_players.run_if(p2p_mode),
+                    start_synctest_session.run_if(synctest_mode),
+                )
+                    .run_if(in_state(GameState::MatchMaking)),
             );
     }
 }
