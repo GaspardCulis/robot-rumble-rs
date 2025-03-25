@@ -3,6 +3,8 @@ use bevy_ggrs::GgrsSchedule;
 
 use crate::utils::math;
 
+use super::physics::PhysicsSet;
+
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
@@ -10,7 +12,7 @@ impl Plugin for CameraPlugin {
         app.add_systems(Startup, |mut commands: Commands| {
             commands.spawn(Camera2d);
         })
-        .add_systems(GgrsSchedule, camera_movement);
+        .add_systems(GgrsSchedule, camera_movement.after(PhysicsSet::Movement));
     }
 }
 

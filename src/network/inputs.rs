@@ -17,8 +17,10 @@ const INPUT_RIGHT: u8 = 1 << 3;
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(ReadInputs, read_local_inputs)
-            .add_systems(GgrsSchedule, update_remote_inputs.before(PhysicsSet));
+        app.add_systems(ReadInputs, read_local_inputs).add_systems(
+            GgrsSchedule,
+            update_remote_inputs.before(PhysicsSet::Player),
+        );
     }
 }
 

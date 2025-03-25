@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
+use crate::GameState;
+
 #[derive(Component, Debug, Reflect, Clone, PartialEq, Deref, DerefMut)]
 #[require(Transform)]
 pub struct Position(pub Vec2);
@@ -12,7 +14,11 @@ pub struct Velocity(pub Vec2);
 pub struct Rotation(pub f32);
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct PhysicsSet;
+pub enum PhysicsSet {
+    Movement,
+    Gravity,
+    Player,
+}
 
 pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
@@ -20,8 +26,20 @@ impl Plugin for PhysicsPlugin {
         app.register_type::<Position>()
             .register_type::<Velocity>()
             .register_type::<Rotation>()
-            .add_systems(GgrsSchedule, update_position.in_set(PhysicsSet))
-            .add_systems(Update, update_spatial_bundles);
+            .configure_sets(
+                GgrsSchedule,
+                (
+                    PhysicsSet::Movement.after(PhysicsSet::Gravity),
+                    PhysicsSet::Gravity.after(PhysicsSet::Player),
+                )
+                    .run_if(in_state(GameState::InGame)),
+            )
+            .add_systems(
+                GgrsSchedule,
+                (update_position, update_spatial_bundles)
+                    .chain()
+                    .in_set(PhysicsSet::Movement),
+            );
     }
 }
 
