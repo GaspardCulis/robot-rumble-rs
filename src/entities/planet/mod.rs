@@ -5,13 +5,14 @@ use crate::core::{
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
+use rand::{seq::IndexedRandom as _, SeedableRng};
+use rand_xoshiro::Xoshiro256PlusPlus;
 
 mod config;
 mod materials;
 
 use config::*;
 use materials::*;
-use rand::{seq::SliceRandom as _, SeedableRng as _};
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq)]
 #[require(Visibility)]
@@ -82,8 +83,8 @@ fn spawn_config_layers(
     for (planet_entity, generation_seed) in query.iter() {
         let mut planet = commands.entity(planet_entity);
         let mut rng = match generation_seed {
-            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed.0),
-            None => rand::rngs::StdRng::from_entropy(),
+            Some(seed) => Xoshiro256PlusPlus::seed_from_u64(seed.0),
+            None => Xoshiro256PlusPlus::from_os_rng(),
         };
 
         // Get config
