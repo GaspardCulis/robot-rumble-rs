@@ -79,7 +79,9 @@ impl Plugin for PlayerPlugin {
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_systems(
                 GgrsSchedule,
-                (player_physics, player_movement).chain().after(PhysicsSet),
+                (player_physics, player_movement)
+                    .chain()
+                    .in_set(PhysicsSet::Player),
             );
     }
 }
@@ -143,6 +145,7 @@ pub fn player_physics(
     planet_query: Query<(&Position, &planet::Radius), With<planet::Planet>>,
     time: Res<Time>,
 ) {
+    return;
     for (mut in_air, mut player_position, mut player_rotation, mut velocity, input_velocity) in
         player_query.iter_mut()
     {
