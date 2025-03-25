@@ -1,21 +1,16 @@
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
-use inputs::GgrsSessionInput as _;
-use leafwing_input_manager::prelude::{ActionState, InputMap};
+use leafwing_input_manager::prelude::InputMap;
 
 use crate::{
-    core::{
-        camera,
-        physics::{PhysicsSet, Position},
-    },
-    entities::player::{Player, PlayerAction, PlayerBundle, PlayerSkin},
+    core::{camera, physics::Position},
+    entities::player::{PlayerAction, PlayerBundle, PlayerSkin},
 };
 
-const NUM_PLAYERS: usize = 3;
+const NUM_PLAYERS: usize = 2;
 
-pub mod inputs;
+mod inputs;
 
 pub type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
 
@@ -26,10 +21,9 @@ pub struct NetworkPlugin;
 impl Plugin for NetworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(GgrsPlugin::<SessionConfig>::default())
+            .add_plugins(inputs::NetworkInputsPlugin)
             .add_systems(Startup, start_matchbox_socket)
-            .add_systems(Update, wait_for_players)
-            .add_systems(ReadInputs, read_local_inputs)
-            .add_systems(GgrsSchedule, update_remote_inputs.before(PhysicsSet));
+            .add_systems(Update, wait_for_players);
     }
 }
 
@@ -115,33 +109,5 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
             PlayerBundle::new(remote_handle, Position(Vec2::ZERO)),
             PlayerSkin("laika".into()),
         ));
-    }
-}
-
-fn read_local_inputs(
-    mut commands: Commands,
-    query: Query<(&Player, &ActionState<PlayerAction>), With<LocalPlayer>>,
-    local_players: Res<LocalPlayers>,
-) {
-    let mut local_inputs = HashMap::new();
-
-    assert_eq!(local_players.0.len(), query.iter().len());
-    for (player, action_state) in query.iter() {
-        let handle = player.handle;
-        let input = action_state.as_ggrs_session_input();
-
-        local_inputs.insert(handle, input);
-    }
-
-    commands.insert_resource(LocalInputs::<SessionConfig>(local_inputs));
-}
-
-fn update_remote_inputs(
-    mut query: Query<(&Player, &mut ActionState<PlayerAction>), Without<LocalPlayer>>,
-    inputs: Res<PlayerInputs<SessionConfig>>,
-) {
-    for (player, mut action_state) in query.iter_mut() {
-        let (input, _) = inputs[player.handle];
-        *action_state = ActionState::<PlayerAction>::from_ggrs_session_input(input);
     }
 }
