@@ -1,7 +1,7 @@
 use std::hash::{BuildHasher as _, Hash, Hasher as _};
 
 use bevy::{prelude::*, utils::FixedState};
-use bevy_ggrs::*;
+use bevy_ggrs::{ggrs::GgrsEvent, *};
 use leafwing_input_manager::prelude::InputMap;
 
 use crate::{
@@ -92,4 +92,28 @@ pub fn spawn_synctest_players(mut commands: Commands) {
             PlayerSkin("laika".into()),
         ))
         .add_rollback();
+}
+
+pub fn handle_ggrs_events(mut session: ResMut<Session<SessionConfig>>) {
+    match session.as_mut() {
+        Session::P2P(s) => {
+            for event in s.events() {
+                match event {
+                    GgrsEvent::Disconnected { .. } | GgrsEvent::NetworkInterrupted { .. } => {
+                        warn!("GGRS event: {event:?}")
+                    }
+                    GgrsEvent::DesyncDetected {
+                        local_checksum,
+                        remote_checksum,
+                        frame,
+                        ..
+                    } => {
+                        error!("Desync on frame {frame}. Local checksum: {local_checksum:X}, remote checksum: {remote_checksum:X}");
+                    }
+                    _ => info!("GGRS event: {event:?}"),
+                }
+            }
+        }
+        _ => {}
+    }
 }
