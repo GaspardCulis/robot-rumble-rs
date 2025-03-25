@@ -9,7 +9,8 @@ use crate::{
     GameState,
 };
 use synctest::{
-    checksum_position, p2p_mode, spawn_synctest_players, start_synctest_session, synctest_mode,
+    checksum_position, handle_ggrs_events, p2p_mode, spawn_synctest_players,
+    start_synctest_session, synctest_mode,
 };
 
 const NUM_PLAYERS: usize = 2;
@@ -54,7 +55,10 @@ impl Plugin for NetworkPlugin {
             )
             .add_systems(
                 Update,
-                wait_for_players.run_if(in_state(GameState::MatchMaking).and(p2p_mode)),
+                (
+                    wait_for_players.run_if(in_state(GameState::MatchMaking).and(p2p_mode)),
+                    handle_ggrs_events.run_if(in_state(GameState::InGame)),
+                ),
             );
     }
 }
@@ -95,6 +99,7 @@ fn wait_for_players(
 
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(NUM_PLAYERS)
+        .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 1 })
         .with_input_delay(2);
 
     for (i, player) in players.into_iter().enumerate() {
