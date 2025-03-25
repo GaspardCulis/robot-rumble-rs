@@ -39,7 +39,7 @@ pub enum PlayerAction {
 pub struct PlayerSkin(pub String);
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
-pub struct InAir;
+pub struct InAir(bool);
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -48,6 +48,7 @@ pub struct PlayerBundle {
     position: Position,
     velocity: Velocity,
     rotation: Rotation,
+    in_air: InAir,
     input_velocity: PlayerInputVelocity,
     action_state: ActionState<PlayerAction>,
     mass: Mass,
@@ -61,6 +62,7 @@ impl PlayerBundle {
             marker: Player { handle },
             velocity: Velocity(Vec2::ZERO),
             rotation: Rotation(0.),
+            in_air: InAir(true),
             input_velocity: PlayerInputVelocity(Vec2::ZERO),
             action_state: ActionState::default(),
             mass: Mass(PLAYER_MASS),
@@ -90,7 +92,7 @@ fn player_movement(
             &mut Velocity,
             &mut PlayerInputVelocity,
             &Rotation,
-            Has<InAir>,
+            &InAir,
         ),
         With<Player>,
     >,
@@ -101,7 +103,7 @@ fn player_movement(
     for (action_state, mut position, mut velocity, mut input_velocity, rotation, in_air) in
         query.iter_mut()
     {
-        if action_state.pressed(&PlayerAction::Jump) && !in_air {
+        if action_state.pressed(&PlayerAction::Jump) && !in_air.0 {
             velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
             // Immediately update position
             position.0 += velocity.0 * delta;
@@ -118,7 +120,7 @@ fn player_movement(
             || action_state.pressed(&PlayerAction::Left))
         {
             let mut slow_down_rate = 6.;
-            if in_air {
+            if in_air.0 {
                 slow_down_rate = 1.;
             }
             input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * slow_down_rate);
@@ -133,10 +135,9 @@ fn player_movement(
 }
 
 pub fn player_physics(
-    mut commands: Commands,
     mut player_query: Query<
         (
-            Entity,
+            &mut InAir,
             &mut Position,
             &mut Rotation,
             &mut Velocity,
@@ -147,7 +148,7 @@ pub fn player_physics(
     planet_query: Query<(&Position, &planet::Radius), With<planet::Planet>>,
     time: Res<Time>,
 ) {
-    for (player_entity, mut player_position, mut player_rotation, mut velocity, input_velocity) in
+    for (mut in_air, mut player_position, mut player_rotation, mut velocity, input_velocity) in
         player_query.iter_mut()
     {
         // Find nearest planet (asserts that one planet exists)
@@ -195,9 +196,9 @@ pub fn player_physics(
                 velocity.0 = Vec2::ZERO;
             }
 
-            commands.entity(player_entity).remove::<InAir>();
+            in_air.0 = false;
         } else {
-            commands.entity(player_entity).insert(InAir);
+            in_air.0 = true;
         }
     }
 }
