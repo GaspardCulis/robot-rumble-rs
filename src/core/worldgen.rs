@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::Rng;
+use rand_xoshiro::{rand_core::SeedableRng as _, Xoshiro256PlusPlus};
 use serde::{Deserialize, Serialize};
 
 use crate::entities::planet::{Radius, SpawnPlanetEvent};
@@ -55,25 +56,25 @@ fn handle_genworld_event(
     mut planet_spawn_events: EventWriter<SpawnPlanetEvent>,
 ) {
     for GenerateWorldEvent { seed } in events.read() {
-        let mut rng = StdRng::seed_from_u64(*seed);
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(*seed);
         let mut planets = Vec::new();
         planets.push(SpawnPlanetEvent {
             position: Position(Vec2::ZERO),
             radius: Radius(WORLDGEN_CONFIG.central_star_radius),
-            seed: rng.gen(),
+            seed: rng.random(),
         });
 
         let num_planets: u32 =
-            rng.gen_range(WORLDGEN_CONFIG.min_planets..WORLDGEN_CONFIG.max_planets);
+            rng.random_range(WORLDGEN_CONFIG.min_planets..WORLDGEN_CONFIG.max_planets);
         for i in 0..num_planets {
             info!("Generating planet [{}/{}]", i + 1, num_planets);
 
             loop {
-                let random_direction = Vec2::from_angle(rng.gen_range(1..360) as f32);
-                let radius = Radius(rng.gen_range(
+                let random_direction = Vec2::from_angle(rng.random_range(1..360) as f32);
+                let radius = Radius(rng.random_range(
                     WORLDGEN_CONFIG.min_planet_radius..WORLDGEN_CONFIG.max_planet_radius,
                 ));
-                let distance = rng.gen_range(
+                let distance = rng.random_range(
                     WORLDGEN_CONFIG.min_planet_surface_distance
                         ..WORLDGEN_CONFIG.max_planet_surface_distance,
                 );
@@ -89,7 +90,7 @@ fn handle_genworld_event(
                     planets.push(SpawnPlanetEvent {
                         position,
                         radius,
-                        seed: rng.gen(),
+                        seed: rng.random(),
                     });
                     break;
                 }

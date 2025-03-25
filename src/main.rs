@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use clap::Parser;
-use rand::Rng as _;
 
 mod core;
 mod entities;
@@ -51,10 +50,4 @@ fn main() {
     }
 
     app.run();
-}
-
-fn _init(mut worldgen_events: EventWriter<core::worldgen::GenerateWorldEvent>) {
-    worldgen_events.send(core::worldgen::GenerateWorldEvent {
-        seed: rand::thread_rng().gen(),
-    });
 }
