@@ -4,7 +4,7 @@ use bevy_matchbox::prelude::*;
 use leafwing_input_manager::prelude::InputMap;
 
 use crate::{
-    core::{camera, physics},
+    core::{camera, physics, worldgen},
     entities::player::{self, PlayerAction, PlayerBundle, PlayerSkin},
     GameState,
 };
@@ -40,9 +40,11 @@ impl Plugin for NetworkPlugin {
             .add_systems(
                 OnEnter(GameState::InGame),
                 (
+                    generate_world,
                     spawn_players.run_if(p2p_mode),
                     spawn_synctest_players.run_if(synctest_mode),
-                ),
+                )
+                    .chain(),
             )
             .add_systems(
                 Update,
@@ -144,4 +146,8 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
             ))
             .add_rollback();
     }
+}
+
+fn generate_world(mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>) {
+    worldgen_events.send(worldgen::GenerateWorldEvent { seed: 69 });
 }
