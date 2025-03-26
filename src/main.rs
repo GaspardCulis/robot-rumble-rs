@@ -33,7 +33,8 @@ fn main() {
                 primary_window: Some(Window {
                     title: "Game".into(),
                     resolution: (1280.0, 720.0).into(),
-                    resizable: false,
+                    fit_canvas_to_parent: true,
+                    prevent_default_event_handling: false,
                     ..default()
                 }),
                 ..default()
