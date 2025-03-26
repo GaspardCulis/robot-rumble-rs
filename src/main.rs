@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use clap::Parser;
 
@@ -26,7 +27,10 @@ fn main() {
     let args = Args::parse();
     let mut app = App::new();
 
-    app.add_plugins(
+    app.add_plugins(EmbeddedAssetPlugin {
+        mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
+    })
+    .add_plugins(
         DefaultPlugins
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
