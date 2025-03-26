@@ -7,8 +7,6 @@ use bevy::{prelude::*, utils::HashMap};
 use bevy_ggrs::{GgrsSchedule, LocalInputs, LocalPlayers, PlayerInputs, ReadInputs};
 use leafwing_input_manager::prelude::ActionState;
 
-use super::LocalPlayer;
-
 const INPUT_UP: u8 = 1 << 0;
 const INPUT_DOWN: u8 = 1 << 1;
 const INPUT_LEFT: u8 = 1 << 2;
@@ -26,14 +24,18 @@ impl Plugin for NetworkInputsPlugin {
 
 fn read_local_inputs(
     mut commands: Commands,
-    query: Query<(&Player, &ActionState<PlayerAction>), With<LocalPlayer>>,
+    query: Query<(&Player, &ActionState<PlayerAction>)>,
     local_players: Res<LocalPlayers>,
 ) {
     let mut local_inputs = HashMap::new();
 
-    assert_eq!(local_players.0.len(), query.iter().len());
     for (player, action_state) in query.iter() {
         let handle = player.handle;
+
+        if !local_players.0.contains(&handle) {
+            continue;
+        }
+
         let input = action_state.as_ggrs_session_input();
 
         local_inputs.insert(handle, input);
