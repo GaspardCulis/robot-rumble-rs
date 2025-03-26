@@ -145,7 +145,6 @@ pub fn player_physics(
     planet_query: Query<(&Position, &planet::Radius), With<planet::Planet>>,
     time: Res<Time>,
 ) {
-    return;
     for (mut in_air, mut player_position, mut player_rotation, mut velocity, input_velocity) in
         player_query.iter_mut()
     {
