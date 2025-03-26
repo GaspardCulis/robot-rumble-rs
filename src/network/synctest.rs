@@ -50,10 +50,14 @@ pub fn start_synctest_session(
         .expect("failed to start session");
 
     commands.insert_resource(bevy_ggrs::Session::SyncTest(ggrs_session));
+
     next_state.set(GameState::WorldGen);
 }
 
-pub fn spawn_synctest_players(mut commands: Commands) {
+pub fn spawn_synctest_players(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
     assert_eq!(SYNCTEST_NUM_PLAYERS, 2);
 
     let input_map_a = InputMap::new([
@@ -92,6 +96,8 @@ pub fn spawn_synctest_players(mut commands: Commands) {
             PlayerSkin("laika".into()),
         ))
         .add_rollback();
+
+    next_state.set(GameState::InGame);
 }
 
 pub fn handle_ggrs_events(mut session: ResMut<Session<SessionConfig>>) {
