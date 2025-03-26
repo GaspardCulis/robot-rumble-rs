@@ -71,7 +71,7 @@ impl Plugin for NetworkPlugin {
 }
 
 fn start_matchbox_socket(mut commands: Commands) {
-    let room_url = format!("ws://127.0.0.1:3536/extreme_bevy?next={NUM_PLAYERS}");
+    let room_url = format!("wss://matchbox.gasdev.fr/extreme_bevy?next={NUM_PLAYERS}");
     info!("connecting to matchbox server: {room_url}");
     commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
 }
