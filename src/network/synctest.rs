@@ -8,7 +8,7 @@ use rand::Rng;
 use crate::{
     core::{camera, physics},
     entities::player::{PlayerAction, PlayerBundle, PlayerSkin},
-    network::{LocalPlayer, SessionConfig, SessionSeed},
+    network::{SessionConfig, SessionSeed},
     Args, GameState,
 };
 
@@ -79,7 +79,6 @@ pub fn spawn_synctest_players(mut commands: Commands) {
     commands
         .spawn((
             input_map_a,
-            LocalPlayer,
             PlayerBundle::new(0, physics::Position(Vec2::ZERO)),
             PlayerSkin("laika".into()),
             camera::CameraFollowTarget,
@@ -89,7 +88,6 @@ pub fn spawn_synctest_players(mut commands: Commands) {
     commands
         .spawn((
             input_map_b,
-            LocalPlayer,
             PlayerBundle::new(1, physics::Position(Vec2::ZERO)),
             PlayerSkin("laika".into()),
         ))

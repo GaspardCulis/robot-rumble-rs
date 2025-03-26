@@ -18,6 +18,7 @@ pub struct Args {
 pub enum GameState {
     #[default]
     MatchMaking,
+    WorldGen,
     InGame,
 }
 
