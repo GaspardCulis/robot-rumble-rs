@@ -31,15 +31,12 @@ impl Plugin for PhysicsPlugin {
                 (
                     PhysicsSet::Movement.after(PhysicsSet::Gravity),
                     PhysicsSet::Gravity.after(PhysicsSet::Player),
+                    PhysicsSet::Player,
                 )
                     .run_if(in_state(GameState::InGame)),
             )
-            .add_systems(
-                GgrsSchedule,
-                (update_position, update_spatial_bundles)
-                    .chain()
-                    .in_set(PhysicsSet::Movement),
-            );
+            .add_systems(GgrsSchedule, update_position.in_set(PhysicsSet::Movement))
+            .add_systems(Update, update_spatial_bundles);
     }
 }
 
