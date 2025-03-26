@@ -50,7 +50,7 @@ pub fn start_synctest_session(
         .expect("failed to start session");
 
     commands.insert_resource(bevy_ggrs::Session::SyncTest(ggrs_session));
-    next_state.set(GameState::InGame);
+    next_state.set(GameState::WorldGen);
 }
 
 pub fn spawn_synctest_players(mut commands: Commands) {
@@ -79,7 +79,7 @@ pub fn spawn_synctest_players(mut commands: Commands) {
     commands
         .spawn((
             input_map_a,
-            PlayerBundle::new(0, physics::Position(Vec2::ZERO)),
+            PlayerBundle::new(0, physics::Position(Vec2::ONE * 200.)),
             PlayerSkin("laika".into()),
             camera::CameraFollowTarget,
         ))
@@ -88,7 +88,7 @@ pub fn spawn_synctest_players(mut commands: Commands) {
     commands
         .spawn((
             input_map_b,
-            PlayerBundle::new(1, physics::Position(Vec2::ZERO)),
+            PlayerBundle::new(1, physics::Position(Vec2::ONE * -200.)),
             PlayerSkin("laika".into()),
         ))
         .add_rollback();
