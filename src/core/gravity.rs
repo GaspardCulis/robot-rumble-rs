@@ -34,7 +34,8 @@ fn apply_forces(
 ) {
     for (a_mass, a_position, mut a_velocity) in on.iter_mut() {
         let mut force_vec = Vec2::new(0., 0.);
-        for (b_mass, b_position) in from.iter() {
+
+        for (b_mass, b_position) in from.iter().sort::<&Position>() {
             if a_position.0 == b_position.0 {
                 continue;
             }
