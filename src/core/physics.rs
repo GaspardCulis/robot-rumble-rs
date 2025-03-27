@@ -90,3 +90,18 @@ impl std::ops::Mul<f32> for &Rotation {
         Rotation(self.0 * rhs)
     }
 }
+
+impl Eq for &Position {}
+
+impl PartialOrd for &Position {
+    /// Compares distance from origin
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.length_squared().partial_cmp(&other.length_squared())
+    }
+}
+
+impl Ord for &Position {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.length_squared().total_cmp(&other.length_squared())
+    }
+}
