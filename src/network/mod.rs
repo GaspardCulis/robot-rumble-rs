@@ -51,7 +51,7 @@ impl Plugin for NetworkPlugin {
             )
             .add_systems(
                 OnEnter(GameState::WorldGen),
-                (generate_world, spawn_synctest_players.run_if(synctest_mode)),
+                (generate_world, spawn_synctest_players.run_if(synctest_mode)).chain(),
             )
             .add_systems(
                 OnEnter(GameState::InGame),
