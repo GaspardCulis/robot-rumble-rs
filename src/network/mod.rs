@@ -160,10 +160,10 @@ fn spawn_players(
         Session::Spectator(s) => s.num_players(),
     };
 
-    let mut planets = planets_query.iter().collect::<Vec<_>>();
-    planets.sort_by(|(a_pos, _), (b_pos, _)| {
-        a_pos.length_squared().total_cmp(&b_pos.length_squared())
-    });
+    let mut planets = planets_query
+        .iter()
+        .sort::<&physics::Position>()
+        .collect::<Vec<_>>();
     planets.shuffle(&mut rng);
 
     for handle in 0..num_players {
