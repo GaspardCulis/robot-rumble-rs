@@ -48,3 +48,15 @@ opt-level = 1
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
 opt-level = 3
+
+[profile.release]
+opt-level = "z"
+strip = "symbols"
+lto = "fat"
+codegen-units = 1
+panic = 'abort'
+
+[profile.release.package."*"]
+opt-level = "z"
+strip = "symbols"
+codegen-units = 1
