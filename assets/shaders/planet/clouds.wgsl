@@ -12,6 +12,7 @@ struct CloudsMaterial {
     outline_color: vec4<f32>,
     shadow_color: vec4<f32>,
     shadow_outline_color: vec4<f32>,
+	_wasm_padding: vec3<f32>,
 }
 
 @group(2) @binding(1) var<uniform> pm_clouds: CloudsMaterial;

@@ -18,6 +18,8 @@ pub struct CratersMaterial {
     pub color1: LinearRgba,
     #[uniform(1)]
     pub color2: LinearRgba,
+    #[uniform(1)]
+    _wasm_padding: Vec3,
 }
 
 #[derive(Component, serde::Deserialize, Clone)]
@@ -54,6 +56,7 @@ impl PlanetMaterial for CratersMaterial {
             light_border: config.light_border,
             color1: Srgba::hex(&config.palette[0]).unwrap().into(),
             color2: Srgba::hex(&config.palette[1]).unwrap().into(),
+            _wasm_padding: Vec3::default(),
         }
     }
 }

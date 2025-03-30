@@ -14,6 +14,8 @@ pub struct GasLayersMaterial {
     pub common: super::CommonMaterial,
     #[uniform(1)]
     pub bands: f32,
+    #[uniform(1)]
+    _wasm_padding: Vec3,
     #[texture(2)]
     #[sampler(3)]
     colorscheme_texture: Option<Handle<Image>>,
@@ -77,6 +79,7 @@ impl PlanetMaterial for GasLayersMaterial {
             bands: config.bands,
             colorscheme_texture: Some(images.add(gradient)),
             darkcolorscheme_texture: Some(images.add(dark_gradient)),
+            _wasm_padding: Vec3::default(),
         }
     }
 }

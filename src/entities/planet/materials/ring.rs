@@ -18,6 +18,8 @@ pub struct RingMaterial {
     pub ring_perspective: f32,
     #[uniform(1)]
     pub scale_rel_to_planet: f32,
+    #[uniform(1)]
+    _wasm_padding: f32,
     #[texture(2)]
     #[sampler(3)]
     colorscheme_texture: Option<Handle<Image>>,
@@ -87,6 +89,7 @@ impl PlanetMaterial for RingMaterial {
             scale_rel_to_planet: config.scale_rel_to_planet,
             colorscheme_texture: Some(images.add(gradient)),
             darkcolorscheme_texture: Some(images.add(dark_gradient)),
+            _wasm_padding: 0.0,
         }
     }
 }

@@ -24,6 +24,8 @@ pub struct LakesMaterial {
     pub color2: LinearRgba,
     #[uniform(1)]
     pub color3: LinearRgba,
+    #[uniform(1)]
+    _wasm_padding: f32,
 }
 
 #[derive(serde::Deserialize, Component, Clone)]
@@ -65,6 +67,7 @@ impl PlanetMaterial for LakesMaterial {
             color1: Srgba::hex(&config.palette[0]).unwrap().into(),
             color2: Srgba::hex(&config.palette[1]).unwrap().into(),
             color3: Srgba::hex(&config.palette[2]).unwrap().into(),
+            _wasm_padding: 0.0,
         }
     }
 }
