@@ -3,8 +3,10 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{Material2d, Material2dPlugin},
 };
+use rand::{Rng as _, SeedableRng as _};
+use rand_xoshiro::Xoshiro256PlusPlus;
 
-use crate::utils::gradient;
+use crate::{network::SessionSeed, utils::gradient, GameState};
 
 #[derive(Component)]
 struct Background;
@@ -14,7 +16,7 @@ impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(Material2dPlugin::<NebulaeMaterial>::default())
             .add_plugins(Material2dPlugin::<StarsMaterial>::default())
-            .add_systems(Startup, setup)
+            .add_systems(OnEnter(GameState::WorldGen), setup)
             .add_systems(Update, scale_and_center);
     }
 }
@@ -73,7 +75,10 @@ fn setup(
     mut star_materials: ResMut<Assets<StarsMaterial>>,
     mut nebulae_materials: ResMut<Assets<NebulaeMaterial>>,
     mut images: ResMut<Assets<Image>>,
+    seed: Res<SessionSeed>,
 ) {
+    let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed.0);
+
     let colorscheme = images.add(gradient(
         &vec![0.0, 0.143, 0.286, 0.429, 0.571, 0.714, 0.857, 1.0],
         &vec![
@@ -87,7 +92,7 @@ fn setup(
     let stars = star_materials.add(StarsMaterial {
         size: 10.0,
         octaves: 8,
-        seed: 69.42,
+        seed: rng.random(),
         pixels: 500.0,
         uv_correct: Vec2::ONE,
         colorscheme_texture: Some(colorscheme.clone_weak()),
@@ -96,7 +101,7 @@ fn setup(
     let nebulae = nebulae_materials.add(NebulaeMaterial {
         size: 8.0,
         octaves: 8,
-        seed: 69.42,
+        seed: rng.random(),
         pixels: 500.0,
         uv_correct: Vec2::ONE,
         background_color: Srgba::hex("#171711").unwrap().into(),
