@@ -5,7 +5,8 @@
 struct RingMaterial {
     ring_width: f32,
     ring_perspective: f32,
-    scale_rel_to_planet: f32
+    scale_rel_to_planet: f32,
+    _wasm_padding: f32,
 }
 
 @group(2) @binding(1) var<uniform> pm_ring: RingMaterial;

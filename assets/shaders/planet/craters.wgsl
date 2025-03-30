@@ -6,6 +6,7 @@ struct CratersMaterial {
     light_border: f32,
     color1: vec4<f32>,
     color2: vec4<f32>,
+	_wasm_padding: vec3<f32>,
 }
 
 @group(2) @binding(1) var<uniform> pm_craters: CratersMaterial;

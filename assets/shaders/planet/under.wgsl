@@ -9,6 +9,7 @@ struct UnderMaterial {
     color1: vec4<f32>,
     color2: vec4<f32>,
     color3: vec4<f32>,
+    _wasm_padding: f32,
 }
 
 @group(2) @binding(1) var<uniform> pm_under: UnderMaterial;

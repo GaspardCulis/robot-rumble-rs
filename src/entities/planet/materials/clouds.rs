@@ -30,6 +30,8 @@ pub struct CloudsMaterial {
     pub shadow_color: LinearRgba,
     #[uniform(1)]
     pub shadow_outline_color: LinearRgba,
+    #[uniform(1)]
+    _wasm_padding: Vec3,
 }
 
 #[derive(Component, serde::Deserialize, Clone)]
@@ -78,6 +80,7 @@ impl PlanetMaterial for CloudsMaterial {
             outline_color: Srgba::hex(&config.palette[1]).unwrap().into(),
             shadow_color: Srgba::hex(&config.palette[2]).unwrap().into(),
             shadow_outline_color: Srgba::hex(&config.palette[3]).unwrap().into(),
+            _wasm_padding: Vec3::default(),
         }
     }
 }

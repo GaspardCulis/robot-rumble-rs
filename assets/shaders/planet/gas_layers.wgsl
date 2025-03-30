@@ -4,6 +4,7 @@
     
 struct GasLayersMaterial {
     bands: f32,
+    _wasm_padding: vec3<f32>,
 }
 
 @group(2) @binding(1) var<uniform> pm_gas_layers: GasLayersMaterial;
