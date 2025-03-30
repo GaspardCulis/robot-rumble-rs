@@ -26,7 +26,7 @@ mod synctest;
 pub type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
 
 #[derive(Resource, Default, Clone, Copy, Debug, Deref, DerefMut)]
-struct SessionSeed(u64);
+pub struct SessionSeed(pub u64);
 
 #[derive(Resource, Default)]
 struct StartMatchDelay(Timer);
