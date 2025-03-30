@@ -18,6 +18,8 @@ pub struct DryTerrainMaterial {
     pub light_distance_1: f32,
     #[uniform(1)]
     pub light_distance_2: f32,
+    #[uniform(1)]
+    _wasm_padding: f32,
     #[texture(2)]
     #[sampler(3)]
     color_texture: Option<Handle<Image>>,
@@ -70,6 +72,7 @@ impl PlanetMaterial for DryTerrainMaterial {
             light_distance_1: config.light_distance_1,
             light_distance_2: config.light_distance_2,
             color_texture: Some(images.add(gradient)),
+            _wasm_padding: 0.0,
         }
     }
 }
