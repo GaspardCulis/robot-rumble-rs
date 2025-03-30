@@ -6,6 +6,7 @@ struct BackgroundStarsMaterial {
     seed: f32,
     pixels: f32,
     uv_correct: vec2<f32>,
+    _wasm_padding: vec2<f32>,
 }
 
 @group(2) @binding(0) var<uniform> bg_stars: BackgroundStarsMaterial;

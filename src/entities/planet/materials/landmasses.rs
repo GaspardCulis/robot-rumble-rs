@@ -26,6 +26,8 @@ pub struct LandmassesMaterial {
     pub color3: LinearRgba,
     #[uniform(1)]
     pub color4: LinearRgba,
+    #[uniform(1)]
+    _wasm_padding: f32,
 }
 
 #[derive(serde::Deserialize, Component, Clone)]
@@ -68,6 +70,7 @@ impl PlanetMaterial for LandmassesMaterial {
             color2: Srgba::hex(&config.palette[1]).unwrap().into(),
             color3: Srgba::hex(&config.palette[2]).unwrap().into(),
             color4: Srgba::hex(&config.palette[3]).unwrap().into(),
+            _wasm_padding: 0.0,
         }
     }
 }

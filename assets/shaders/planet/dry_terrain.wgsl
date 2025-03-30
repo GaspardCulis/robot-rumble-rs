@@ -6,6 +6,7 @@ struct DryTerrainMaterial {
     dither_size: f32,
     light_distance_1: f32,
     light_distance_2: f32,
+    _wasm_padding: f32,
 }
 
 @group(2) @binding(1) var<uniform> pm_dry: DryTerrainMaterial;
