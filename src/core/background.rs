@@ -33,6 +33,8 @@ struct StarsMaterial {
     pub pixels: f32,
     #[uniform(0)]
     pub uv_correct: Vec2,
+    #[uniform(0)]
+    _wasm_padding: Vec2,
     #[texture(1)]
     #[sampler(2)]
     colorscheme_texture: Option<Handle<Image>>,
@@ -58,6 +60,8 @@ struct NebulaeMaterial {
     pub uv_correct: Vec2,
     #[uniform(0)]
     pub background_color: LinearRgba,
+    #[uniform(0)]
+    _wasm_padding: Vec2,
     #[texture(1)]
     #[sampler(2)]
     colorscheme_texture: Option<Handle<Image>>,
@@ -96,6 +100,7 @@ fn setup(
         pixels: 500.0,
         uv_correct: Vec2::ONE,
         colorscheme_texture: Some(colorscheme.clone_weak()),
+        _wasm_padding: Vec2::default(),
     });
 
     let nebulae = nebulae_materials.add(NebulaeMaterial {
@@ -106,6 +111,7 @@ fn setup(
         uv_correct: Vec2::ONE,
         background_color: Srgba::hex("#171711").unwrap().into(),
         colorscheme_texture: Some(colorscheme),
+        _wasm_padding: Vec2::default(),
     });
 
     commands.spawn((
