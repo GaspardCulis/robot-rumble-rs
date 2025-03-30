@@ -20,7 +20,7 @@ The Rust rewrite of [Robot Rumble](https://github.com/GaspardCulis/robot-rumble)
     - [ ] Implement all shader types
     - [x] Create modular planet config system using [ron](https://github.com/ron-rs/ron)
   - [ ] Map generation
-- [x] Multiplayer using [lightyear](https://docs.rs/lightyear)
+  - [x] Multiplayer using [matchbox](https://docs.rs/bevy_matchbox)
 - [ ] UI
   - [ ] Main menu
   - [ ] Server browser menu
