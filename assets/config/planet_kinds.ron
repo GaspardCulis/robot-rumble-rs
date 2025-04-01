@@ -197,6 +197,24 @@ PlanetsConfig([
                     ),
                 ))
             ),
+            (
+                scale: Some(2.0),
+                material: StarFlares ((
+                    // Common
+                    size: 4.0,
+                    octaves: 4,
+                    // Material specific
+                    scale: 1.0,
+                    storm_width: 0.3,
+                    storm_dither_width: 0,
+                    circle_amount: 2.0,
+                    circle_scale: 1.0,
+                    colorscheme: (
+                        offsets: [0.0, 1.0],
+                        colors: ["#77d6c1", "#ffffe4"],
+                    ),
+                ))
+            ),
         ]
     ),
 ])
