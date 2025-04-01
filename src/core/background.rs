@@ -157,6 +157,6 @@ fn scale_and_center(
 
         bg_transform.translation.x = camera.translation.x;
         bg_transform.translation.y = camera.translation.y;
-        bg_transform.scale = Vec3::splat(scale);
+        bg_transform.scale = Vec3::splat(scale) * camera.scale;
     }
 }
