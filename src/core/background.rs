@@ -44,6 +44,10 @@ impl Material2d for StarsMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/background/stars.wgsl".into()
     }
+
+    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
+        bevy::sprite::AlphaMode2d::Blend
+    }
 }
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
@@ -70,6 +74,10 @@ struct NebulaeMaterial {
 impl Material2d for NebulaeMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/background/nebulae.wgsl".into()
+    }
+
+    fn alpha_mode(&self) -> bevy::sprite::AlphaMode2d {
+        bevy::sprite::AlphaMode2d::Blend
     }
 }
 
