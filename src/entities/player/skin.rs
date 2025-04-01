@@ -6,7 +6,7 @@ use crate::utils::spritesheet;
 
 use super::{Player, PlayerSkin};
 
-pub const PLAYER_SKIN_SCALE: f32 = 3.;
+pub const PLAYER_SKIN_SCALE: f32 = 2.4;
 
 #[derive(serde::Deserialize, Asset, TypePath, Deref)]
 struct SkinsConfig(HashMap<String, AnimationsConfig>);
@@ -98,7 +98,8 @@ fn load_skin_on_player(
                             index: default_anim.indices.first,
                         },
                     ),
-                    Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE)),
+                    Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE))
+                        .with_translation(Vec3::new(0.0, 0.0, 10.0)),
                     default_anim.indices.clone(),
                     default_anim.timer.clone(),
                     animations_handle,
