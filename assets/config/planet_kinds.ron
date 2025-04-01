@@ -180,4 +180,23 @@ PlanetsConfig([
             )
         ]
     ),
+    // SunLike
+    PlanetKindConfig (
+        type: Star,
+        layers: [
+            (
+                material: Star ((
+                    // Common
+                    size: 5.0,
+                    octaves: 4,
+                    // Material specific
+                    tiles: 1.0,
+                    colorscheme: (
+                        offsets: [0.0, 0.33, 0.66, 1.0],
+                        colors: ["#f5ffe8", "#77d6c1", "#1c92a7", "#033e5e"],
+                    ),
+                ))
+            ),
+        ]
+    ),
 ])

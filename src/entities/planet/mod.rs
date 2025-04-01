@@ -151,6 +151,13 @@ fn spawn_config_layers(
                                 z_index,
                             })
                         }
+                        PlanetLayerMaterialConfig::Star(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<StarMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
                     };
                 }
             } else {

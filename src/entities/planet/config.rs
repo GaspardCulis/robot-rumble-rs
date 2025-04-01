@@ -46,5 +46,6 @@ pub enum PlanetLayerMaterialConfig {
     Craters(<CratersMaterial as PlanetMaterial>::Config),
     DryTerrain(<DryTerrainMaterial as PlanetMaterial>::Config),
     GasLayers(<GasLayersMaterial as PlanetMaterial>::Config),
+    Star(<StarMaterial as PlanetMaterial>::Config),
     Ring(<RingMaterial as PlanetMaterial>::Config),
 }
