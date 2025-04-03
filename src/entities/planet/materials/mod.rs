@@ -17,6 +17,7 @@ mod lakes;
 mod landmasses;
 mod ring;
 mod star;
+mod star_blobs;
 mod star_flares;
 mod under;
 pub use clouds::CloudsMaterial;
@@ -28,6 +29,7 @@ pub use lakes::LakesMaterial;
 pub use landmasses::LandmassesMaterial;
 pub use ring::RingMaterial;
 pub use star::StarMaterial;
+pub use star_blobs::StarBlobsMaterial;
 pub use star_flares::StarFlaresMaterial;
 pub use under::UnderMaterial;
 
@@ -66,6 +68,7 @@ impl Plugin for PlanetMaterialsPlugin {
             .add_plugins(PlanetMaterialPlugin::<LandmassesMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<RingMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<StarMaterial>::default())
+            .add_plugins(PlanetMaterialPlugin::<StarBlobsMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<StarFlaresMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<UnderMaterial>::default());
     }
