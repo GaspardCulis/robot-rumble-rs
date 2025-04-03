@@ -104,8 +104,8 @@ fn setup(
     ));
 
     let nebulae = nebulae_materials.add(NebulaeMaterial {
-        size: 8.0,
-        octaves: 8,
+        size: 6.0,
+        octaves: 3,
         seed: rng.random(),
         pixels: 500.0,
         uv_correct: Vec2::ONE,
