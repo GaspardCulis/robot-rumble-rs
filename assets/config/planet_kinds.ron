@@ -1,5 +1,6 @@
 PlanetsConfig([
     // EarthLike
+    /*
     PlanetKindConfig (
         type: Planet,
         layers: [
@@ -180,10 +181,23 @@ PlanetsConfig([
             )
         ]
     ),
+    */
     // SunLike
     PlanetKindConfig (
         type: Star,
         layers: [
+            (
+                scale: Some(2.0),
+                material: StarBlobs ((
+                    // Common
+                    size: 5.0,
+                    octaves: 4,
+                    // Material specific
+                    circle_amount: 2.0,
+                    circle_size: 1.0,
+                    color: "#ffffe4",
+                ))
+            ),
             (
                 material: Star ((
                     // Common
