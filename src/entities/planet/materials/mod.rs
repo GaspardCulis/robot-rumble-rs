@@ -92,7 +92,10 @@ where
     fn build(&self, app: &mut App) {
         app.register_type::<M>()
             .add_plugins(Material2dPlugin::<M>::default())
-            .add_systems(Update, instance_layer_material::<M>);
+            .add_systems(
+                Update,
+                instance_layer_material::<M>.run_if(resource_exists::<network::SessionSeed>),
+            );
     }
 }
 
