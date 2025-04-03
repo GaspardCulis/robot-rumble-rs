@@ -86,11 +86,13 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut star_materials: ResMut<Assets<StarsMaterial>>,
     mut nebulae_materials: ResMut<Assets<NebulaeMaterial>>,
+    mut color_materials: ResMut<Assets<ColorMaterial>>,
     mut images: ResMut<Assets<Image>>,
     seed: Res<SessionSeed>,
 ) {
     let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed.0);
 
+    let background_color = Srgba::hex("#171711").unwrap();
     let colorscheme = images.add(gradient(
         &vec![0.0, 0.143, 0.286, 0.429, 0.571, 0.714, 0.857, 1.0],
         &vec![
@@ -101,26 +103,28 @@ fn setup(
         .collect(),
     ));
 
-    let stars = star_materials.add(StarsMaterial {
-        size: 10.0,
-        octaves: 8,
-        seed: rng.random(),
-        pixels: 500.0,
-        uv_correct: Vec2::ONE,
-        colorscheme_texture: Some(colorscheme.clone_weak()),
-        _wasm_padding: Vec2::default(),
-    });
-
     let nebulae = nebulae_materials.add(NebulaeMaterial {
         size: 8.0,
         octaves: 8,
         seed: rng.random(),
         pixels: 500.0,
         uv_correct: Vec2::ONE,
-        background_color: Srgba::hex("#171711").unwrap().into(),
+        background_color: Srgba::hex("#001711").unwrap().into(),
+        colorscheme_texture: Some(colorscheme.clone_weak()),
+        _wasm_padding: Vec2::default(),
+    });
+
+    let stars = star_materials.add(StarsMaterial {
+        size: 10.0,
+        octaves: 8,
+        seed: rng.random(),
+        pixels: 500.0,
+        uv_correct: Vec2::ONE,
         colorscheme_texture: Some(colorscheme),
         _wasm_padding: Vec2::default(),
     });
+
+    let background = color_materials.add(Color::from(background_color));
 
     commands.spawn((
         Background,
@@ -129,7 +133,7 @@ fn setup(
         Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
             x: 0.,
             y: 0.,
-            z: -11.,
+            z: -10.,
         }),
     ));
 
@@ -140,7 +144,18 @@ fn setup(
         Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
             x: 0.,
             y: 0.,
-            z: -10.,
+            z: -10.1,
+        }),
+    ));
+
+    commands.spawn((
+        Background,
+        Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
+        MeshMaterial2d(background),
+        Transform::from_scale(Vec3::splat(500.0)).with_translation(Vec3 {
+            x: 0.,
+            y: 0.,
+            z: -10.2,
         }),
     ));
 }
