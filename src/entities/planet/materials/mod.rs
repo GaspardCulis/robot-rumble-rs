@@ -1,3 +1,5 @@
+use crate::network;
+
 use super::Radius;
 use bevy::{
     asset::load_internal_asset,
@@ -5,7 +7,8 @@ use bevy::{
     reflect::GetTypeRegistration,
     sprite::{Material2d, Material2dPlugin},
 };
-use rand::Rng;
+use rand::{Rng, SeedableRng as _};
+use rand_xoshiro::Xoshiro256PlusPlus;
 use std::marker::PhantomData;
 
 mod clouds;
@@ -106,11 +109,14 @@ fn instance_layer_material<M: PlanetMaterial>(
     mut images: ResMut<Assets<Image>>,
     mut material: ResMut<Assets<M>>,
     query: Query<(Entity, &Radius, &PlanetMaterialLayerInit<M>), Added<PlanetMaterialLayerInit<M>>>,
+    seed: Res<network::SessionSeed>,
 ) {
     for (entity, radius, layer) in query.iter() {
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed.0);
+
         let common = CommonMaterial {
             pixels: f32::min(radius.0 as f32 / 2., 200.),
-            seed: rand::rng().random(),
+            seed: rng.random(),
             ..Default::default()
         }
         .scale(layer.scale);
