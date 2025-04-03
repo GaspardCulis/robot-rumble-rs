@@ -1,6 +1,6 @@
 #import bevy_sprite::mesh2d_view_bindings::globals;
 #import bevy_sprite::mesh2d_vertex_output::VertexOutput;
-#import planet::common::{pm_common, dither, fbm, rand, rotate, spherify};
+#import planet::common::{pm_common, dither, fbm, rand, rotate, spherify, atan_xy};
 
 struct StarFlaresMaterial {
     scale: f32,
@@ -39,7 +39,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 
     uv = rotate(uv, pm_common.rotation);
 
-    let angle = atan2(uv.x - 0.5, uv.y - 0.5) * 0.4;
+    let angle = atan_xy(uv.x - 0.5, uv.y - 0.5) * 0.4;
 
     let d = distance(uv, vec2<f32>(0.5));
 
