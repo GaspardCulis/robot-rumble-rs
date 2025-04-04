@@ -57,12 +57,12 @@ The Rust rewrite of [Robot Rumble](https://github.com/GaspardCulis/robot-rumble)
         [NoAtmosphere](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/NoAtmosphere/NoAtmosphere.gdshader)
       - \[ \]
         [LandRivers](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Rivers/LandRivers.gdshader)
-      - \[ \] Star
-        - \[ \]
+      - \[x\] Star (FIX: Loop StarFlares and StarBlobs)
+        - \[x\]
           [Star](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Star/Star.gdshader)
-        - \[ \]
+        - \[x\]
           [StarBlobs](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Star/StarBlobs.gdshader)
-        - \[ \]
+        - \[x\]
           [StarFlares](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Star/StarFlares.gdshader)
     - \[x\] Create modular planet config system using
       [ron](https://github.com/ron-rs/ron)
