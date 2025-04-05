@@ -1,6 +1,5 @@
 PlanetsConfig([
     // EarthLike
-    /*
     PlanetKindConfig (
         type: Planet,
         layers: [
@@ -181,7 +180,6 @@ PlanetsConfig([
             )
         ]
     ),
-    */
     // SunLike
     PlanetKindConfig (
         type: Star,
