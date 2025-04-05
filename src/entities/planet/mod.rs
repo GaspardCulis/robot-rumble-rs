@@ -21,10 +21,17 @@ pub struct Planet;
 #[derive(Component, Debug, Reflect, Copy, Clone, PartialEq)]
 pub struct Radius(pub u32);
 
+#[derive(Component, Debug, Reflect, Copy, Clone, PartialEq, serde::Deserialize)]
+pub enum PlanetType {
+    Planet,
+    Star,
+}
+
 #[derive(Event)]
 pub struct SpawnPlanetEvent {
     pub position: Position,
     pub radius: Radius,
+    pub r#type: PlanetType,
     pub seed: u64,
 }
 
@@ -34,14 +41,16 @@ struct PlanetBundle {
     marker: Planet,
     position: Position,
     radius: Radius,
+    r#type: PlanetType,
     mass: Mass,
 }
 
 impl PlanetBundle {
-    fn new(position: Position, radius: Radius) -> Self {
+    fn new(position: Position, radius: Radius, r#type: PlanetType) -> Self {
         Self {
             position,
             radius,
+            r#type,
             name: Name::new("Planet"),
             marker: Planet,
             mass: Mass(radius_to_mass(radius)),
@@ -68,7 +77,7 @@ fn load_planets_config(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn handle_spawn_planet_event(mut events: EventReader<SpawnPlanetEvent>, mut commands: Commands) {
     for event in events.read() {
         commands.spawn((
-            PlanetBundle::new(event.position.clone(), event.radius),
+            PlanetBundle::new(event.position.clone(), event.radius, event.r#type),
             GenerationSeed(event.seed),
         ));
     }
@@ -78,9 +87,9 @@ fn spawn_config_layers(
     mut commands: Commands,
     planet_config: Res<PlanetsConfigHandle>,
     planet_configs: Res<Assets<PlanetsConfig>>,
-    query: Query<(Entity, Option<&worldgen::GenerationSeed>), Added<Planet>>,
+    query: Query<(Entity, &PlanetType, Option<&worldgen::GenerationSeed>), Added<Planet>>,
 ) {
-    for (planet_entity, generation_seed) in query.iter() {
+    for (planet_entity, planet_type, generation_seed) in query.iter() {
         let mut planet = commands.entity(planet_entity);
         let mut rng = match generation_seed {
             Some(seed) => Xoshiro256PlusPlus::seed_from_u64(seed.0),
@@ -89,7 +98,13 @@ fn spawn_config_layers(
 
         // Get config
         if let Some(config) = planet_configs.get(planet_config.0.id()) {
-            if let Some(kind) = config.0.choose(&mut rng) {
+            if let Some(kind) = config
+                .0
+                .iter()
+                .filter(|c| c.r#type == *planet_type)
+                .collect::<Vec<_>>()
+                .choose(&mut rng)
+            {
                 // Spawn the planet's material layers
                 for (i, layer) in kind.layers.iter().enumerate() {
                     let scale = layer.scale.unwrap_or(1.0);
