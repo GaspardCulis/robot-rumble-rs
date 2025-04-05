@@ -68,9 +68,9 @@ fn circleNoise(uv: vec2<f32>) -> f32 {
     tmp_uv.x += uv_y * .31;
     let f = fract(tmp_uv);
     let h = rand(vec2<f32>(floor(tmp_uv.x), floor(uv_y)));
-    let m = (length(f, -0.25 - (h * 0.5)));
+    let m = (length(f - 0.25 - (h * 0.5)));
     let r = h * 0.25;
-    return smoothstep(r, -0.1 * r, r, m);
+    return smoothstep(r - 0.1 * r, r, m);
 }
 
 /// Tweaked for compatibility with Godot GLSL version
