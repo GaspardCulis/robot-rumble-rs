@@ -15,7 +15,7 @@ struct CommonMaterial {
 
 fn rand(coord: vec2<f32>) -> f32 {
     let tmp = coord % (vec2<f32>(2.0, 1.0) * round(pm_common.size));
-    return fract(sin(dot(tmp.xy, vec2<f32>(12.9898,78.233))) * 15.5453 * pm_common.seed);
+    return fract(sin(dot(tmp.xy, vec2<f32>(12.9898, 78.233))) * 15.5453 * pm_common.seed);
 }
 
 fn noise(coord: vec2<f32>) -> f32 {
@@ -29,7 +29,7 @@ fn noise(coord: vec2<f32>) -> f32 {
 
     let cubic = f * f * (3.0 - 2.0 * f);
 
-    return mix(a, b, cubic.x) + (c-a) * cubic.y * (1.0 - cubic.x) + (d-b) * cubic.x * cubic.y;
+    return mix(a, b, cubic.x) + (c - a) * cubic.y * (1.0 - cubic.x) + (d - b) * cubic.x * cubic.y;
 }
 
 fn fbm(coord: vec2<f32>) -> f32 {
@@ -46,7 +46,7 @@ fn fbm(coord: vec2<f32>) -> f32 {
 }
 
 fn dither(uv1: vec2<f32>, uv2: vec2<f32>) -> bool {
-    return ((uv1.x + uv2.y) % (2.0/pm_common.pixels)) <= 1.0 / pm_common.pixels;
+    return ((uv1.x + uv2.y) % (2.0 / pm_common.pixels)) <= 1.0 / pm_common.pixels;
 }
 
 fn rotate(coords: vec2<f32>, angle: f32) -> vec2<f32> {
@@ -58,17 +58,45 @@ fn rotate(coords: vec2<f32>, angle: f32) -> vec2<f32> {
 fn spherify(uv: vec2<f32>) -> vec2<f32> {
     let centered = uv * 2.0 - 1.0;
     let z = sqrt(1.0 - dot(centered.xy, centered.xy));
-    let sphere = centered/(z + 1.0);
+    let sphere = centered / (z + 1.0);
     return sphere * 0.5 + 0.5;
 }
 
 fn circleNoise(uv: vec2<f32>) -> f32 {
-	let uv_y = floor(uv.y);
-	var tmp_uv = uv;
-    tmp_uv.x += uv_y*.31;
+    let uv_y = floor(uv.y);
+    var tmp_uv = uv;
+    tmp_uv.x += uv_y * .31;
     let f = fract(tmp_uv);
-	let h = rand(vec2<f32>(floor(tmp_uv.x),floor(uv_y)));
-    let m = (length(f-0.25-(h*0.5)));
-    let r = h*0.25;
-    return smoothstep(r-0.1*r, r, m);
+    let h = rand(vec2<f32>(floor(tmp_uv.x), floor(uv_y)));
+    let m = (length(f, -0.25 - (h * 0.5)));
+    let r = h * 0.25;
+    return smoothstep(r, -0.1 * r, r, m);
+}
+
+/// Tweaked for compatibility with Godot GLSL version
+fn atan_xy(x: f32, y: f32) -> f32 {
+    let pi = 3.1415926535;
+
+    if x > 0.0 && y < 0.0 {
+        return -atan(y / x);
+    }
+    if x > 0.0 && y >= 0.0 {
+        return atan(y / x);
+    }
+
+    if x < 0.0 && y >= 0.0 {
+        return atan(y / x) + pi;
+    }
+    if x < 0.0 && y < 0.0 {
+        return atan(y / x) + pi;
+    }
+
+    if x == 0.0 && y > 0.0 {
+        return pi / 2.0;
+    }
+    if x == 0.0 && y < 0.0 {
+        return -pi / 2.0;
+    }
+
+    return 0.0;
 }
