@@ -1,6 +1,6 @@
 use bevy::{asset::Asset, reflect::TypePath};
 
-use super::materials::*;
+use super::{materials::*, PlanetType};
 
 pub mod types {
     pub type ColorConfig = String;
@@ -20,14 +20,8 @@ pub struct PlanetsConfig(pub Vec<PlanetKindConfig>);
 
 #[derive(serde::Deserialize)]
 pub struct PlanetKindConfig {
-    pub r#type: PlanetTypeConfig,
+    pub r#type: PlanetType,
     pub layers: Vec<PlanetLayerConfig>,
-}
-
-#[derive(serde::Deserialize)]
-pub enum PlanetTypeConfig {
-    Planet,
-    Star,
 }
 
 #[derive(serde::Deserialize)]

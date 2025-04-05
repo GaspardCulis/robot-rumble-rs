@@ -3,7 +3,7 @@ use rand::Rng;
 use rand_xoshiro::{rand_core::SeedableRng as _, Xoshiro256PlusPlus};
 use serde::{Deserialize, Serialize};
 
-use crate::entities::planet::{Radius, SpawnPlanetEvent};
+use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 
 use super::physics::Position;
 
@@ -61,6 +61,7 @@ fn handle_genworld_event(
         planets.push(SpawnPlanetEvent {
             position: Position(Vec2::ZERO),
             radius: Radius(WORLDGEN_CONFIG.central_star_radius),
+            r#type: PlanetType::Star,
             seed: rng.random(),
         });
 
@@ -90,6 +91,7 @@ fn handle_genworld_event(
                     planets.push(SpawnPlanetEvent {
                         position,
                         radius,
+                        r#type: PlanetType::Planet,
                         seed: rng.random(),
                     });
                     break;
