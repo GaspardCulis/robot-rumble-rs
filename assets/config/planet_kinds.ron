@@ -1,5 +1,6 @@
 PlanetsConfig([
     // EarthLike
+    /*
     PlanetKindConfig (
         type: Planet,
         layers: [
@@ -178,6 +179,56 @@ PlanetsConfig([
                     )
                 ))
             )
+        ]
+    ),
+    */
+    // SunLike
+    PlanetKindConfig (
+        type: Star,
+        layers: [
+            (
+                scale: Some(2.0),
+                material: StarBlobs ((
+                    // Common
+                    size: 5.0,
+                    octaves: 4,
+                    // Material specific
+                    circle_amount: 2.0,
+                    circle_size: 1.0,
+                    color: "#ffffe4",
+                ))
+            ),
+            (
+                material: Star ((
+                    // Common
+                    size: 5.0,
+                    octaves: 4,
+                    // Material specific
+                    tiles: 1.0,
+                    colorscheme: (
+                        offsets: [0.0, 0.33, 0.66, 1.0],
+                        colors: ["#f5ffe8", "#77d6c1", "#1c92a7", "#033e5e"],
+                    ),
+                ))
+            ),
+            (
+                scale: Some(2.0),
+                material: StarFlares ((
+                    // Common
+                    size: 4.0,
+                    octaves: 4,
+                    // Material specific
+                    scale: 1.0,
+                    storm_width: 0.3,
+                    storm_dither_width: 0,
+                    circle_amount: 2.0,
+                    circle_scale: 1.0,
+                    colorscheme: (
+                        offsets: [0.0, 1.0],
+                        colors: ["#77d6c1", "#ffffe4"],
+                    ),
+                ))
+            ),
         ]
     ),
 ])
