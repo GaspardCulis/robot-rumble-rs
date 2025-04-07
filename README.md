@@ -16,7 +16,7 @@ The Rust rewrite of [Robot Rumble](https://github.com/GaspardCulis/robot-rumble)
 - \[ \] Planets and environment:
   - \[x\] Implement
     [pixel planet](https://deep-fold.itch.io/pixel-planet-generator) shader
-  - \[ \] Add background shader using
+  - \[x\] Add background shader using
     [pixel space background](https://deep-fold.itch.io/space-background-generator)
     shader
   - \[ \] Add multiple kinds of planets
