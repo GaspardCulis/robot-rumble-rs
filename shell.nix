@@ -1,16 +1,24 @@
-{pkgs ? import <nixpkgs> {}}:
-with pkgs;
-  mkShell rec {
-    nativeBuildInputs = [
+let
+  rust_overlay = import (builtins.fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz");
+  pkgs = import <nixpkgs> {overlays = [rust_overlay];};
+  rustVersion = "latest";
+  rust = pkgs.rust-bin.nightly.${rustVersion}.default.override {
+    extensions = [
+      "rust-src" # for rust-analyzer
+      "rust-analyzer"
+      "rustc-codegen-cranelift" # Fast compile times
+    ];
+    targets = ["wasm32-unknown-unknown"];
+  };
+in
+  pkgs.mkShell rec {
+    nativeBuildInputs = with pkgs; [
+      rust
       pkg-config
-      rustc
-      cargo
-      rustfmt
-      rust-analyzer
-      clippy
       wasm-bindgen-cli
     ];
-    buildInputs = [
+    buildInputs = with pkgs; [
+      mold
       clang
       llvmPackages.bintools
       udev
@@ -23,8 +31,7 @@ with pkgs;
       libxkbcommon
       wayland # To use the wayland feature
     ];
-    LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
-    RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+    LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
 
     shellHook = ''
       export PATH="$HOME/.cargo/bin:$PATH"
