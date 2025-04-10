@@ -1,5 +1,8 @@
 let
-  rust_overlay = import (builtins.fetchTarball "https://github.com/oxalica/rust-overlay/archive/master.tar.gz");
+  rust_overlay = import (builtins.fetchGit {
+    url = "https://github.com/oxalica/rust-overlay";
+    rev = "2af83121f9d2c5281796e60e2b048906a84b9fac";
+  });
   pkgs = import <nixpkgs> {overlays = [rust_overlay];};
   rustVersion = "latest";
   rust = pkgs.rust-bin.nightly.${rustVersion}.default.override {
