@@ -2,6 +2,10 @@
 
 The Rust rewrite of [Robot Rumble](https://github.com/GaspardCulis/robot-rumble)
 
+## Building
+
+In order to minimize compile times, the `mold` linker is required. The `cranelift` codegen backend also required, see [here](https://github.com/rust-lang/rustc_codegen_cranelift?tab=readme-ov-file#download-using-rustup) for recommended installation intructions.
+
 ## TODOS
 
 - \[ \] Player:
