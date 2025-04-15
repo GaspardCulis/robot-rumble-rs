@@ -5,7 +5,8 @@ let
   });
   pkgs = import <nixpkgs> {overlays = [rust_overlay];};
   rustVersion = "latest";
-  rust = pkgs.rust-bin.nightly.${rustVersion}.default.override {
+  rustToolchain = (pkgs.lib.importTOML ./rust-toolchain.toml).toolchain.channel;
+  rust = pkgs.rust-bin.${rustToolchain}.${rustVersion}.default.override {
     extensions = [
       "rust-src" # for rust-analyzer
       "rust-analyzer"
