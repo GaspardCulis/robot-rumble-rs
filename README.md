@@ -34,6 +34,15 @@ rustup component add llvm-tools-preview
 rustup component add rustc-codegen-cranelift-preview --toolchain nightly
 ```
 
+### WASM
+
+This section covers exporting the release version to WASM on a NixOS machine.
+
+```sh
+cargo build --profile wasm-release --target wasm32-unknown-unknown
+wasm-bindgen --no-typescript --target web --out-dir <OUT_DIR> --out-name "robot-rumble" target/wasm32-unknown-unknown/wasm-release/robot-rumble-client.wasm
+```
+
 ## TODOS
 
 - \[ \] Player:
