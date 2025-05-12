@@ -4,7 +4,35 @@ The Rust rewrite of [Robot Rumble](https://github.com/GaspardCulis/robot-rumble)
 
 ## Building
 
-In order to minimize compile times, the `mold` linker is required. The `cranelift` codegen backend also required, see [here](https://github.com/rust-lang/rustc_codegen_cranelift?tab=readme-ov-file#download-using-rustup) for recommended installation intructions.
+This project uses nightly Rust. In order to minimize compile times, the `mold`
+linker and `cranelift` codegen backend are required.
+
+See the
+[official Bevy guide](https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional)
+for more information.
+
+### Linux (Debian based)
+
+```sh
+sudo apt-get install mold clang
+rustup component add rustc-codegen-cranelift-preview --toolchain nightly
+```
+
+### NixOS
+
+Everything is included in the workspace `shell.nix`.
+
+```
+nix-shell
+```
+
+### Cringedows
+
+```sh
+cargo install -f cargo-binutils
+rustup component add llvm-tools-preview
+rustup component add rustc-codegen-cranelift-preview --toolchain nightly
+```
 
 ## TODOS
 
