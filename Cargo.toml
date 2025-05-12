@@ -40,7 +40,7 @@ features = [
   "wayland",
   "webgl2",
 
-  "asset_processor"
+  "asset_processor",
 ]
 
 # Enable a small amount of optimization in debug mode
@@ -53,13 +53,11 @@ codegen-backend = "cranelift"
 opt-level = 3
 
 [profile.release]
-opt-level = "z"
-strip = "symbols"
+codegen-units = 1
 lto = "fat"
-codegen-units = 1
-panic = 'abort'
 
-[profile.release.package."*"]
+[profile.wasm-release]
+inherits = "release"
 opt-level = "z"
 strip = "symbols"
-codegen-units = 1
+panic = 'abort'
