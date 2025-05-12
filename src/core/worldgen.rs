@@ -80,7 +80,8 @@ fn handle_genworld_event(
                     worldgen_config.min_planet_radius..worldgen_config.max_planet_radius,
                 ));
                 let distance = rng.random_range(
-                    worldgen_config.min_planet_surface_distance..worldgen_config.max_planet_surface_distance,
+                    worldgen_config.min_planet_surface_distance
+                        ..worldgen_config.max_planet_surface_distance,
                 );
                 let position = Position(random_direction * distance as f32);
 
