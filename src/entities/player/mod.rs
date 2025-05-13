@@ -8,6 +8,7 @@ use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
+use super::bullet::{Bullet, BULLET_SPEED};
 use super::planet;
 
 mod animation;
@@ -33,6 +34,8 @@ pub enum PlayerAction {
     Sneak,
     Left,
     Right,
+    #[actionlike(DualAxis)]
+    Shoot,
 }
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
@@ -79,7 +82,7 @@ impl Plugin for PlayerPlugin {
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_systems(
                 GgrsSchedule,
-                (player_physics, player_movement)
+                (player_physics, player_movement, player_shooting)
                     .chain()
                     .in_set(PhysicsSet::Player),
             );
@@ -127,6 +130,25 @@ fn player_movement(
             input_velocity.0.y = math::lerp(input_velocity.0.y, -PLAYER_VELOCITY, delta);
         } else {
             input_velocity.0.y = math::lerp(input_velocity.0.y, 0., delta * 10.);
+        }
+    }
+}
+
+fn player_shooting(
+    mut commands: Commands,
+    query: Query<(&ActionState<PlayerAction>, &Position, &Velocity), With<Player>>,
+) {
+    for (action_state, position, velocity) in query.iter() {
+        let axis_pair = action_state.axis_pair(&PlayerAction::Shoot);
+
+        if axis_pair.length() > 0.8 {
+            let bullet = (
+                Bullet,
+                Position(position.0),
+                Velocity(axis_pair * BULLET_SPEED + velocity.0),
+            );
+
+            commands.spawn(bullet);
         }
     }
 }
