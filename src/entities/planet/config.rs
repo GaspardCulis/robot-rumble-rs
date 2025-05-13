@@ -44,4 +44,5 @@ pub enum PlanetLayerMaterialConfig {
     StarBlobs(<StarBlobsMaterial as PlanetMaterial>::Config),
     StarFlares(<StarFlaresMaterial as PlanetMaterial>::Config),
     Ring(<RingMaterial as PlanetMaterial>::Config),
+    BlackHole(<BlackHoleMaterial as PlanetMaterial>::Config),
 }
