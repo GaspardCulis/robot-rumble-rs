@@ -229,4 +229,21 @@ PlanetsConfig([
             ),
         ]
     ),
+    // BlackHoleLike
+    PlanetKindConfig (
+        type: Planet,
+        layers: [
+            (
+                material: BlackHole (( 
+                    // Common
+                    size: 5.0,
+                    octaves: 3,
+                    // Material specific
+                    radius: 0.5,
+                    light_width: 0.05,
+                    palette: ( "#000000", "#fef4df", "#ff884d" )
+                ))
+            )
+        ]
+    ),
 ])
