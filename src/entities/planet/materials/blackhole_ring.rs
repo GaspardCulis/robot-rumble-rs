@@ -4,8 +4,8 @@ use bevy::{
     sprite::Material2d,
 };
 
-use crate::entities::planet::config::types::*;
 use super::{CommonMaterial, PlanetMaterial};
+use crate::entities::planet::config::types::*;
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct BlackHoleRingMaterial {
@@ -17,7 +17,7 @@ pub struct BlackHoleRingMaterial {
     #[uniform(1)]
     pub ring_perspective: f32,
     #[uniform(1)]
-    pub should_dither: u32, 
+    pub should_dither: u32,
     #[uniform(1)]
     pub colors: [LinearRgba; 5],
     #[uniform(1)]

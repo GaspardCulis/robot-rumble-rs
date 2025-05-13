@@ -9,7 +9,6 @@ pub mod types {
     pub type PaletteConfig4 = [ColorConfig; 4];
     pub type PaletteConfig5 = [ColorConfig; 5];
 
-
     #[derive(serde::Deserialize, Clone)]
     pub struct ColorGradientConfig {
         pub offsets: Vec<f32>,

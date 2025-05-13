@@ -201,7 +201,6 @@ fn spawn_config_layers(
                                 z_index,
                             })
                         }
-
                     };
                 }
             } else {
