@@ -14,7 +14,10 @@ for more information.
 ### Linux (Debian based)
 
 ```sh
-sudo apt-get install mold clang
+# System dependencies
+sudo apt install pkg-config libwayland-dev libasound2-dev libudev-dev
+# Compilation dependencies
+sudo apt install mold clang
 rustup component add rustc-codegen-cranelift-preview --toolchain nightly
 ```
 
