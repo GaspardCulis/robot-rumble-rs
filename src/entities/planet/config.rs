@@ -7,6 +7,8 @@ pub mod types {
     pub type PaletteConfig2 = [ColorConfig; 2];
     pub type PaletteConfig3 = [ColorConfig; 3];
     pub type PaletteConfig4 = [ColorConfig; 4];
+    pub type PaletteConfig5 = [ColorConfig; 5];
+
 
     #[derive(serde::Deserialize, Clone)]
     pub struct ColorGradientConfig {
@@ -45,4 +47,5 @@ pub enum PlanetLayerMaterialConfig {
     StarFlares(<StarFlaresMaterial as PlanetMaterial>::Config),
     Ring(<RingMaterial as PlanetMaterial>::Config),
     BlackHole(<BlackHoleMaterial as PlanetMaterial>::Config),
+    BlackHoleRing(<BlackHoleRingMaterial as PlanetMaterial>::Config),
 }
