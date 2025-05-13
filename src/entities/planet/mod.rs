@@ -187,6 +187,14 @@ fn spawn_config_layers(
                                 z_index,
                             })
                         }
+                        PlanetLayerMaterialConfig::BlackHole(config) => {
+                            planet.insert(PlanetMaterialLayerInit::<BlackHoleMaterial> {
+                                config,
+                                scale,
+                                z_index,
+                            })
+                        }
+
                     };
                 }
             } else {
