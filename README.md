@@ -27,10 +27,10 @@ In order to minimize compile times, the `mold` linker is required. The `cranelif
     - \[ \] Implement all shader types
       - \[ \]
         [Asteroids](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Asteroids/Asteroids.gdshader)
-      - \[ \] BlackHole
-        - \[ \]
+      - \[x\] BlackHole
+        - \[x\]
           [BlackHole](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/BlackHole/BlackHole.gdshader)
-        - \[ \]
+        - \[x\]
           [BlackHoleRing](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/BlackHole/BlackHoleRing.gdshader)
       - \[x\]
         [DryTerrain](https://github.com/Deep-Fold/PixelPlanets/tree/main/Planets/DryTerran)
