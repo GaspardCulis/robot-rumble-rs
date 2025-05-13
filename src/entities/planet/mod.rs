@@ -27,7 +27,7 @@ pub enum PlanetType {
     Star,
 }
 
-#[derive(Event)]
+#[derive(Event, Clone)]
 pub struct SpawnPlanetEvent {
     pub position: Position,
     pub radius: Radius,
