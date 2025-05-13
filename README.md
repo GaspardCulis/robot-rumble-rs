@@ -2,6 +2,10 @@
 
 The Rust rewrite of [Robot Rumble](https://github.com/GaspardCulis/robot-rumble)
 
+## Building
+
+In order to minimize compile times, the `mold` linker is required. The `cranelift` codegen backend also required, see [here](https://github.com/rust-lang/rustc_codegen_cranelift?tab=readme-ov-file#download-using-rustup) for recommended installation intructions.
+
 ## TODOS
 
 - \[ \] Player:
@@ -16,17 +20,17 @@ The Rust rewrite of [Robot Rumble](https://github.com/GaspardCulis/robot-rumble)
 - \[ \] Planets and environment:
   - \[x\] Implement
     [pixel planet](https://deep-fold.itch.io/pixel-planet-generator) shader
-  - \[ \] Add background shader using
+  - \[x\] Add background shader using
     [pixel space background](https://deep-fold.itch.io/space-background-generator)
     shader
   - \[ \] Add multiple kinds of planets
     - \[ \] Implement all shader types
       - \[ \]
         [Asteroids](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/Asteroids/Asteroids.gdshader)
-      - \[ \] BlackHole
-        - \[ \]
+      - \[x\] BlackHole
+        - \[x\]
           [BlackHole](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/BlackHole/BlackHole.gdshader)
-        - \[ \]
+        - \[x\]
           [BlackHoleRing](https://github.com/Deep-Fold/PixelPlanets/blob/main/Planets/BlackHole/BlackHoleRing.gdshader)
       - \[x\]
         [DryTerrain](https://github.com/Deep-Fold/PixelPlanets/tree/main/Planets/DryTerran)

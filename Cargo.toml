@@ -1,3 +1,5 @@
+cargo-features = ["codegen-backend"]
+
 [package]
 name = "robot-rumble-client"
 version = "0.1.0"
@@ -44,6 +46,7 @@ features = [
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1
+codegen-backend = "cranelift"
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
