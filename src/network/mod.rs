@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
+use inputs::NetworkInputs;
 use leafwing_input_manager::prelude::InputMap;
 use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -21,7 +22,7 @@ use synctest::{
 pub mod inputs;
 mod synctest;
 
-pub type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
+pub type SessionConfig = bevy_ggrs::GgrsConfig<NetworkInputs, PeerId>;
 
 #[derive(Resource, Default, Clone, Copy, Debug, Deref, DerefMut)]
 pub struct SessionSeed(pub u64);
