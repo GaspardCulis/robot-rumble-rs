@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_ggrs::GgrsSchedule;
+use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use leafwing_input_manager::prelude::*;
 
 use crate::core::gravity::{Mass, Passive};
@@ -148,7 +148,7 @@ fn player_shooting(
                 Velocity(axis_pair * BULLET_SPEED + velocity.0),
             );
 
-            commands.spawn(bullet);
+            commands.spawn(bullet).add_rollback();
         }
     }
 }
