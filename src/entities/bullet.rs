@@ -17,11 +17,14 @@ pub struct Bullet;
 pub struct BulletPlugin;
 impl Plugin for BulletPlugin {
     fn build(&self, app: &mut App) {
-        app.register_required_components_with::<Bullet, Rotation>(|| Rotation(0.0))
-            .register_required_components_with::<Bullet, Mass>(|| Mass(BULLET_MASS))
-            .register_required_components_with::<Bullet, Passive>(|| Passive)
-            .register_required_components_with::<Bullet, Name>(|| Name::new("Bullet"))
-            .add_systems(Update, (add_sprite, rotate_sprite, check_collisions));
+        app.register_required_components_with::<Bullet, Transform>(|| {
+            Transform::from_scale(Vec3::splat(1.5))
+        })
+        .register_required_components_with::<Bullet, Rotation>(|| Rotation(0.0))
+        .register_required_components_with::<Bullet, Mass>(|| Mass(BULLET_MASS))
+        .register_required_components_with::<Bullet, Passive>(|| Passive)
+        .register_required_components_with::<Bullet, Name>(|| Name::new("Bullet"))
+        .add_systems(Update, (add_sprite, rotate_sprite, check_collisions));
     }
 }
 
