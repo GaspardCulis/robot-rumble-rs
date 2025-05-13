@@ -243,6 +243,26 @@ PlanetsConfig([
                     light_width: 0.05,
                     palette: ( "#000000", "#fef4df", "#ff884d" )
                 ))
+            ),
+            (
+                scale: Some(5.0),
+                material: BlackHoleRing (( 
+                    // Common
+                    size: 6.598,
+                    octaves: 3,
+                    rotation: 0.766,
+                    // Matériel spécifique
+                    disk_width: 0.065,
+                    ring_perspective: 14,
+                    should_dither: true,
+                    palette: (
+                        "#000000", 
+                        "#ffb45c", 
+                        "#ff8243",
+                        "#f25c19",
+                        "#fff5cc"
+                    )
+                ))
             )
         ]
     ),
