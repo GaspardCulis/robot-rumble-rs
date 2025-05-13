@@ -5,6 +5,8 @@ use rand_xoshiro::{rand_core::SeedableRng as _, Xoshiro256PlusPlus};
 use serde::{Deserialize, Serialize};
 
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
+use crate::entities::satellite::SpawnSatelliteEvent;
+
 
 use super::physics::Position;
 
@@ -35,6 +37,16 @@ pub struct WorldgenConfig {
 
     max_planet_surface_distance: u32,
     min_planet_surface_distance: u32,
+
+    // Satellite generation
+    min_satellites: u32,
+    max_satellites: u32,
+
+    satellite_min_distance: f32,
+    satellite_max_distance: f32,
+
+    satellite_planet_min_distance: f32,
+    satellite_satellite_min_distance: f32,
 }
 
 #[derive(Resource)]
@@ -51,6 +63,7 @@ pub struct GenerateWorldEvent {
 fn handle_genworld_event(
     mut events: EventReader<GenerateWorldEvent>,
     mut planet_spawn_events: EventWriter<SpawnPlanetEvent>,
+    mut satellite_spawn_events: EventWriter<SpawnSatelliteEvent>,
     config_handle: Res<WorldgenConfigHandle>,
     configs: Res<Assets<WorldgenConfig>>,
 ) {
@@ -93,18 +106,65 @@ fn handle_genworld_event(
 
                 if !collision {
                     planets.push(SpawnPlanetEvent {
-                        position,
+                        position: position.clone(),
                         radius,
                         r#type: PlanetType::Planet,
                         seed: rng.random(),
                     });
+
+
                     break;
                 }
             }
         }
 
-        planets.into_iter().for_each(|spawn_event| {
-            planet_spawn_events.send(spawn_event);
-        });
+       for spawn_event in &planets {
+            planet_spawn_events.send(spawn_event.clone());
+        }
+
+        // Générer un certain nombre de satellites 
+        let mut satellite_positions: Vec<Position> = Vec::new();
+        let num_satellites = rng.random_range(
+            worldgen_config.min_satellites..worldgen_config.max_satellites,
+        );
+
+        for _ in 0..num_satellites {
+            let mut attempts = 0;
+            loop {
+                attempts += 1;
+                if attempts > 10 {
+                    warn!("Could not place satellite after 10 attempts, skipping...");
+                    break;
+                }
+
+                let angle = rng.random_range(0.0..std::f32::consts::TAU);
+                let distance = rng.random_range(
+                    worldgen_config.satellite_min_distance..worldgen_config.satellite_max_distance,
+                );
+                let position = Position(Vec2::from_angle(angle) * distance);
+
+                let safe_distance_planet = worldgen_config.satellite_planet_min_distance;
+                let safe_distance_satellite = worldgen_config.satellite_satellite_min_distance;
+
+                let far_from_planets = planets.iter().all(|planet| {
+                    position.0.distance(planet.position.0) > (planet.radius.0 as f32 + safe_distance_planet)
+                });
+
+                let far_from_satellites = satellite_positions.iter().all(|existing| {
+                    position.0.distance(existing.0) > safe_distance_satellite
+                });
+
+                if far_from_planets && far_from_satellites {
+                    satellite_spawn_events.send(SpawnSatelliteEvent {
+                        position: position.clone(),
+                        scale: rng.random_range(0.5..0.9),
+                    });
+                    satellite_positions.push(position);
+                    break;
+                }
+            }
+        }
+
+
     }
 }
