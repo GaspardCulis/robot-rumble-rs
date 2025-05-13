@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::core::{
     gravity::{Mass, Passive},
-    physics::Position,
+    physics::{Position, Rotation, Velocity},
 };
 
 use super::planet::Radius;
@@ -17,10 +17,11 @@ pub struct Bullet;
 pub struct BulletPlugin;
 impl Plugin for BulletPlugin {
     fn build(&self, app: &mut App) {
-        app.register_required_components_with::<Bullet, Mass>(|| Mass(BULLET_MASS))
+        app.register_required_components_with::<Bullet, Rotation>(|| Rotation(0.0))
+            .register_required_components_with::<Bullet, Mass>(|| Mass(BULLET_MASS))
             .register_required_components_with::<Bullet, Passive>(|| Passive)
             .register_required_components_with::<Bullet, Name>(|| Name::new("Bullet"))
-            .add_systems(Update, (add_sprite, check_collisions));
+            .add_systems(Update, (add_sprite, rotate_sprite, check_collisions));
     }
 }
 
@@ -33,6 +34,12 @@ fn add_sprite(
         commands
             .entity(bullet)
             .insert(Sprite::from_image(asset_server.load("bullet.png")));
+    }
+}
+
+fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Bullet>, With<Sprite>)>) {
+    for (mut rotation, velocity) in query.iter_mut() {
+        rotation.0 = -velocity.angle_to(Vec2::X);
     }
 }
 
