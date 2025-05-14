@@ -29,10 +29,11 @@ impl Plugin for PhysicsPlugin {
             .configure_sets(
                 GgrsSchedule,
                 (
-                    PhysicsSet::Movement.after(PhysicsSet::Gravity),
-                    PhysicsSet::Gravity.after(PhysicsSet::Player),
                     PhysicsSet::Player,
+                    PhysicsSet::Gravity,
+                    PhysicsSet::Movement,
                 )
+                    .chain()
                     .run_if(in_state(GameState::InGame)),
             )
             .add_systems(GgrsSchedule, update_position.in_set(PhysicsSet::Movement))
