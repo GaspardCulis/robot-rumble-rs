@@ -9,6 +9,7 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 use crate::{
     core::{camera::CameraFollowTarget, physics, worldgen},
     entities::{
+        bullet,
         planet::{Planet, Radius},
         player::{self, Player, PlayerAction, PlayerBundle, PlayerSkin, PLAYER_RADIUS},
     },
@@ -42,6 +43,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
+            .rollback_component_with_copy::<bullet::Bullet>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),

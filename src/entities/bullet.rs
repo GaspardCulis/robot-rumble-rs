@@ -14,7 +14,7 @@ use super::planet::Radius;
 pub const BULLET_SPEED: f32 = 1200.;
 pub const BULLET_MASS: u32 = 20;
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Clone, Copy)]
 #[require(Visibility)]
 pub struct Bullet;
 
