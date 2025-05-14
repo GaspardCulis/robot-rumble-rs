@@ -1,8 +1,11 @@
 use bevy::prelude::*;
 
-use crate::core::{
-    gravity::{Mass, Passive},
-    physics::{Position, Rotation, Velocity},
+use crate::{
+    core::{
+        gravity::{Mass, Passive},
+        physics::{Position, Rotation, Velocity},
+    },
+    GameState,
 };
 
 use super::planet::Radius;
@@ -24,7 +27,10 @@ impl Plugin for BulletPlugin {
         .register_required_components_with::<Bullet, Mass>(|| Mass(BULLET_MASS))
         .register_required_components_with::<Bullet, Passive>(|| Passive)
         .register_required_components_with::<Bullet, Name>(|| Name::new("Bullet"))
-        .add_systems(Update, (add_sprite, rotate_sprite, check_collisions));
+        .add_systems(
+            Update,
+            (add_sprite, rotate_sprite, check_collisions).run_if(in_state(GameState::InGame)),
+        );
     }
 }
 
