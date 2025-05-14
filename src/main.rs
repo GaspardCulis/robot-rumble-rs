@@ -27,10 +27,7 @@ fn main() {
     let args = Args::parse();
     let mut app = App::new();
 
-    app.add_plugins(EmbeddedAssetPlugin {
-        mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
-    })
-    .add_plugins(
+    app.add_plugins(
         DefaultPlugins
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
@@ -53,6 +50,10 @@ fn main() {
 
     if cfg!(debug_assertions) {
         app.add_plugins(WorldInspectorPlugin::new());
+    } else {
+        app.add_plugins(EmbeddedAssetPlugin {
+            mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
+        });
     }
 
     app.run();
