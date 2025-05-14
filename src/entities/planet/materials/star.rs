@@ -14,6 +14,8 @@ pub struct StarMaterial {
     pub common: super::CommonMaterial,
     #[uniform(1)]
     pub tiles: f32,
+    #[uniform(1)]
+    _wasm_padding: Vec3,
     #[texture(2)]
     #[sampler(3)]
     colorscheme_texture: Option<Handle<Image>>,
@@ -65,6 +67,7 @@ impl PlanetMaterial for StarMaterial {
             common,
             tiles: config.tiles,
             colorscheme_texture: Some(images.add(gradient)),
+            _wasm_padding: Default::default(),
         }
     }
 }
