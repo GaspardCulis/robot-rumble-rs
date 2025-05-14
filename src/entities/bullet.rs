@@ -1,9 +1,10 @@
 use bevy::prelude::*;
+use bevy_ggrs::GgrsSchedule;
 
 use crate::{
     core::{
         gravity::{Mass, Passive},
-        physics::{Position, Rotation, Velocity},
+        physics::{PhysicsSet, Position, Rotation, Velocity},
     },
     GameState,
 };
@@ -29,9 +30,13 @@ impl Plugin for BulletPlugin {
         .register_required_components_with::<Bullet, Name>(|| Name::new("Bullet"))
         .add_systems(
             Update,
-            (add_sprite, rotate_sprite, check_collisions)
-                .chain()
-                .run_if(in_state(GameState::InGame)),
+            (add_sprite, rotate_sprite).chain().before(check_collisions),
+        )
+        .add_systems(
+            GgrsSchedule,
+            check_collisions
+                .run_if(in_state(GameState::InGame))
+                .after(PhysicsSet::Movement),
         );
     }
 }
