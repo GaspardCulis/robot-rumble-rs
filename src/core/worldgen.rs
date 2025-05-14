@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use rand::Rng;
-use rand_xoshiro::{rand_core::SeedableRng as _, Xoshiro256PlusPlus};
+use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
 use crate::{

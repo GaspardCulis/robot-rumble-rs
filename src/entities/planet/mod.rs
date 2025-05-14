@@ -5,7 +5,7 @@ use crate::core::{
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use rand::{seq::IndexedRandom as _, SeedableRng};
+use rand::{SeedableRng, seq::IndexedRandom as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 mod config;
