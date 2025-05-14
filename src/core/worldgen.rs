@@ -136,6 +136,6 @@ fn handle_config_reload(
                 worldgen_events.send(GenerateWorldEvent { seed: seed.0 });
             }
             _ => {}
-        }
+        };
     }
 }
