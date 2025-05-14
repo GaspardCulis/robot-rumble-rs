@@ -3,6 +3,8 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use leafwing_input_manager::prelude::*;
+use rand::{Rng as _, SeedableRng as _};
+use rand_xoshiro::Xoshiro256PlusPlus;
 
 use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
@@ -137,15 +139,22 @@ fn player_movement(
 fn player_shooting(
     mut commands: Commands,
     query: Query<(&ActionState<PlayerAction>, &Position, &Velocity), With<Player>>,
+    time: Res<Time>,
 ) {
     for (action_state, position, velocity) in query.iter() {
+        // Putting it here is important as query iter order is non-deterministic
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(
+            (time.elapsed().as_millis() % u64::MAX as u128) as u64,
+        );
+
         let axis_pair = action_state.axis_pair(&PlayerAction::Shoot);
+        let random_angle = Vec2::from_angle(rng.random_range(-0.04..0.04));
 
         if axis_pair.length() > 0.8 {
             let bullet = (
                 Bullet,
                 Position(position.0),
-                Velocity(axis_pair * BULLET_SPEED + velocity.0),
+                Velocity(axis_pair.rotate(random_angle) * BULLET_SPEED + velocity.0),
             );
 
             commands.spawn(bullet).add_rollback();
