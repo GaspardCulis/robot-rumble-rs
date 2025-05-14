@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use std::{collections::HashMap, time::Duration};
 
-use crate::utils::spritesheet;
+use crate::{core::physics::Position, utils::spritesheet};
 
 use super::{Player, PlayerSkin};
 
@@ -65,12 +65,12 @@ fn load_skin_config(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn load_skin_on_player(
     mut commands: Commands,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    query: Query<(Entity, &PlayerSkin), (With<Player>, Without<Sprite>)>,
+    query: Query<(Entity, &PlayerSkin, &Position), (With<Player>, Without<Sprite>)>,
     config_handle: Res<SkinConfigHandle>,
     skins_config: Res<Assets<SkinsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    for (player_entity, player_skin) in query.iter() {
+    for (player_entity, player_skin, player_position) in query.iter() {
         info!("Loading skin animations for {:?}", player_entity);
         if let Some(skin_config) = skins_config.get(config_handle.0.id()) {
             if let Some(skin) = skin_config.get(&player_skin.0) {
@@ -98,8 +98,9 @@ fn load_skin_on_player(
                             index: default_anim.indices.first,
                         },
                     ),
-                    Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE))
-                        .with_translation(Vec3::new(0.0, 0.0, 10.0)),
+                    Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE)).with_translation(
+                        Vec3::new(player_position.0.x, player_position.0.y, 10.0),
+                    ),
                     default_anim.indices.clone(),
                     default_anim.timer.clone(),
                     animations_handle,
