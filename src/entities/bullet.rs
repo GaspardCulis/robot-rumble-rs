@@ -68,7 +68,7 @@ fn check_collisions(
         for (planet_position, planet_radius) in planet_query.iter() {
             let distance = bullet_position.distance(planet_position.0) - planet_radius.0 as f32;
             if distance <= 0.0 {
-                commands.entity(bullet).despawn();
+                commands.entity(bullet).despawn_recursive();
             }
         }
     }
