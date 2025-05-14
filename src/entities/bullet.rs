@@ -29,7 +29,9 @@ impl Plugin for BulletPlugin {
         .register_required_components_with::<Bullet, Name>(|| Name::new("Bullet"))
         .add_systems(
             Update,
-            (add_sprite, rotate_sprite, check_collisions).run_if(in_state(GameState::InGame)),
+            (add_sprite, rotate_sprite, check_collisions)
+                .chain()
+                .run_if(in_state(GameState::InGame)),
         );
     }
 }
