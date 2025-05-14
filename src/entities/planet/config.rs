@@ -1,6 +1,6 @@
 use bevy::{asset::Asset, reflect::TypePath};
 
-use super::{materials::*, PlanetType};
+use super::{PlanetType, materials::*};
 
 pub mod types {
     pub type ColorConfig = String;
