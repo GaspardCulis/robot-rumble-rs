@@ -13,8 +13,8 @@ use crate::{
         bullet,
         planet::{Planet, Radius},
         player::{
-            self, weapons::Weapon, weapons::WeaponBundle, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle,
-            PlayerSkin,
+            self, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle, PlayerSkin,
+            weapons::{Weapon, WeaponBundle},
         },
     },
 };
