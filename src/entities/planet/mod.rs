@@ -5,7 +5,7 @@ use crate::core::{
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use rand::{SeedableRng, seq::IndexedRandom as _};
+use rand::{seq::IndexedRandom as _, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 mod config;
@@ -65,7 +65,14 @@ impl Plugin for PlanetPlugin {
             .add_plugins(materials::PlanetMaterialsPlugin)
             .add_event::<SpawnPlanetEvent>()
             .add_systems(Startup, load_planets_config)
-            .add_systems(Update, (handle_spawn_planet_event, spawn_config_layers));
+            .add_systems(
+                Update,
+                (
+                    handle_spawn_planet_event,
+                    spawn_config_layers,
+                    handle_config_reload,
+                ),
+            );
     }
 }
 
@@ -87,7 +94,10 @@ fn spawn_config_layers(
     mut commands: Commands,
     planet_config: Res<PlanetsConfigHandle>,
     planet_configs: Res<Assets<PlanetsConfig>>,
-    query: Query<(Entity, &PlanetType, Option<&worldgen::GenerationSeed>), Added<Planet>>,
+    query: Query<
+        (Entity, &PlanetType, Option<&worldgen::GenerationSeed>),
+        (With<Planet>, Without<Children>),
+    >,
 ) {
     for (planet_entity, planet_type, generation_seed) in query.iter() {
         let mut planet = commands.entity(planet_entity);
@@ -209,6 +219,26 @@ fn spawn_config_layers(
         } else {
             warn!("Received SpawnPlanetEvent with no PlanetsConfig asset available");
         }
+    }
+}
+
+fn handle_config_reload(
+    mut commands: Commands,
+    mut events: EventReader<AssetEvent<PlanetsConfig>>,
+    planets: Query<(Entity, &Children), With<Planet>>,
+) {
+    for event in events.read() {
+        match event {
+            AssetEvent::Modified { id: _ } => {
+                for (planet, material_layers) in planets.iter() {
+                    commands.entity(planet).clear_children();
+                    for layer in material_layers {
+                        commands.entity(*layer).despawn();
+                    }
+                }
+            }
+            _ => {}
+        };
     }
 }
 
