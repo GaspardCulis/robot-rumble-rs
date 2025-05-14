@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
-use leafwing_input_manager::prelude::InputMap;
 use leafwing_input_manager::prelude::*;
 use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
 use rand_xoshiro::Xoshiro256PlusPlus;
