@@ -52,7 +52,7 @@ impl Plugin for SkinPlugin {
         app.add_plugins(RonAssetPlugin::<SkinsConfig>::new(&[]))
             .add_plugins(spritesheet::AnimatedSpritePlugin)
             .add_systems(Startup, load_skin_config)
-            .add_systems(Update, load_skin_on_player);
+            .add_systems(Update, (load_skin_on_player, handle_config_reload));
     }
 }
 
@@ -65,7 +65,7 @@ fn load_skin_config(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn load_skin_on_player(
     mut commands: Commands,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    query: Query<(Entity, &PlayerSkin), Added<Player>>,
+    query: Query<(Entity, &PlayerSkin), (With<Player>, Without<Sprite>)>,
     config_handle: Res<SkinConfigHandle>,
     skins_config: Res<Assets<SkinsConfig>>,
     asset_server: Res<AssetServer>,
@@ -105,11 +105,28 @@ fn load_skin_on_player(
                     animations_handle,
                 ));
             } else {
-                warn!("Received invalid player skin id");
+                warn!("Received invalid player skin id: {}", player_skin.0);
             };
         } else {
             warn!("Skin config not loaded yet");
         }
+    }
+}
+
+fn handle_config_reload(
+    mut commands: Commands,
+    mut events: EventReader<AssetEvent<SkinsConfig>>,
+    players: Query<Entity, (With<Player>, With<PlayerSkin>, With<Sprite>)>,
+) {
+    for event in events.read() {
+        match event {
+            AssetEvent::Modified { id: _ } => {
+                for player in players.iter() {
+                    commands.entity(player).remove::<Sprite>();
+                }
+            }
+            _ => {}
+        };
     }
 }
 
