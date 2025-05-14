@@ -1,6 +1,6 @@
 use super::{
-    skin::{SkinAnimationsHandle, PLAYER_SKIN_SCALE},
     InAir, Player, PlayerAction,
+    skin::{PLAYER_SKIN_SCALE, SkinAnimationsHandle},
 };
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;

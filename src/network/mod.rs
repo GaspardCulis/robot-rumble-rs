@@ -2,16 +2,16 @@ use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use leafwing_input_manager::prelude::InputMap;
-use rand::{seq::SliceRandom, Rng as _, SeedableRng as _};
+use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 use crate::{
+    GameState,
     core::{camera::CameraFollowTarget, physics, worldgen},
     entities::{
         planet::{Planet, Radius},
-        player::{self, Player, PlayerAction, PlayerBundle, PlayerSkin, PLAYER_RADIUS},
+        player::{self, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle, PlayerSkin},
     },
-    GameState,
 };
 use synctest::{
     checksum_position, handle_ggrs_events, p2p_mode, spawn_synctest_players,
