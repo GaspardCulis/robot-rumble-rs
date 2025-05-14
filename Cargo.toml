@@ -41,6 +41,7 @@ features = [
   "webgl2",
 
   "asset_processor",
+  "file_watcher",
 ]
 
 # Enable a small amount of optimization in debug mode
