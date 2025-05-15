@@ -163,11 +163,17 @@ fn handle_genworld_event(
                     position.0.distance(existing.0) > safe_distance_satellite
                 });
 
+                let kind = if rng.random_bool(0.5) {
+                    SatelliteKind::Graviton
+                } else {
+                    SatelliteKind::Bumper
+                };
+
                 if far_from_planets && far_from_satellites {
                     satellite_spawn_events.send(SpawnSatelliteEvent {
                         position: position.clone(),
                         scale: rng.random_range(0.5..0.9),
-                        kind: SatelliteKind::Graviton,
+                        kind: kind,
                     });
                     satellite_positions.push(position);
                     break;
