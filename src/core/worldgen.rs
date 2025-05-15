@@ -4,10 +4,7 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent},
-    network::SessionSeed,
-};
+use crate::entities::planet::*;
 
 use super::physics::Position;
 
@@ -22,7 +19,7 @@ impl Plugin for WorldgenPlugin {
                 (
                     handle_genworld_event,
                     #[cfg(debug_assertions)]
-                    handle_config_reload.run_if(resource_exists::<SessionSeed>),
+                    handle_config_reload.run_if(resource_exists::<crate::network::SessionSeed>),
                 ),
             );
     }
@@ -120,12 +117,13 @@ fn handle_genworld_event(
 }
 
 /// Re-generates world on config changes. Will cause desyncs
+#[cfg(debug_assertions)]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<WorldgenConfig>>,
     mut worldgen_events: EventWriter<GenerateWorldEvent>,
     planets: Query<Entity, With<Planet>>,
-    seed: Res<SessionSeed>,
+    seed: Res<crate::network::SessionSeed>,
 ) {
     for event in events.read() {
         match event {

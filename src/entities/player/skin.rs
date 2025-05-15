@@ -121,6 +121,7 @@ fn load_skin_on_player(
     }
 }
 
+#[cfg(debug_assertions)]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<SkinsConfig>>,
