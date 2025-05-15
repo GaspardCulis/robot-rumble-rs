@@ -18,8 +18,6 @@ use synctest::{
     start_synctest_session, synctest_mode,
 };
 
-const NUM_PLAYERS: usize = 2;
-
 pub mod inputs;
 mod synctest;
 
@@ -70,8 +68,11 @@ impl Plugin for NetworkPlugin {
     }
 }
 
-fn start_matchbox_socket(mut commands: Commands) {
-    let room_url = format!("wss://matchbox.gasdev.fr/extreme_bevy?next={NUM_PLAYERS}");
+fn start_matchbox_socket(mut commands: Commands, args: Res<crate::Args>) {
+    let room_url = format!(
+        "wss://matchbox.gasdev.fr/extreme_bevy?next={}",
+        args.players
+    );
     info!("connecting to matchbox server: {room_url}");
     commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
 }
@@ -80,6 +81,7 @@ fn wait_for_players(
     mut commands: Commands,
     mut socket: ResMut<MatchboxSocket>,
     mut next_state: ResMut<NextState<GameState>>,
+    args: Res<crate::Args>,
 ) {
     if socket.get_channel(0).is_err() {
         return; // we've already started
@@ -89,14 +91,14 @@ fn wait_for_players(
     socket.update_peers();
     let players = socket.players();
 
-    if players.len() < NUM_PLAYERS {
+    if players.len() < args.players {
         return; // wait for more players
     }
 
     info!("All peers have joined, going in-game");
 
     // determine the seed
-    let seed = if NUM_PLAYERS > 1 {
+    let seed = if args.players > 1 {
         let local_id = socket.id().expect("no peer id assigned").0.as_u64_pair();
         socket
             .connected_peers()
@@ -118,6 +120,7 @@ fn wait_start_match(
     mut socket: ResMut<MatchboxSocket>,
     mut next_state: ResMut<NextState<GameState>>,
     mut timeout: ResMut<StartMatchDelay>,
+    args: Res<crate::Args>,
     time: Res<Time>,
 ) {
     timeout.0.tick(time.delta());
@@ -126,10 +129,10 @@ fn wait_start_match(
     }
 
     let players = socket.players();
-    assert_eq!(players.len(), NUM_PLAYERS);
+    assert_eq!(players.len(), args.players);
 
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
-        .with_num_players(NUM_PLAYERS)
+        .with_num_players(args.players)
         .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 })
         .with_input_delay(2);
 
