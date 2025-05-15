@@ -11,22 +11,26 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub struct NetworkInputs {
     keys: u32, // FIX: Make smaller when https://github.com/gschup/bevy_ggrs#119 is fixed
-    shoot_direction: Vec2,
+    pointer_direction: Vec2,
 }
 
 const INPUT_UP: u32 = 1 << 0;
 const INPUT_DOWN: u32 = 1 << 1;
 const INPUT_LEFT: u32 = 1 << 2;
 const INPUT_RIGHT: u32 = 1 << 3;
+const INPUT_SHOOT: u32 = 1 << 4;
 
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(ReadInputs, (handle_shoot_click, read_local_inputs).chain())
-            .add_systems(
-                GgrsSchedule,
-                update_remote_inputs.before(PhysicsSet::Player),
-            );
+        app.add_systems(
+            ReadInputs,
+            (update_local_pointer_direction, read_local_inputs).chain(),
+        )
+        .add_systems(
+            GgrsSchedule,
+            update_remote_inputs.before(PhysicsSet::Player),
+        );
     }
 }
 
@@ -78,13 +82,14 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
                 PlayerAction::Sneak => INPUT_DOWN,
                 PlayerAction::Left => INPUT_LEFT,
                 PlayerAction::Right => INPUT_RIGHT,
-                PlayerAction::Shoot => unimplemented!("Should not get called"),
+                PlayerAction::Shoot => INPUT_SHOOT,
+                PlayerAction::PointerDirection => unimplemented!("Should not get called"),
             };
         }
 
         NetworkInputs {
             keys,
-            shoot_direction: self.axis_pair(&PlayerAction::Shoot),
+            pointer_direction: self.axis_pair(&PlayerAction::PointerDirection),
         }
     }
 
@@ -105,18 +110,20 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
         if keys & INPUT_RIGHT != 0 {
             action_state.press(&PlayerAction::Right);
         }
+        if keys & INPUT_SHOOT != 0 {
+            action_state.press(&PlayerAction::Shoot);
+        }
 
-        action_state.set_axis_pair(&PlayerAction::Shoot, input.shoot_direction);
+        action_state.set_axis_pair(&PlayerAction::PointerDirection, input.pointer_direction);
 
         action_state
     }
 }
 
-fn handle_shoot_click(
+fn update_local_pointer_direction(
     mut player_query: Query<(&Player, &GlobalTransform, &mut ActionState<PlayerAction>)>,
     windows: Query<&Window>,
     query_view: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
-    mouse: Res<ButtonInput<MouseButton>>,
     local_players: Res<LocalPlayers>,
 ) {
     let window = windows.single();
@@ -129,13 +136,10 @@ fn handle_shoot_click(
             .iter_mut()
             .filter(|(player, _, _)| local_players.0.contains(&player.handle))
         {
-            let shoot_direction = if mouse.pressed(MouseButton::Left) {
-                (world_position - player_world_pos.translation().xy()).normalize()
-            } else {
-                Vec2::ZERO
-            };
+            let pointer_direction =
+                (world_position - player_world_pos.translation().xy()).normalize();
 
-            action_state.set_axis_pair(&PlayerAction::Shoot, shoot_direction);
+            action_state.set_axis_pair(&PlayerAction::PointerDirection, pointer_direction);
         }
     }
 }
