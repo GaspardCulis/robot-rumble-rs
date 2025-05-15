@@ -1,10 +1,11 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule, RollbackFrameCount};
+use bevy_ggrs::{GgrsSchedule, RollbackFrameCount};
 use leafwing_input_manager::prelude::*;
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
+use weapons::{Direction, Triggered, Weapon};
 
 use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
@@ -15,6 +16,7 @@ use super::planet;
 
 mod animation;
 mod skin;
+pub mod weapons;
 
 // TODO: Move to config file
 pub const PLAYER_MASS: u32 = 800;
@@ -83,9 +85,10 @@ impl Plugin for PlayerPlugin {
         app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
+            .add_plugins(weapons::WeaponPlugin)
             .add_systems(
                 GgrsSchedule,
-                (player_physics, player_movement, player_shooting)
+                (player_physics, player_movement, update_weapon)
                     .chain()
                     .in_set(PhysicsSet::Player),
             );
@@ -137,12 +140,40 @@ fn player_movement(
     }
 }
 
+fn update_weapon(
+    player_query: Query<
+        (&ActionState<PlayerAction>, &Position, &Velocity, &Children),
+        With<Player>,
+    >,
+    mut weapon_query: Query<
+        (&mut Triggered, &mut Position, &mut Velocity, &mut Direction),
+        (With<Weapon>, Without<Player>),
+    >,
+) {
+    for (action_state, player_position, player_velocity, children) in player_query.iter() {
+        let axis_pair = action_state.axis_pair(&PlayerAction::Shoot);
+        let is_shooting = axis_pair.length() > 0.8;
+        for &child in children.iter() {
+            if let Ok((mut triggered, mut position, mut velocity, mut direction)) =
+                weapon_query.get_mut(child)
+            {
+                direction.0 = axis_pair;
+                triggered.0 = is_shooting;
+                position.0 = player_position.0;
+                velocity.0 = player_velocity.0;
+            } else {
+                warn!("AYO");
+            }
+        }
+    }
+}
+/*
 fn player_shooting(
     mut commands: Commands,
     query: Query<(&ActionState<PlayerAction>, &Position, &Velocity), With<Player>>,
     time: Res<RollbackFrameCount>,
 ) {
-    for (action_state, position, velocity) in query.iter() {
+    for (action_state, children) in player_query.iter() {
         // Putting it here is important as query iter order is non-deterministic
         if action_state.pressed(&PlayerAction::Shoot) {
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
@@ -160,6 +191,7 @@ fn player_shooting(
         }
     }
 }
+ */
 
 pub fn player_physics(
     mut player_query: Query<
