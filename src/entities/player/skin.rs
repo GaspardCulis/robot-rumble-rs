@@ -52,7 +52,14 @@ impl Plugin for SkinPlugin {
         app.add_plugins(RonAssetPlugin::<SkinsConfig>::new(&[]))
             .add_plugins(spritesheet::AnimatedSpritePlugin)
             .add_systems(Startup, load_skin_config)
-            .add_systems(Update, (load_skin_on_player, handle_config_reload));
+            .add_systems(
+                Update,
+                (
+                    load_skin_on_player,
+                    #[cfg(debug_assertions)]
+                    handle_config_reload,
+                ),
+            );
     }
 }
 
