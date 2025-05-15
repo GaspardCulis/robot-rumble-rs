@@ -46,7 +46,7 @@ pub fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<T
     }
 }
 
-fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
+pub fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
     for (mut transform, position, rotation) in query.iter_mut() {
         transform.translation.x = position.x;
         transform.translation.y = position.y;
@@ -72,6 +72,14 @@ impl std::ops::Mul<f32> for &Position {
 
     fn mul(self, rhs: f32) -> Self::Output {
         Position(self.0 * rhs)
+    }
+}
+
+impl std::ops::Sub for Position {
+    type Output = Self;
+    #[inline]
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0.sub(rhs.0))
     }
 }
 

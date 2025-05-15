@@ -27,7 +27,7 @@ impl Plugin for GravityPlugin {
     }
 }
 
-fn apply_forces(
+pub fn apply_forces(
     mut on: Query<(&Mass, &Position, &mut Velocity), Without<Static>>,
     from: Query<(&Mass, &Position), Without<Passive>>,
     time: Res<Time>,
