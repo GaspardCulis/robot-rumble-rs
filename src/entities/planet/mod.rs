@@ -223,6 +223,7 @@ fn spawn_config_layers(
     }
 }
 
+#[cfg(debug_assertions)]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<PlanetsConfig>>,
