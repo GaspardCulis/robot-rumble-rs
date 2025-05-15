@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+#[cfg(not(debug_assertions))]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
+#[cfg(debug_assertions)]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use clap::Parser;
 
@@ -29,6 +31,11 @@ fn main() {
     let args = Args::parse();
     let mut app = App::new();
 
+    #[cfg(not(debug_assertions))]
+    app.add_plugins(EmbeddedAssetPlugin {
+        mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
+    });
+
     app.add_plugins(
         DefaultPlugins
             .set(ImagePlugin::default_nearest())
@@ -50,13 +57,8 @@ fn main() {
     .init_state::<GameState>()
     .insert_resource(args);
 
-    if cfg!(debug_assertions) {
-        app.add_plugins(WorldInspectorPlugin::new());
-    } else {
-        app.add_plugins(EmbeddedAssetPlugin {
-            mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
-        });
-    }
+    #[cfg(debug_assertions)]
+    app.add_plugins(WorldInspectorPlugin::new());
 
     app.run();
 }
