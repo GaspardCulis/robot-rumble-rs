@@ -18,6 +18,8 @@ pub struct StarBlobsMaterial {
     pub circle_size: f32,
     #[uniform(1)]
     pub color: LinearRgba,
+    #[uniform(1)]
+    _wasm_padding: Vec2,
 }
 
 #[derive(Component, serde::Deserialize, Clone)]
@@ -57,6 +59,7 @@ impl PlanetMaterial for StarBlobsMaterial {
             circle_amount: config.circle_amount,
             circle_size: config.circle_size,
             color: Srgba::hex(&config.color).unwrap().into(),
+            _wasm_padding: Default::default(),
         }
     }
 }

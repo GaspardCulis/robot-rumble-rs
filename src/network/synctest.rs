@@ -6,10 +6,10 @@ use leafwing_input_manager::prelude::InputMap;
 use rand::Rng;
 
 use crate::{
+    Args, GameState,
     core::{camera, physics},
     entities::player::{PlayerAction, PlayerBundle, PlayerSkin},
     network::{SessionConfig, SessionSeed},
-    Args, GameState,
 };
 
 const SYNCTEST_NUM_PLAYERS: usize = 2;
@@ -114,7 +114,9 @@ pub fn handle_ggrs_events(mut session: ResMut<Session<SessionConfig>>) {
                         frame,
                         ..
                     } => {
-                        error!("Desync on frame {frame}. Local checksum: {local_checksum:X}, remote checksum: {remote_checksum:X}");
+                        error!(
+                            "Desync on frame {frame}. Local checksum: {local_checksum:X}, remote checksum: {remote_checksum:X}"
+                        );
                     }
                     _ => info!("GGRS event: {event:?}"),
                 }

@@ -6,6 +6,7 @@ struct StarBlobsMaterial {
     circle_amount: f32,
     circle_size: f32,
     color: vec4<f32>,
+    _wasm_padding: vec2<f32>,
 }
 
 @group(2) @binding(1) var<uniform> pm_star_blobs: StarBlobsMaterial;

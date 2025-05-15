@@ -13,6 +13,8 @@ pub struct Args {
     /// Runs the game in synctest mode
     #[clap(long)]
     pub synctest: bool,
+    #[arg(short, long, default_value_t = 2)]
+    pub players: usize,
 }
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
@@ -27,10 +29,7 @@ fn main() {
     let args = Args::parse();
     let mut app = App::new();
 
-    app.add_plugins(EmbeddedAssetPlugin {
-        mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
-    })
-    .add_plugins(
+    app.add_plugins(
         DefaultPlugins
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
@@ -53,6 +52,10 @@ fn main() {
 
     if cfg!(debug_assertions) {
         app.add_plugins(WorldInspectorPlugin::new());
+    } else {
+        app.add_plugins(EmbeddedAssetPlugin {
+            mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
+        });
     }
 
     app.run();

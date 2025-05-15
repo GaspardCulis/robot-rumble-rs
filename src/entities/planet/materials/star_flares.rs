@@ -22,6 +22,8 @@ pub struct StarFlaresMaterial {
     pub circle_amount: f32,
     #[uniform(1)]
     pub circle_scale: f32,
+    #[uniform(1)]
+    _wasm_padding: Vec3,
     #[texture(2)]
     #[sampler(3)]
     colorscheme_texture: Option<Handle<Image>>,
@@ -81,6 +83,7 @@ impl PlanetMaterial for StarFlaresMaterial {
             circle_amount: config.circle_amount,
             circle_scale: config.circle_scale,
             colorscheme_texture: Some(images.add(gradient)),
+            _wasm_padding: Default::default(),
         }
     }
 }

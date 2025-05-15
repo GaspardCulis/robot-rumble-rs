@@ -1,10 +1,13 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use rand::Rng;
-use rand_xoshiro::{rand_core::SeedableRng as _, Xoshiro256PlusPlus};
+use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
-use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
+use crate::{
+    entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent},
+    network::SessionSeed,
+};
 use crate::entities::satellite::{SpawnSatelliteEvent, SatelliteKind};
 
 
@@ -16,7 +19,13 @@ impl Plugin for WorldgenPlugin {
         app.add_plugins(RonAssetPlugin::<WorldgenConfig>::new(&[]))
             .add_event::<GenerateWorldEvent>()
             .add_systems(Startup, load_worldgen_config)
-            .add_systems(Update, handle_genworld_event);
+            .add_systems(
+                Update,
+                (
+                    handle_genworld_event,
+                    handle_config_reload.run_if(resource_exists::<SessionSeed>),
+                ),
+            );
     }
 }
 
@@ -167,5 +176,26 @@ fn handle_genworld_event(
         }
 
 
+    }
+}
+
+fn handle_config_reload(
+    mut commands: Commands,
+    mut events: EventReader<AssetEvent<WorldgenConfig>>,
+    mut worldgen_events: EventWriter<GenerateWorldEvent>,
+    planets: Query<Entity, With<Planet>>,
+    seed: Res<SessionSeed>,
+) {
+    for event in events.read() {
+        match event {
+            AssetEvent::Modified { id: _ } => {
+                for planet in planets.iter() {
+                    commands.entity(planet).despawn_recursive();
+                }
+
+                worldgen_events.send(GenerateWorldEvent { seed: seed.0 });
+            }
+            _ => {}
+        };
     }
 }
