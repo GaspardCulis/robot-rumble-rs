@@ -12,7 +12,10 @@ use crate::{
     entities::{
         bullet,
         planet::{Planet, Radius},
-        player::{self, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle, PlayerSkin},
+        player::{
+            self, weapons::Weapon, weapons::WeaponBundle, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle,
+            PlayerSkin,
+        },
     },
 };
 use synctest::{
@@ -191,7 +194,8 @@ fn spawn_players(
                 PlayerBundle::new(handle, physics::Position(position)),
                 PlayerSkin("laika".into()),
             ))
-            .add_rollback();
+            .add_rollback()
+            .with_child((WeaponBundle::new(Weapon::default(), physics::Position(position))));
     }
 }
 
