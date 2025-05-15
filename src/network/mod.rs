@@ -96,12 +96,17 @@ fn wait_for_players(
     info!("All peers have joined, going in-game");
 
     // determine the seed
-    let id = socket.id().expect("no peer id assigned").0.as_u64_pair();
-    let mut seed = id.0 ^ id.1;
-    for peer in socket.connected_peers() {
-        let peer_id = peer.0.as_u64_pair();
-        seed ^= peer_id.0 ^ peer_id.1;
-    }
+    let seed = if NUM_PLAYERS > 1 {
+        let local_id = socket.id().expect("no peer id assigned").0.as_u64_pair();
+        socket
+            .connected_peers()
+            .map(|peer| peer.0.as_u64_pair())
+            .fold(local_id.0 ^ local_id.1, |acc, peer_id| {
+                acc ^ (peer_id.0 ^ peer_id.1)
+            })
+    } else {
+        rand::rng().random()
+    };
     commands.insert_resource(SessionSeed(seed));
     commands.insert_resource(StartMatchDelay(Timer::from_seconds(0.5, TimerMode::Once)));
 
