@@ -10,7 +10,7 @@ use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
-use super::bullet::{Bullet, BULLET_SPEED};
+use super::bullet::{BULLET_SPEED, Bullet};
 use super::planet;
 
 mod animation;
@@ -36,8 +36,9 @@ pub enum PlayerAction {
     Sneak,
     Left,
     Right,
-    #[actionlike(DualAxis)]
     Shoot,
+    #[actionlike(DualAxis)]
+    PointerDirection,
 }
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
@@ -143,16 +144,16 @@ fn player_shooting(
 ) {
     for (action_state, position, velocity) in query.iter() {
         // Putting it here is important as query iter order is non-deterministic
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
+        if action_state.pressed(&PlayerAction::Shoot) {
+            let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
 
-        let axis_pair = action_state.axis_pair(&PlayerAction::Shoot);
-        let random_angle = Vec2::from_angle(rng.random_range(-0.04..0.04));
+            let pointer_direction = action_state.axis_pair(&PlayerAction::PointerDirection);
+            let random_angle = Vec2::from_angle(rng.random_range(-0.04..0.04));
 
-        if axis_pair.length() > 0.8 {
             let bullet = (
                 Bullet,
                 Position(position.0),
-                Velocity(axis_pair.rotate(random_angle) * BULLET_SPEED + velocity.0),
+                Velocity(pointer_direction.rotate(random_angle) * BULLET_SPEED + velocity.0),
             );
 
             commands.spawn(bullet).add_rollback();

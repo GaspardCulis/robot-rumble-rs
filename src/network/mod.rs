@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
-use leafwing_input_manager::prelude::InputMap;
+use leafwing_input_manager::prelude::*;
 use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -222,7 +222,9 @@ fn add_local_player_components(
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
-    ]);
+    ])
+    .with(PlayerAction::Shoot, MouseButton::Left)
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
 
     let local_players_query = query
         .iter()
