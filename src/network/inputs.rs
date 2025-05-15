@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub struct NetworkInputs {
-    keys: u32, // FIX: Make smaller
+    keys: u32, // FIX: Make smaller when https://github.com/gschup/bevy_ggrs#119 is fixed
     shoot_direction: Vec2,
 }
 
