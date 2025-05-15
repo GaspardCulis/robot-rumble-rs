@@ -13,6 +13,8 @@ pub struct Args {
     /// Runs the game in synctest mode
     #[clap(long)]
     pub synctest: bool,
+    #[arg(short, long, default_value_t = 2)]
+    pub players: usize,
 }
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
