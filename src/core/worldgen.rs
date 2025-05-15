@@ -21,6 +21,7 @@ impl Plugin for WorldgenPlugin {
                 Update,
                 (
                     handle_genworld_event,
+                    #[cfg(debug_assertions)]
                     handle_config_reload.run_if(resource_exists::<SessionSeed>),
                 ),
             );
