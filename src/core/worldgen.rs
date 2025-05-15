@@ -5,7 +5,7 @@ use rand_xoshiro::{rand_core::SeedableRng as _, Xoshiro256PlusPlus};
 use serde::{Deserialize, Serialize};
 
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
-use crate::entities::satellite::SpawnSatelliteEvent;
+use crate::entities::satellite::{SpawnSatelliteEvent, SatelliteKind};
 
 
 use super::physics::Position;
@@ -158,6 +158,7 @@ fn handle_genworld_event(
                     satellite_spawn_events.send(SpawnSatelliteEvent {
                         position: position.clone(),
                         scale: rng.random_range(0.5..0.9),
+                        kind: SatelliteKind::Graviton,
                     });
                     satellite_positions.push(position);
                     break;

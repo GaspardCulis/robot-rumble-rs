@@ -9,6 +9,7 @@ use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
 use super::planet;
+use crate::entities::satellite::graviton::Orbited;
 
 mod animation;
 mod skin;
@@ -95,7 +96,7 @@ fn player_movement(
             &Rotation,
             &InAir,
         ),
-        With<Player>,
+        (With<Player>, Without<Orbited>),
     >,
     time: Res<Time>,
 ) {
