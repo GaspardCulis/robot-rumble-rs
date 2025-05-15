@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use crate::core::physics::Position;
 
-use super::graviton::{GravitonVisual};
+use super::graviton::{GravitonMarker, GravitonVisual};
+use super::bumper::Bumper;
 
 
 #[derive(Component)]
@@ -20,6 +21,22 @@ pub struct SpawnSatelliteEvent {
     pub scale: f32,
     pub kind: SatelliteKind,
 }
+#[derive(serde::Deserialize, Asset, TypePath)]
+pub struct SatelliteConfig {
+    // Graviton
+    pub orbit_radius: f32,
+    pub min_angular_speed: f32,
+    pub orbit_duration: f32,
+    pub orbit_cooldown: f32,
+    pub decay_rate: f32,
+
+    // Bumper
+    pub bump_radius: f32,
+    pub bump_multiplier: f32,
+}
+
+#[derive(Resource)]
+pub struct SatelliteConfigHandle(pub Handle<SatelliteConfig>);
 
 pub struct SatellitePlugin;
 impl Plugin for SatellitePlugin {
@@ -34,8 +51,10 @@ fn handle_spawn_satellite(
     asset_server: Res<AssetServer>,
     mut events: EventReader<SpawnSatelliteEvent>,
 ) {
-    let texture_active = asset_server.load("skins/satellite/working_graviton.png");
-    let texture_inactive = asset_server.load("skins/satellite/destroyed_graviton.png");
+    let graviton_active = asset_server.load("skins/satellite/working_graviton.png");
+    let graviton_inactive = asset_server.load("skins/satellite/destroyed_graviton.png");
+
+    let bumper_texture = asset_server.load("skins/satellite/working_bumper.png");
 
     for event in events.read() {
         let mut entity = commands.spawn((
@@ -50,26 +69,57 @@ fn handle_spawn_satellite(
             event.kind,
         ));
 
-        if event.kind == SatelliteKind::Graviton {
-            entity.insert((
-                GravitonVisual {
-                    active: texture_active.clone(),
-                    inactive: texture_inactive.clone(),
-                },
-            ));
+        match event.kind {
+            SatelliteKind::Graviton => {
+                entity.insert((
+                    GravitonMarker,
+                    GravitonVisual {
+                        active: graviton_active.clone(),
+                        inactive: graviton_inactive.clone(),
+                    },
+                ));
+
+                entity.with_children(|parent| {
+                    parent.spawn((
+                        Sprite {
+                            image: graviton_active.clone(),
+                            ..default()
+                        },
+                        Transform::from_translation(Vec3::new(100.0, 75.0, 0.0)),
+                        GlobalTransform::default(),
+                        Visibility::Visible,
+                    ));
+                });
+            }
+
+            SatelliteKind::Bumper => {
+                entity.insert(Bumper);
+
+                entity.with_children(|parent| {
+                    parent.spawn((
+                        Sprite {
+                            image: bumper_texture.clone(),
+                            ..default()
+                        },
+                        Transform::from_translation(Vec3::new(100.0, 75.0, 0.0)),
+                        GlobalTransform::default(),
+                        Visibility::Visible,
+                    ));
+                });
+            }
+
+            SatelliteKind::Grabber => {
+                warn!("Grabber not implemented yet.");
+            }
         }
-
-        entity.with_children(|parent| {
-            parent.spawn((
-                Sprite {
-                    image: texture_active.clone(),
-                    ..default()
-                },
-                Transform::from_translation(Vec3::new(100.0, 75.0, 0.0)),
-                GlobalTransform::default(),
-                Visibility::Visible,
-            ));
-        });
-
     }
+}
+
+
+pub fn load_satellite_config(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
+    let handle = asset_server.load("config/satellites.ron");
+    commands.insert_resource(SatelliteConfigHandle(handle));
 }
