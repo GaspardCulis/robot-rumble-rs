@@ -2,23 +2,21 @@ use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use leafwing_input_manager::prelude::InputMap;
-use rand::{seq::SliceRandom, Rng as _, SeedableRng as _};
+use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 use crate::{
+    GameState,
     core::{camera::CameraFollowTarget, physics, worldgen},
     entities::{
         planet::{Planet, Radius},
-        player::{self, Player, PlayerAction, PlayerBundle, PlayerSkin, PLAYER_RADIUS},
+        player::{self, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle, PlayerSkin},
     },
-    GameState,
 };
 use synctest::{
     checksum_position, handle_ggrs_events, p2p_mode, spawn_synctest_players,
     start_synctest_session, synctest_mode,
 };
-
-const NUM_PLAYERS: usize = 2;
 
 pub mod inputs;
 mod synctest;
@@ -70,8 +68,11 @@ impl Plugin for NetworkPlugin {
     }
 }
 
-fn start_matchbox_socket(mut commands: Commands) {
-    let room_url = format!("wss://matchbox.gasdev.fr/extreme_bevy?next={NUM_PLAYERS}");
+fn start_matchbox_socket(mut commands: Commands, args: Res<crate::Args>) {
+    let room_url = format!(
+        "wss://matchbox.gasdev.fr/extreme_bevy?next={}",
+        args.players
+    );
     info!("connecting to matchbox server: {room_url}");
     commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
 }
@@ -80,6 +81,7 @@ fn wait_for_players(
     mut commands: Commands,
     mut socket: ResMut<MatchboxSocket>,
     mut next_state: ResMut<NextState<GameState>>,
+    args: Res<crate::Args>,
 ) {
     if socket.get_channel(0).is_err() {
         return; // we've already started
@@ -89,19 +91,24 @@ fn wait_for_players(
     socket.update_peers();
     let players = socket.players();
 
-    if players.len() < NUM_PLAYERS {
+    if players.len() < args.players {
         return; // wait for more players
     }
 
     info!("All peers have joined, going in-game");
 
     // determine the seed
-    let id = socket.id().expect("no peer id assigned").0.as_u64_pair();
-    let mut seed = id.0 ^ id.1;
-    for peer in socket.connected_peers() {
-        let peer_id = peer.0.as_u64_pair();
-        seed ^= peer_id.0 ^ peer_id.1;
-    }
+    let seed = if args.players > 1 {
+        let local_id = socket.id().expect("no peer id assigned").0.as_u64_pair();
+        socket
+            .connected_peers()
+            .map(|peer| peer.0.as_u64_pair())
+            .fold(local_id.0 ^ local_id.1, |acc, peer_id| {
+                acc ^ (peer_id.0 ^ peer_id.1)
+            })
+    } else {
+        rand::rng().random()
+    };
     commands.insert_resource(SessionSeed(seed));
     commands.insert_resource(StartMatchDelay(Timer::from_seconds(0.5, TimerMode::Once)));
 
@@ -113,6 +120,7 @@ fn wait_start_match(
     mut socket: ResMut<MatchboxSocket>,
     mut next_state: ResMut<NextState<GameState>>,
     mut timeout: ResMut<StartMatchDelay>,
+    args: Res<crate::Args>,
     time: Res<Time>,
 ) {
     timeout.0.tick(time.delta());
@@ -121,10 +129,10 @@ fn wait_start_match(
     }
 
     let players = socket.players();
-    assert_eq!(players.len(), NUM_PLAYERS);
+    assert_eq!(players.len(), args.players);
 
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
-        .with_num_players(NUM_PLAYERS)
+        .with_num_players(args.players)
         .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 })
         .with_input_delay(2);
 

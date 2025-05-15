@@ -6,7 +6,7 @@ use bevy::{
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
-use crate::{network::SessionSeed, utils::gradient, GameState};
+use crate::{GameState, network::SessionSeed, utils::gradient};
 
 #[derive(Component)]
 struct Background;

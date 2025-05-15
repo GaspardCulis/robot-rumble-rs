@@ -8,6 +8,7 @@ struct StarFlaresMaterial {
     storm_dither_width: f32,
     circle_amount: f32,
     circle_scale: f32,
+    _wasm_padding: vec3<f32>,
 }
 
 @group(2) @binding(1) var<uniform> pm_star_flares: StarFlaresMaterial;
