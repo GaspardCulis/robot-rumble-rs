@@ -4,4 +4,6 @@ target/
 
 .envrc
 .direnv
+
 .vscode
+.helix
