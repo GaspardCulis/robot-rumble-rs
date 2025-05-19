@@ -4,17 +4,20 @@ WeaponsConfig({
         magazine_size: 15,
         reload_time: 1.0,
         damage_multiplier: 1.0,
+        spread: 0.04,
     ),
     Shotgun: WeaponStats(
         cooldown: 0.5,
         magazine_size: 8,
         reload_time: 5.0,
         damage_multiplier: 1.0,
+        spread: 0.1,
     ),
     Rifle: WeaponStats(
         cooldown: 0.3,
         magazine_size: 10,
         reload_time: 2.5,
         damage_multiplier: 1.1,
+        spread: 0.02,
     ),
 })

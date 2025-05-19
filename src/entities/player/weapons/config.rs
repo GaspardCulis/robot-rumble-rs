@@ -25,4 +25,5 @@ pub struct WeaponStats {
     #[serde_as(as = "serde_with::DurationSecondsWithFrac")]
     pub reload_time: Duration,
     pub damage_multiplier: f32,
+    pub spread: f32,
 }
