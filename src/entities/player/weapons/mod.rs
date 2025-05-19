@@ -93,12 +93,12 @@ fn fire_weapon_system(
     mut commands: Commands,
     weapon_query: Query<(&Triggered, &Position, &Velocity, &Rotation), With<WeaponType>>,
 ) {
-    for (triggered, position, velocity, Rotation(direction)) in weapon_query.iter() {
+    for (triggered, position, velocity, rotation) in weapon_query.iter() {
         if triggered.0 {
             let bullet = (
                 Bullet,
                 Position(position.0),
-                Velocity(direction * BULLET_SPEED + velocity.0),
+                Velocity(Vec2::from_angle(rotation.0) * BULLET_SPEED + velocity.0),
             );
 
             commands.spawn(bullet).add_rollback();
