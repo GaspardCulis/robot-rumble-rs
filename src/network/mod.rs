@@ -41,6 +41,8 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
+            .rollback_component_with_clone::<weapons::Triggered>()
+            .rollback_component_with_clone::<weapons::WeaponState>()
             .rollback_component_with_copy::<bullet::Bullet>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
