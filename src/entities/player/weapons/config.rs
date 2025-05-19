@@ -25,6 +25,7 @@ pub struct WeaponStats {
     pub reload_time: Duration,
     pub magazine_size: usize,
     pub damage_multiplier: f32,
+    /// Amount of spawned bullets per-shot. Still counts as one ammo
     pub shot_bullet_count: usize,
     pub spread: f32,
 }

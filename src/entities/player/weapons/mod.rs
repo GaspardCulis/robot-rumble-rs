@@ -109,15 +109,19 @@ fn fire_weapon_system(
         if triggered.0 && state.cooldown_timer.finished() && state.current_ammo > 0 {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
-            let random_angle = rng.random_range(-stats.spread..stats.spread);
+            for _ in 0..stats.shot_bullet_count {
+                let random_angle = rng.random_range(-stats.spread..stats.spread);
 
-            let bullet = (
-                Bullet,
-                Position(position.0),
-                Velocity(Vec2::from_angle(rotation.0 + random_angle) * BULLET_SPEED + velocity.0),
-            );
+                let bullet = (
+                    Bullet,
+                    Position(position.0),
+                    Velocity(
+                        Vec2::from_angle(rotation.0 + random_angle) * BULLET_SPEED + velocity.0,
+                    ),
+                );
 
-            commands.spawn(bullet).add_rollback();
+                commands.spawn(bullet).add_rollback();
+            }
 
             state.current_ammo -= 1;
             state.cooldown_timer.reset();
