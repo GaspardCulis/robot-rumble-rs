@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use crate::{
     core::physics::{Position, Rotation, Velocity},
     entities::bullet::{BULLET_SPEED, Bullet},
@@ -19,8 +21,8 @@ pub struct Triggered(pub bool);
 /// Weapon in-game state
 struct WeaponState {
     current_ammo: u32,
+    cooldown_timer: Timer,
     reload_timer: Timer,
-    last_shot_ts: Option<f32>,
 }
 
 #[derive(Resource)]
@@ -38,6 +40,7 @@ impl Plugin for WeaponPlugin {
                     #[cfg(debug_assertions)]
                     handle_config_reload,
                     add_stats_component.run_if(resource_exists::<WeaponsConfigHandle>),
+                    tick_weapon_timers,
                     fire_weapon_system,
                 ),
             );
@@ -67,8 +70,8 @@ fn add_stats_component(
             if !has_weapon_state {
                 commands.entity(weapon_entity).insert(WeaponState {
                     current_ammo: weapon_stats.magazine_size,
-                    reload_timer: Timer::default(),
-                    last_shot_ts: None,
+                    cooldown_timer: Timer::new(weapon_stats.cooldown, TimerMode::Once),
+                    reload_timer: Timer::new(weapon_stats.reload_time, TimerMode::Once),
                 });
             }
 
@@ -77,28 +80,30 @@ fn add_stats_component(
     }
 }
 
-/*
-/// update timer between shots
-fn update_weapon_timer(mut query: Query<&mut Weapon>, time: Res<Time>) {
-    for mut weapon in query.iter_mut() {
-        weapon.last_shot.tick(time.delta());
-        if weapon.last_shot.finished() {
-            // Weapon can fire again
-        }
+fn tick_weapon_timers(mut query: Query<&mut WeaponState>, time: Res<Time>) {
+    for mut state in query.iter_mut() {
+        state.cooldown_timer.tick(time.delta());
+        state.reload_timer.tick(time.delta());
     }
 }
-*/
 
 fn fire_weapon_system(
     mut commands: Commands,
-    weapon_query: Query<
-        (&Triggered, &Position, &Velocity, &Rotation, &WeaponStats),
+    mut weapon_query: Query<
+        (
+            &mut WeaponState,
+            &Triggered,
+            &Position,
+            &Velocity,
+            &Rotation,
+            &WeaponStats,
+        ),
         With<WeaponType>,
     >,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    for (triggered, position, velocity, rotation, stats) in weapon_query.iter() {
-        if triggered.0 {
+    for (mut state, triggered, position, velocity, rotation, stats) in weapon_query.iter_mut() {
+        if triggered.0 && state.cooldown_timer.finished() {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             let random_angle = rng.random_range(-stats.spread..stats.spread);
@@ -110,6 +115,8 @@ fn fire_weapon_system(
             );
 
             commands.spawn(bullet).add_rollback();
+
+            state.cooldown_timer.reset();
         }
     }
 }
