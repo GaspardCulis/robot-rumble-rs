@@ -147,7 +147,7 @@ fn update_weapon(
     >,
     mut weapon_query: Query<
         (&mut Triggered, &mut Position, &mut Velocity, &mut Direction),
-        (With<Weapon>, Without<Player>),
+        (With<WeaponType>, Without<Player>),
     >,
 ) {
     for (action_state, player_position, player_velocity, children) in player_query.iter() {

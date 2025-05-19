@@ -7,10 +7,11 @@ use crate::{
 };
 use bevy::prelude::*;
 use bevy_ggrs::AddRollbackCommandExtension;
-use config::{WeaponStats, WeaponType};
 use std::time::Duration;
 
 mod config;
+
+pub use config::{WeaponStats, WeaponType};
 
 struct CurrentAmmo(u32);
 
@@ -49,7 +50,7 @@ impl WeaponBundle {
                     cooldown: Duration::from_millis(300),
                     magazine_size: 15,
                     reload_time: Duration::from_millis(1000),
-                    damage_multiplyer: 1.0,
+                    damage_multiplier: 1.0,
                 };
 
                 let state = WeaponState {
@@ -75,7 +76,7 @@ impl WeaponBundle {
                     cooldown: Duration::from_millis(500),
                     magazine_size: 8,
                     reload_time: Duration::from_millis(5000),
-                    damage_multiplyer: 1.0,
+                    damage_multiplier: 1.0,
                 };
 
                 let state = WeaponState {
@@ -101,7 +102,7 @@ impl WeaponBundle {
                     cooldown: Duration::from_millis(300),
                     magazine_size: 10,
                     reload_time: Duration::from_millis(2500),
-                    damage_multiplyer: 1.1,
+                    damage_multiplier: 1.1,
                 };
 
                 let state = WeaponState {
