@@ -12,12 +12,12 @@ mod config;
 
 pub use config::{WeaponStats, WeaponType};
 
-#[derive(Component, Default)]
+#[derive(Component, Clone, Default)]
 pub struct Triggered(pub bool);
 
-#[derive(Debug, Component)]
+#[derive(Component, Clone, Debug)]
 /// Weapon in-game state
-struct WeaponState {
+pub struct WeaponState {
     current_ammo: usize,
     cooldown_timer: Timer,
     reload_timer: Timer,
