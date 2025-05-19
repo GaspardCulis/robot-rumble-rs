@@ -6,7 +6,9 @@ use crate::{
     entities::bullet::{BULLET_SPEED, Bullet},
 };
 use bevy::prelude::*;
+use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::AddRollbackCommandExtension;
+use config::WeaponsConfig;
 use std::time::Duration;
 
 mod config;
@@ -27,6 +29,9 @@ struct WeaponState {
 }
 #[derive(Debug, Component)]
 pub struct Direction(pub Vec2);
+
+#[derive(Resource)]
+struct WeaponsConfigHandle(Handle<WeaponsConfig>);
 
 #[derive(Bundle)]
 pub struct WeaponBundle {
@@ -97,7 +102,7 @@ impl WeaponBundle {
                     passive: Passive,
                 }
             }
-            WeaponType::Riffle => {
+            WeaponType::Rifle => {
                 let stats = WeaponStats {
                     cooldown: Duration::from_millis(300),
                     magazine_size: 10,
@@ -131,8 +136,15 @@ pub struct WeaponPlugin;
 
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, fire_weapon_system);
+        app.add_plugins(RonAssetPlugin::<WeaponsConfig>::new(&[]))
+            .add_systems(Startup, load_weapons_config)
+            .add_systems(Update, fire_weapon_system);
     }
+}
+
+fn load_weapons_config(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let weapons_config = WeaponsConfigHandle(asset_server.load("config/weapons.ron"));
+    commands.insert_resource(weapons_config);
 }
 
 /*

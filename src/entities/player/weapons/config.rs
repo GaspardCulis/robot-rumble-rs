@@ -15,11 +15,14 @@ pub enum WeaponType {
     Rifle,
 }
 
+#[serde_with::serde_as]
 #[derive(Debug, Component, serde::Deserialize)]
 /// Static weapon properties
 pub struct WeaponStats {
+    #[serde_as(as = "serde_with::DurationSecondsWithFrac")]
     pub cooldown: Duration,
     pub magazine_size: u32,
+    #[serde_as(as = "serde_with::DurationSecondsWithFrac")]
     pub reload_time: Duration,
     pub damage_multiplier: f32,
 }
