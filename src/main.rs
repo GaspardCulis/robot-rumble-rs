@@ -9,6 +9,7 @@ mod core;
 mod entities;
 mod level;
 mod network;
+mod ui;
 mod utils;
 
 #[derive(Parser, Resource, Debug)]
@@ -56,6 +57,7 @@ fn main() {
     .add_plugins(entities::EntitiesPlugins)
     .add_plugins(level::LevelPlugins)
     .add_plugins(network::NetworkPlugin)
+    .add_plugins(ui::UiPlugin)
     .init_state::<GameState>()
     .insert_resource(args);
 
