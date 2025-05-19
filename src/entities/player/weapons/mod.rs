@@ -35,6 +35,8 @@ impl Plugin for WeaponPlugin {
             .add_systems(
                 Update,
                 (
+                    #[cfg(debug_assertions)]
+                    handle_config_reload,
                     add_stats_component.run_if(resource_exists::<WeaponsConfigHandle>),
                     fire_weapon_system,
                 ),
@@ -49,10 +51,7 @@ fn load_weapons_config(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn add_stats_component(
     mut commands: Commands,
-    query: Query<
-        (Entity, &WeaponType, Has<WeaponState>),
-        (Added<WeaponType>, Without<WeaponStats>),
-    >,
+    query: Query<(Entity, &WeaponType, Has<WeaponState>), (With<WeaponType>, Without<WeaponStats>)>,
     config_handle: Res<WeaponsConfigHandle>,
     config_assets: Res<Assets<config::WeaponsConfig>>,
 ) {
@@ -112,5 +111,23 @@ fn fire_weapon_system(
 
             commands.spawn(bullet).add_rollback();
         }
+    }
+}
+
+#[cfg(debug_assertions)]
+fn handle_config_reload(
+    mut commands: Commands,
+    mut events: EventReader<AssetEvent<config::WeaponsConfig>>,
+    weapons: Query<Entity, With<WeaponStats>>,
+) {
+    for event in events.read() {
+        match event {
+            AssetEvent::Modified { id: _ } => {
+                for weapon in weapons.iter() {
+                    commands.entity(weapon).remove::<WeaponStats>();
+                }
+            }
+            _ => {}
+        };
     }
 }
