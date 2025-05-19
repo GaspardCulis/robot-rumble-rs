@@ -188,18 +188,23 @@ fn spawn_players(
         let position =
             spawn_planet_pos.0 + random_direction * (spawn_planet_radius.0 as f32 + PLAYER_RADIUS);
 
+        let weapon = commands
+            .spawn((
+                weapons::WeaponType::default(),
+                physics::Position(Vec2::ZERO),
+                physics::Velocity(Vec2::ZERO),
+                physics::Rotation(0.0),
+            ))
+            .add_rollback()
+            .id();
+
         commands
             .spawn((
                 PlayerBundle::new(handle, physics::Position(position)),
                 PlayerSkin("laika".into()),
             ))
             .add_rollback()
-            .with_child((
-                weapons::WeaponType::default(),
-                physics::Position(position),
-                physics::Velocity(Vec2::ZERO),
-                physics::Rotation(0.0),
-            ));
+            .add_child(weapon);
     }
 }
 
