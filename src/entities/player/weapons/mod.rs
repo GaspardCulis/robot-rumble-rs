@@ -5,7 +5,8 @@ use crate::{
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::AddRollbackCommandExtension;
-use config::WeaponsConfig;
+use rand::{Rng as _, SeedableRng as _};
+use rand_xoshiro::Xoshiro256PlusPlus;
 
 mod config;
 
@@ -23,13 +24,13 @@ struct WeaponState {
 }
 
 #[derive(Resource)]
-struct WeaponsConfigHandle(Handle<WeaponsConfig>);
+struct WeaponsConfigHandle(Handle<config::WeaponsConfig>);
 
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
         app.register_required_components::<WeaponType, Triggered>()
-            .add_plugins(RonAssetPlugin::<WeaponsConfig>::new(&[]))
+            .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
             .add_systems(Startup, load_weapons_config)
             .add_systems(
                 Update,
@@ -53,7 +54,7 @@ fn add_stats_component(
         (Added<WeaponType>, Without<WeaponStats>),
     >,
     config_handle: Res<WeaponsConfigHandle>,
-    config_assets: Res<Assets<WeaponsConfig>>,
+    config_assets: Res<Assets<config::WeaponsConfig>>,
 ) {
     let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
         c
@@ -91,14 +92,22 @@ fn update_weapon_timer(mut query: Query<&mut Weapon>, time: Res<Time>) {
 
 fn fire_weapon_system(
     mut commands: Commands,
-    weapon_query: Query<(&Triggered, &Position, &Velocity, &Rotation), With<WeaponType>>,
+    weapon_query: Query<
+        (&Triggered, &Position, &Velocity, &Rotation, &WeaponStats),
+        With<WeaponType>,
+    >,
+    time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    for (triggered, position, velocity, rotation) in weapon_query.iter() {
+    for (triggered, position, velocity, rotation, stats) in weapon_query.iter() {
         if triggered.0 {
+            // Putting it here is important as query iter order is non-deterministic
+            let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
+            let random_angle = rng.random_range(-stats.spread..stats.spread);
+
             let bullet = (
                 Bullet,
                 Position(position.0),
-                Velocity(Vec2::from_angle(rotation.0) * BULLET_SPEED + velocity.0),
+                Velocity(Vec2::from_angle(rotation.0 + random_angle) * BULLET_SPEED + velocity.0),
             );
 
             commands.spawn(bullet).add_rollback();
