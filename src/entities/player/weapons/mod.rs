@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use crate::{
     core::physics::{Position, Rotation, Velocity},
     entities::bullet::{BULLET_SPEED, Bullet},
@@ -20,7 +18,7 @@ pub struct Triggered(pub bool);
 #[derive(Debug, Component)]
 /// Weapon in-game state
 struct WeaponState {
-    current_ammo: u32,
+    current_ammo: usize,
     cooldown_timer: Timer,
     reload_timer: Timer,
 }

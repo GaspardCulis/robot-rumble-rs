@@ -21,9 +21,10 @@ pub enum WeaponType {
 pub struct WeaponStats {
     #[serde_as(as = "serde_with::DurationSecondsWithFrac")]
     pub cooldown: Duration,
-    pub magazine_size: u32,
     #[serde_as(as = "serde_with::DurationSecondsWithFrac")]
     pub reload_time: Duration,
+    pub magazine_size: usize,
     pub damage_multiplier: f32,
+    pub shot_bullet_count: usize,
     pub spread: f32,
 }
