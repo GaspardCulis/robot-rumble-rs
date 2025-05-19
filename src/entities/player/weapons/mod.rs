@@ -79,10 +79,16 @@ fn add_stats_component(
     }
 }
 
-fn tick_weapon_timers(mut query: Query<&mut WeaponState>, time: Res<Time>) {
-    for mut state in query.iter_mut() {
+/// Also handles ammo reloads for convenience
+fn tick_weapon_timers(mut query: Query<(&mut WeaponState, &WeaponStats)>, time: Res<Time>) {
+    for (mut state, stats) in query.iter_mut() {
         state.cooldown_timer.tick(time.delta());
         state.reload_timer.tick(time.delta());
+
+        // Verify current_ammo is 0 to avoid a subtle bug where we fire when WeaponState is instanciated
+        if state.reload_timer.just_finished() && state.current_ammo == 0 {
+            state.current_ammo = stats.magazine_size;
+        }
     }
 }
 
@@ -102,7 +108,7 @@ fn fire_weapon_system(
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
     for (mut state, triggered, position, velocity, rotation, stats) in weapon_query.iter_mut() {
-        if triggered.0 && state.cooldown_timer.finished() {
+        if triggered.0 && state.cooldown_timer.finished() && state.current_ammo > 0 {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             let random_angle = rng.random_range(-stats.spread..stats.spread);
@@ -115,7 +121,12 @@ fn fire_weapon_system(
 
             commands.spawn(bullet).add_rollback();
 
+            state.current_ammo -= 1;
             state.cooldown_timer.reset();
+
+            if state.current_ammo == 0 {
+                state.reload_timer.reset();
+            }
         }
     }
 }
