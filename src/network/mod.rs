@@ -14,7 +14,7 @@ use crate::{
         planet::{Planet, Radius},
         player::{
             self, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle, PlayerSkin,
-            weapons::{Weapon, WeaponBundle},
+            weapons::{WeaponBundle, WeaponType},
         },
     },
 };
@@ -196,7 +196,7 @@ fn spawn_players(
             ))
             .add_rollback()
             .with_child(WeaponBundle::new(
-                Weapon::default(),
+                WeaponType::default(),
                 physics::Position(position),
             ));
     }
