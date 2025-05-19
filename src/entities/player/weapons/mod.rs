@@ -106,12 +106,16 @@ fn fire_weapon_system(
             &Velocity,
             &Rotation,
             &WeaponStats,
+            Option<&Parent>,
         ),
         With<WeaponType>,
     >,
+    mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    for (mut state, triggered, position, velocity, rotation, stats) in weapon_query.iter_mut() {
+    for (mut state, triggered, position, velocity, rotation, stats, parent) in
+        weapon_query.iter_mut()
+    {
         if triggered.0 && state.cooldown_timer.finished() && state.current_ammo > 0 {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
@@ -134,6 +138,15 @@ fn fire_weapon_system(
 
             if state.current_ammo == 0 {
                 state.reload_timer.reset();
+            }
+
+            // Recoil
+            if let Some(parent) = parent {
+                if let Ok(mut velocity) = owner_query.get_mut(parent.get()) {
+                    velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
+                } else {
+                    warn!("Weapon parent has no velocity");
+                };
             }
         }
     }
