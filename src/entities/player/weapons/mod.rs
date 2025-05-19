@@ -1,10 +1,10 @@
 use crate::{
-    core::physics::{Position, Rotation, Velocity},
+    core::physics::{PhysicsSet, Position, Rotation, Velocity},
     entities::bullet::{BULLET_SPEED, Bullet},
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use bevy_ggrs::AddRollbackCommandExtension;
+use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -29,7 +29,8 @@ struct WeaponsConfigHandle(Handle<config::WeaponsConfig>);
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
-        app.register_required_components::<WeaponType, Triggered>()
+        app.register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
+            .register_required_components::<WeaponType, Triggered>()
             .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
             .add_systems(Startup, load_weapons_config)
             .add_systems(
@@ -38,9 +39,14 @@ impl Plugin for WeaponPlugin {
                     #[cfg(debug_assertions)]
                     handle_config_reload,
                     add_stats_component.run_if(resource_exists::<WeaponsConfigHandle>),
-                    tick_weapon_timers,
-                    fire_weapon_system,
                 ),
+            )
+            .add_systems(
+                GgrsSchedule,
+                (tick_weapon_timers, fire_weapon_system)
+                    .chain()
+                    .in_set(PhysicsSet::Player)
+                    .after(super::update_weapon),
             );
     }
 }
