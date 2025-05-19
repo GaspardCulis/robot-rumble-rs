@@ -151,8 +151,8 @@ fn update_weapon(
     >,
 ) {
     for (action_state, player_position, player_velocity, children) in player_query.iter() {
-        let axis_pair = action_state.axis_pair(&PlayerAction::Shoot);
-        let is_shooting = axis_pair.length() > 0.8;
+        let axis_pair = action_state.axis_pair(&PlayerAction::PointerDirection);
+        let is_shooting = action_state.pressed(&PlayerAction::Shoot);
         for &child in children.iter() {
             if let Ok((mut triggered, mut position, mut velocity, mut direction)) =
                 weapon_query.get_mut(child)
