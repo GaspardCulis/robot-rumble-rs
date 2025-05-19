@@ -7,31 +7,15 @@ use crate::{
 };
 use bevy::prelude::*;
 use bevy_ggrs::AddRollbackCommandExtension;
+use config::{WeaponStats, WeaponType};
 use std::time::Duration;
 
-/// Availabale weapons to spawn
-// TODO: Move to config file weapons properties
-#[derive(Component, Default, Debug)]
-pub enum Weapon {
-    #[default]
-    Pistol,
-    Shotgun,
-    Riffle,
-}
+mod config;
 
 struct CurrentAmmo(u32);
 
 #[derive(Component)]
 pub struct Triggered(pub bool);
-
-#[derive(Debug, Component)]
-/// Static weapon properties
-struct WeaponStats {
-    cooldown: Duration,
-    magazine_size: u32,
-    reload_time: Duration,
-    damage_multiplyer: f32,
-}
 
 #[derive(Debug, Component)]
 /// Weapon in-game state
@@ -45,7 +29,7 @@ pub struct Direction(pub Vec2);
 
 #[derive(Bundle)]
 pub struct WeaponBundle {
-    marker: Weapon,
+    r#type: WeaponType,
     position: Position,
     velocity: Velocity,
     _rotation: Rotation,
@@ -57,10 +41,10 @@ pub struct WeaponBundle {
 }
 
 impl WeaponBundle {
-    pub fn new(weapon_type: Weapon, position: Position) -> Self {
+    pub fn new(weapon_type: WeaponType, position: Position) -> Self {
         // TODO: define config file for uniform build
         match weapon_type {
-            Weapon::Pistol => {
+            WeaponType::Pistol => {
                 let stats = WeaponStats {
                     cooldown: Duration::from_millis(300),
                     magazine_size: 15,
@@ -75,7 +59,7 @@ impl WeaponBundle {
                 };
 
                 Self {
-                    marker: weapon_type,
+                    r#type: weapon_type,
                     position,
                     direction: Direction(Vec2::ZERO),
                     velocity: Velocity(Vec2::ZERO),
@@ -86,7 +70,7 @@ impl WeaponBundle {
                     passive: Passive,
                 }
             }
-            Weapon::Shotgun => {
+            WeaponType::Shotgun => {
                 let stats = WeaponStats {
                     cooldown: Duration::from_millis(500),
                     magazine_size: 8,
@@ -101,7 +85,7 @@ impl WeaponBundle {
                 };
 
                 Self {
-                    marker: weapon_type,
+                    r#type: weapon_type,
                     position,
                     direction: Direction(Vec2::ZERO),
                     _rotation: Rotation(0.),
@@ -112,7 +96,7 @@ impl WeaponBundle {
                     passive: Passive,
                 }
             }
-            Weapon::Riffle => {
+            WeaponType::Riffle => {
                 let stats = WeaponStats {
                     cooldown: Duration::from_millis(300),
                     magazine_size: 10,
@@ -127,7 +111,7 @@ impl WeaponBundle {
                 };
 
                 Self {
-                    marker: weapon_type,
+                    r#type: weapon_type,
                     position,
                     direction: Direction(Vec2::ZERO),
                     _rotation: Rotation(0.),
@@ -164,7 +148,7 @@ fn update_weapon_timer(mut query: Query<&mut Weapon>, time: Res<Time>) {
 
 fn fire_weapon_system(
     mut commands: Commands,
-    weapon_query: Query<(&Triggered, &Position, &Velocity, &Direction), With<Weapon>>,
+    weapon_query: Query<(&Triggered, &Position, &Velocity, &Direction), With<WeaponType>>,
 ) {
     for (triggered, position, velocity, Direction(direction)) in weapon_query.iter() {
         if triggered.0 {
