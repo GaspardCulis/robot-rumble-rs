@@ -16,7 +16,7 @@ pub enum WeaponType {
 }
 
 #[serde_with::serde_as]
-#[derive(Debug, Component, serde::Deserialize)]
+#[derive(Debug, Component, Clone, serde::Deserialize)]
 /// Static weapon properties
 pub struct WeaponStats {
     #[serde_as(as = "serde_with::DurationSecondsWithFrac")]
