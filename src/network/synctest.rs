@@ -82,6 +82,16 @@ pub fn spawn_synctest_players(
         (PlayerAction::Left, KeyCode::KeyJ),
     ]);
 
+    let weapon = commands
+        .spawn((
+            weapons::WeaponType::default(),
+            physics::Position(Vec2::ZERO),
+            physics::Velocity(Vec2::ZERO),
+            physics::Rotation(0.0),
+        ))
+        .add_rollback()
+        .id();
+
     commands
         .spawn((
             input_map_a,
@@ -90,12 +100,7 @@ pub fn spawn_synctest_players(
             camera::CameraFollowTarget,
         ))
         .add_rollback()
-        .with_child((
-            weapons::WeaponType::default(),
-            physics::Position(Vec2::ZERO),
-            physics::Velocity(Vec2::ZERO),
-            physics::Rotation(0.0),
-        ));
+        .add_child(weapon);
 
     commands
         .spawn((
