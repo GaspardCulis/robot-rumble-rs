@@ -46,6 +46,21 @@ pub struct WeaponBundle {
     passive: Passive,
 }
 
+pub struct WeaponPlugin;
+impl Plugin for WeaponPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(RonAssetPlugin::<WeaponsConfig>::new(&[]))
+            .add_systems(Startup, load_weapons_config)
+            .add_systems(
+                Update,
+                (
+                    add_stats_component.run_if(resource_exists::<WeaponsConfigHandle>),
+                    fire_weapon_system,
+                ),
+            );
+    }
+}
+
 impl WeaponBundle {
     pub fn new(weapon_type: WeaponType, position: Position) -> Self {
         // TODO: define config file for uniform build
@@ -132,19 +147,40 @@ impl WeaponBundle {
     }
 }
 
-pub struct WeaponPlugin;
-
-impl Plugin for WeaponPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins(RonAssetPlugin::<WeaponsConfig>::new(&[]))
-            .add_systems(Startup, load_weapons_config)
-            .add_systems(Update, fire_weapon_system);
-    }
-}
-
 fn load_weapons_config(mut commands: Commands, asset_server: Res<AssetServer>) {
     let weapons_config = WeaponsConfigHandle(asset_server.load("config/weapons.ron"));
     commands.insert_resource(weapons_config);
+}
+
+fn add_stats_component(
+    mut commands: Commands,
+    query: Query<
+        (Entity, &WeaponType, Has<WeaponState>),
+        (Added<WeaponType>, Without<WeaponStats>),
+    >,
+    config_handle: Res<WeaponsConfigHandle>,
+    config_assets: Res<Assets<WeaponsConfig>>,
+) {
+    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
+        c
+    } else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
+
+    for (weapon_entity, weapon_type, has_weapon_state) in query.iter() {
+        if let Some(weapon_stats) = config.0.get(weapon_type) {
+            if !has_weapon_state {
+                commands.entity(weapon_entity).insert(WeaponState {
+                    current_ammo: weapon_stats.magazine_size,
+                    reload_timer: Timer::default(),
+                    last_shot_ts: None,
+                });
+            }
+
+            commands.entity(weapon_entity).insert(weapon_stats.clone());
+        }
+    }
 }
 
 /*
