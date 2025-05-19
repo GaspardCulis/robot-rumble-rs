@@ -3,14 +3,14 @@ use bevy_ggrs::GgrsSchedule;
 
 use crate::GameState;
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq, Deref, DerefMut)]
+#[derive(Component, Debug, Default, Reflect, Clone, PartialEq, Deref, DerefMut)]
 #[require(Transform)]
 pub struct Position(pub Vec2);
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq, Deref, DerefMut)]
+#[derive(Component, Debug, Default, Reflect, Clone, PartialEq, Deref, DerefMut)]
 pub struct Velocity(pub Vec2);
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq, Deref, DerefMut)]
+#[derive(Component, Debug, Default, Reflect, Clone, PartialEq, Deref, DerefMut)]
 pub struct Rotation(pub f32);
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
