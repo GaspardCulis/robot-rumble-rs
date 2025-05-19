@@ -54,7 +54,7 @@ fn load_weapons_config(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn add_stats_component(
     mut commands: Commands,
-    query: Query<(Entity, &WeaponType, Has<WeaponState>), (With<WeaponType>, Without<WeaponStats>)>,
+    query: Query<(Entity, &WeaponType), (With<WeaponType>, Without<WeaponStats>)>,
     config_handle: Res<WeaponsConfigHandle>,
     config_assets: Res<Assets<config::WeaponsConfig>>,
 ) {
@@ -65,15 +65,14 @@ fn add_stats_component(
         return;
     };
 
-    for (weapon_entity, weapon_type, has_weapon_state) in query.iter() {
+    for (weapon_entity, weapon_type) in query.iter() {
         if let Some(weapon_stats) = config.0.get(weapon_type) {
-            if !has_weapon_state {
-                commands.entity(weapon_entity).insert(WeaponState {
-                    current_ammo: weapon_stats.magazine_size,
-                    cooldown_timer: Timer::new(weapon_stats.cooldown, TimerMode::Once),
-                    reload_timer: Timer::new(weapon_stats.reload_time, TimerMode::Once),
-                });
-            }
+            // Overrides weapon state if present
+            commands.entity(weapon_entity).insert(WeaponState {
+                current_ammo: weapon_stats.magazine_size,
+                cooldown_timer: Timer::new(weapon_stats.cooldown, TimerMode::Once),
+                reload_timer: Timer::new(weapon_stats.reload_time, TimerMode::Once),
+            });
 
             commands.entity(weapon_entity).insert(weapon_stats.clone());
         }
