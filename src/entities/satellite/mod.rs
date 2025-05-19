@@ -6,6 +6,7 @@ use crate::core::{physics::PhysicsSet};
 mod satellite;
 pub mod graviton;
 pub mod bumper;
+pub mod orbit_material;
 
 pub use satellite::{Satellite, SpawnSatelliteEvent, SatelliteKind};
 

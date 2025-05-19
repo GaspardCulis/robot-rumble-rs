@@ -5,7 +5,7 @@
     orbit_cooldown: 5.0,
     decay_rate: 40.0,
 
-    bump_radius: 120.0,
+    bump_radius: 150.0,
     bump_multiplier: 1.5,
     
 )
