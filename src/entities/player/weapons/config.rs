@@ -27,5 +27,6 @@ pub struct WeaponStats {
     pub damage_multiplier: f32,
     /// Amount of spawned bullets per-shot. Still counts as one ammo
     pub shot_bullet_count: usize,
+    pub recoil: f32,
     pub spread: f32,
 }
