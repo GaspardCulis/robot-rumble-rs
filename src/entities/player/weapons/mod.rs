@@ -3,9 +3,9 @@ use crate::{
         gravity::Passive,
         physics::{Position, Rotation, Velocity},
     },
-    entities::bullet::{Bullet, BULLET_SPEED},
+    entities::bullet::{BULLET_SPEED, Bullet},
 };
-use bevy::{math::VectorSpace, prelude::*};
+use bevy::prelude::*;
 use bevy_ggrs::AddRollbackCommandExtension;
 use std::time::Duration;
 

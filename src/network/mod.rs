@@ -195,7 +195,10 @@ fn spawn_players(
                 PlayerSkin("laika".into()),
             ))
             .add_rollback()
-            .with_child((WeaponBundle::new(Weapon::default(), physics::Position(position))));
+            .with_child(WeaponBundle::new(
+                Weapon::default(),
+                physics::Position(position),
+            ));
     }
 }
 
