@@ -25,7 +25,7 @@ WeaponsConfig({
             spread: 0.1,
         ),
         skin: (
-            sprite: "weapons/pistol.png",
+            sprite: "weapons/shotgun.png",
             scale: 3.0,
         ),
     ),
