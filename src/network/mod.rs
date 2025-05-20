@@ -202,9 +202,9 @@ fn spawn_players(
             .spawn((
                 PlayerBundle::new(handle, physics::Position(position)),
                 PlayerSkin("laika".into()),
+                player::Weapon(weapon),
             ))
-            .add_rollback()
-            .add_child(weapon);
+            .add_rollback();
     }
 }
 

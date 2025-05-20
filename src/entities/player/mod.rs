@@ -3,7 +3,6 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 use leafwing_input_manager::prelude::*;
-use weapons::{Triggered, WeaponType};
 
 use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
@@ -41,10 +40,13 @@ pub enum PlayerAction {
 }
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
+pub struct InAir(bool);
+
+#[derive(Component, Clone, Debug, PartialEq, Reflect)]
 pub struct PlayerSkin(pub String);
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
-pub struct InAir(bool);
+pub struct Weapon(pub Entity);
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -138,33 +140,33 @@ fn player_movement(
 }
 
 fn update_weapon(
-    player_query: Query<
-        (&ActionState<PlayerAction>, &Position, &Velocity, &Children),
-        With<Player>,
-    >,
+    player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
     mut weapon_query: Query<
-        (&mut Triggered, &mut Position, &mut Velocity, &mut Rotation),
-        (With<WeaponType>, Without<Player>),
+        (
+            &mut weapons::Triggered,
+            &mut Position,
+            &mut Velocity,
+            &mut Rotation,
+        ),
+        Without<Player>,
     >,
 ) {
-    for (action_state, player_position, player_velocity, children) in player_query.iter() {
+    for (action_state, player_position, player_velocity, weapon) in player_query.iter() {
         let axis_pair = action_state.axis_pair(&PlayerAction::PointerDirection);
         let is_shooting = action_state.pressed(&PlayerAction::Shoot);
-        for &child in children.iter() {
-            if let Ok((mut triggered, mut position, mut velocity, mut direction)) =
-                weapon_query.get_mut(child)
-            {
-                direction.0 = if axis_pair != Vec2::ZERO {
-                    axis_pair.to_angle()
-                } else {
-                    0.0
-                };
-                triggered.0 = is_shooting;
-                position.0 = player_position.0;
-                velocity.0 = player_velocity.0;
+        if let Ok((mut triggered, mut position, mut velocity, mut direction)) =
+            weapon_query.get_mut(weapon.0)
+        {
+            direction.0 = if axis_pair != Vec2::ZERO {
+                axis_pair.to_angle()
             } else {
-                warn!("AYO");
-            }
+                0.0
+            };
+            triggered.0 = is_shooting;
+            position.0 = player_position.0;
+            velocity.0 = player_velocity.0;
+        } else {
+            warn!("AYO");
         }
     }
 }
