@@ -12,8 +12,6 @@ mod config;
 
 pub use config::{WeaponStats, WeaponType};
 
-const WEAPON_SCALE: Vec3 = Vec3::splat(3.0);
-
 #[derive(Component, Clone, Default)]
 pub struct Triggered(pub bool);
 
@@ -73,7 +71,9 @@ fn add_stats_component(
     };
 
     for (weapon_entity, weapon_type) in query.iter() {
-        if let Some(weapon_stats) = config.0.get(weapon_type) {
+        if let Some(weapon_config) = config.0.get(weapon_type) {
+            let weapon_stats = &weapon_config.stats;
+
             // Overrides weapon state if present
             commands.entity(weapon_entity).insert(WeaponState {
                 current_ammo: weapon_stats.magazine_size,
@@ -93,12 +93,23 @@ fn add_sprite(
     config_assets: Res<Assets<config::WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    for (weapon_entity, _weapon_type) in query.iter() {
-        commands.entity(weapon_entity).insert((
-            Sprite::from_image(asset_server.load("weapons/pistol.png")),
-            Transform::from_xyz(0.0, 0.0, super::skin::PLAYER_SKIN_ZINDEX + 1.0)
-                .with_scale(WEAPON_SCALE),
-        ));
+    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
+        c
+    } else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
+
+    for (weapon_entity, weapon_type) in query.iter() {
+        if let Some(weapon_config) = config.0.get(weapon_type) {
+            let skin = weapon_config.skin.clone();
+
+            commands.entity(weapon_entity).insert((
+                Sprite::from_image(asset_server.load(skin.sprite)),
+                Transform::from_xyz(0.0, 0.0, super::skin::PLAYER_SKIN_ZINDEX + 1.0)
+                    .with_scale(Vec3::splat(skin.scale)),
+            ));
+        }
     }
 }
 
