@@ -186,13 +186,14 @@ fn fire_weapon_system(
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<config::WeaponsConfig>>,
-    weapons: Query<Entity, With<WeaponStats>>,
+    weapons: Query<Entity, Or<(With<WeaponStats>, With<Sprite>)>>,
 ) {
     for event in events.read() {
         match event {
             AssetEvent::Modified { id: _ } => {
                 for weapon in weapons.iter() {
                     commands.entity(weapon).remove::<WeaponStats>();
+                    commands.entity(weapon).remove::<Sprite>();
                 }
             }
             _ => {}
