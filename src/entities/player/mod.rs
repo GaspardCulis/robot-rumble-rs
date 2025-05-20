@@ -1,17 +1,14 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_ggrs::{GgrsSchedule, RollbackFrameCount};
+use bevy_ggrs::GgrsSchedule;
 use leafwing_input_manager::prelude::*;
-use rand::{Rng as _, SeedableRng as _};
-use rand_xoshiro::Xoshiro256PlusPlus;
-use weapons::{Direction, Triggered, Weapon};
+use weapons::{Triggered, WeaponType};
 
 use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
-use super::bullet::{BULLET_SPEED, Bullet};
 use super::planet;
 
 mod animation;
