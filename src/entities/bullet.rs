@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
 use crate::{
+    GameState,
     core::{
         gravity::{Mass, Passive},
         physics::{PhysicsSet, Position, Rotation, Velocity},
     },
-    GameState,
 };
 
 use super::planet::Radius;
