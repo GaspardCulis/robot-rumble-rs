@@ -7,6 +7,7 @@ use crate::{core::physics::Position, utils::spritesheet};
 use super::{Player, PlayerSkin};
 
 pub const PLAYER_SKIN_SCALE: f32 = 2.4;
+pub const PLAYER_SKIN_ZINDEX: f32 = 10.0;
 
 #[derive(serde::Deserialize, Asset, TypePath, Deref)]
 struct SkinsConfig(HashMap<String, AnimationsConfig>);
@@ -106,7 +107,7 @@ fn load_skin_on_player(
                         },
                     ),
                     Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE)).with_translation(
-                        Vec3::new(player_position.0.x, player_position.0.y, 10.0),
+                        Vec3::new(player_position.0.x, player_position.0.y, PLAYER_SKIN_ZINDEX),
                     ),
                     default_anim.indices.clone(),
                     default_anim.timer.clone(),
