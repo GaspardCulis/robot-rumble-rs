@@ -1,23 +1,17 @@
 use crate::{
-    core::{
-        gravity::Passive,
-        physics::{Position, Rotation, Velocity},
-    },
+    core::physics::{Position, Rotation, Velocity},
     entities::bullet::{BULLET_SPEED, Bullet},
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::AddRollbackCommandExtension;
 use config::WeaponsConfig;
-use std::time::Duration;
 
 mod config;
 
 pub use config::{WeaponStats, WeaponType};
 
-struct CurrentAmmo(u32);
-
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Triggered(pub bool);
 
 #[derive(Debug, Component)]
@@ -27,29 +21,15 @@ struct WeaponState {
     reload_timer: Timer,
     last_shot_ts: Option<f32>,
 }
-#[derive(Debug, Component)]
-pub struct Direction(pub Vec2);
 
 #[derive(Resource)]
 struct WeaponsConfigHandle(Handle<WeaponsConfig>);
 
-#[derive(Bundle)]
-pub struct WeaponBundle {
-    r#type: WeaponType,
-    position: Position,
-    velocity: Velocity,
-    _rotation: Rotation,
-    direction: Direction,
-    is_triggered: Triggered,
-    stats: WeaponStats,
-    state: WeaponState,
-    passive: Passive,
-}
-
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(RonAssetPlugin::<WeaponsConfig>::new(&[]))
+        app.register_required_components::<WeaponType, Triggered>()
+            .add_plugins(RonAssetPlugin::<WeaponsConfig>::new(&[]))
             .add_systems(Startup, load_weapons_config)
             .add_systems(
                 Update,
@@ -58,92 +38,6 @@ impl Plugin for WeaponPlugin {
                     fire_weapon_system,
                 ),
             );
-    }
-}
-
-impl WeaponBundle {
-    pub fn new(weapon_type: WeaponType, position: Position) -> Self {
-        // TODO: define config file for uniform build
-        match weapon_type {
-            WeaponType::Pistol => {
-                let stats = WeaponStats {
-                    cooldown: Duration::from_millis(300),
-                    magazine_size: 15,
-                    reload_time: Duration::from_millis(1000),
-                    damage_multiplier: 1.0,
-                };
-
-                let state = WeaponState {
-                    current_ammo: stats.magazine_size,
-                    reload_timer: Timer::default(),
-                    last_shot_ts: None,
-                };
-
-                Self {
-                    r#type: weapon_type,
-                    position,
-                    direction: Direction(Vec2::ZERO),
-                    velocity: Velocity(Vec2::ZERO),
-                    _rotation: Rotation(0.),
-                    is_triggered: Triggered(false),
-                    stats,
-                    state,
-                    passive: Passive,
-                }
-            }
-            WeaponType::Shotgun => {
-                let stats = WeaponStats {
-                    cooldown: Duration::from_millis(500),
-                    magazine_size: 8,
-                    reload_time: Duration::from_millis(5000),
-                    damage_multiplier: 1.0,
-                };
-
-                let state = WeaponState {
-                    current_ammo: stats.magazine_size,
-                    reload_timer: Timer::default(),
-                    last_shot_ts: None,
-                };
-
-                Self {
-                    r#type: weapon_type,
-                    position,
-                    direction: Direction(Vec2::ZERO),
-                    _rotation: Rotation(0.),
-                    velocity: Velocity(Vec2::ZERO),
-                    is_triggered: Triggered(false),
-                    stats,
-                    state,
-                    passive: Passive,
-                }
-            }
-            WeaponType::Rifle => {
-                let stats = WeaponStats {
-                    cooldown: Duration::from_millis(300),
-                    magazine_size: 10,
-                    reload_time: Duration::from_millis(2500),
-                    damage_multiplier: 1.1,
-                };
-
-                let state = WeaponState {
-                    current_ammo: stats.magazine_size,
-                    reload_timer: Timer::default(),
-                    last_shot_ts: None,
-                };
-
-                Self {
-                    r#type: weapon_type,
-                    position,
-                    direction: Direction(Vec2::ZERO),
-                    _rotation: Rotation(0.),
-                    velocity: Velocity(Vec2::ZERO),
-                    is_triggered: Triggered(false),
-                    stats,
-                    state,
-                    passive: Passive,
-                }
-            }
-        }
     }
 }
 
@@ -197,9 +91,9 @@ fn update_weapon_timer(mut query: Query<&mut Weapon>, time: Res<Time>) {
 
 fn fire_weapon_system(
     mut commands: Commands,
-    weapon_query: Query<(&Triggered, &Position, &Velocity, &Direction), With<WeaponType>>,
+    weapon_query: Query<(&Triggered, &Position, &Velocity, &Rotation), With<WeaponType>>,
 ) {
-    for (triggered, position, velocity, Direction(direction)) in weapon_query.iter() {
+    for (triggered, position, velocity, Rotation(direction)) in weapon_query.iter() {
         if triggered.0 {
             let bullet = (
                 Bullet,

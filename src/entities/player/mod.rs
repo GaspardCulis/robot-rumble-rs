@@ -146,7 +146,7 @@ fn update_weapon(
         With<Player>,
     >,
     mut weapon_query: Query<
-        (&mut Triggered, &mut Position, &mut Velocity, &mut Direction),
+        (&mut Triggered, &mut Position, &mut Velocity, &mut Rotation),
         (With<WeaponType>, Without<Player>),
     >,
 ) {
@@ -157,7 +157,11 @@ fn update_weapon(
             if let Ok((mut triggered, mut position, mut velocity, mut direction)) =
                 weapon_query.get_mut(child)
             {
-                direction.0 = axis_pair;
+                direction.0 = if axis_pair != Vec2::ZERO {
+                    axis_pair.to_angle()
+                } else {
+                    0.0
+                };
                 triggered.0 = is_shooting;
                 position.0 = player_position.0;
                 velocity.0 = player_velocity.0;
