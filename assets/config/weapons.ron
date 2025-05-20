@@ -1,29 +1,47 @@
 WeaponsConfig({
-    Pistol: WeaponStats(
-        cooldown: 0.3,
-        magazine_size: 15,
-        reload_time: 1.0,
-        damage_multiplier: 1.0,
-        shot_bullet_count: 1,
-        recoil: 30.0,
-        spread: 0.04,
+    Pistol: (
+        stats: (
+            cooldown: 0.3,
+            magazine_size: 15,
+            reload_time: 1.0,
+            damage_multiplier: 1.0,
+            shot_bullet_count: 1,
+            recoil: 30.0,
+            spread: 0.04,
+        ),
+        skin: (
+            sprite: "weapons/pistol.png",
+            scale: 3.0,
+        ),
     ),
-    Shotgun: WeaponStats(
-        cooldown: 0.5,
-        magazine_size: 8,
-        reload_time: 5.0,
-        damage_multiplier: 1.0,
-        shot_bullet_count: 10,
-        recoil: 800.0,
-        spread: 0.1,
+    Shotgun: (
+        stats: (
+            cooldown: 0.5,
+            magazine_size: 8,
+            reload_time: 5.0,
+            damage_multiplier: 1.0,
+            shot_bullet_count: 10,
+            recoil: 800.0,
+            spread: 0.1,
+        ),
+        skin: (
+            sprite: "weapons/pistol.png",
+            scale: 3.0,
+        ),
     ),
-    Rifle: WeaponStats(
-        cooldown: 0.3,
-        magazine_size: 10,
-        reload_time: 2.5,
-        damage_multiplier: 1.1,
-        shot_bullet_count: 1,
-        recoil: 60.0,
-        spread: 0.02,
+    Rifle: (
+        stats: (
+            cooldown: 0.3,
+            magazine_size: 10,
+            reload_time: 2.5,
+            damage_multiplier: 1.1,
+            shot_bullet_count: 1,
+            recoil: 60.0,
+            spread: 0.02,
+        ),
+        skin: (
+            sprite: "weapons/pistol.png",
+            scale: 3.0,
+        ),
     ),
 })
