@@ -70,6 +70,7 @@ impl Plugin for PlanetPlugin {
                 (
                     handle_spawn_planet_event,
                     spawn_config_layers,
+                    #[cfg(debug_assertions)]
                     handle_config_reload,
                 ),
             );
@@ -208,6 +209,7 @@ fn spawn_config_layers(
     }
 }
 
+#[cfg(debug_assertions)]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<PlanetsConfig>>,

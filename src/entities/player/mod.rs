@@ -1,13 +1,16 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_ggrs::GgrsSchedule;
+use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule, RollbackFrameCount};
 use leafwing_input_manager::prelude::*;
+use rand::{Rng as _, SeedableRng as _};
+use rand_xoshiro::Xoshiro256PlusPlus;
 
 use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
+use super::bullet::{BULLET_SPEED, Bullet};
 use super::planet;
 use crate::entities::satellite::graviton::Orbited;
 
@@ -34,6 +37,9 @@ pub enum PlayerAction {
     Sneak,
     Left,
     Right,
+    Shoot,
+    #[actionlike(DualAxis)]
+    PointerDirection,
 }
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
@@ -80,7 +86,7 @@ impl Plugin for PlayerPlugin {
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_systems(
                 GgrsSchedule,
-                (player_physics, player_movement)
+                (player_physics, player_movement, player_shooting)
                     .chain()
                     .in_set(PhysicsSet::Player),
             );
@@ -128,6 +134,30 @@ fn player_movement(
             input_velocity.0.y = math::lerp(input_velocity.0.y, -PLAYER_VELOCITY, delta);
         } else {
             input_velocity.0.y = math::lerp(input_velocity.0.y, 0., delta * 10.);
+        }
+    }
+}
+
+fn player_shooting(
+    mut commands: Commands,
+    query: Query<(&ActionState<PlayerAction>, &Position, &Velocity), With<Player>>,
+    time: Res<RollbackFrameCount>,
+) {
+    for (action_state, position, velocity) in query.iter() {
+        // Putting it here is important as query iter order is non-deterministic
+        if action_state.pressed(&PlayerAction::Shoot) {
+            let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
+
+            let pointer_direction = action_state.axis_pair(&PlayerAction::PointerDirection);
+            let random_angle = Vec2::from_angle(rng.random_range(-0.04..0.04));
+
+            let bullet = (
+                Bullet,
+                Position(position.0),
+                Velocity(pointer_direction.rotate(random_angle) * BULLET_SPEED + velocity.0),
+            );
+
+            commands.spawn(bullet).add_rollback();
         }
     }
 }
