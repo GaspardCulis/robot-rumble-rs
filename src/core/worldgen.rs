@@ -22,7 +22,8 @@ impl Plugin for WorldgenPlugin {
                 Update,
                 (
                     handle_genworld_event,
-                    handle_config_reload.run_if(resource_exists::<SessionSeed>),
+                    #[cfg(debug_assertions)]
+                    handle_config_reload.run_if(resource_exists::<crate::network::SessionSeed>),
                 ),
             );
     }
@@ -182,12 +183,13 @@ fn handle_genworld_event(
     }
 }
 
+#[cfg(debug_assertions)]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<WorldgenConfig>>,
     mut worldgen_events: EventWriter<GenerateWorldEvent>,
     planets: Query<Entity, With<Planet>>,
-    seed: Res<SessionSeed>,
+    seed: Res<crate::network::SessionSeed>,
 ) {
     for event in events.read() {
         match event {

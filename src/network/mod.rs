@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
-use leafwing_input_manager::prelude::InputMap;
+use inputs::NetworkInputs;
+use leafwing_input_manager::prelude::*;
 use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -9,6 +10,7 @@ use crate::{
     GameState,
     core::{camera::CameraFollowTarget, physics, worldgen},
     entities::{
+        bullet,
         planet::{Planet, Radius},
         player::{self, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle, PlayerSkin},
     },
@@ -21,7 +23,7 @@ use synctest::{
 pub mod inputs;
 mod synctest;
 
-pub type SessionConfig = bevy_ggrs::GgrsConfig<u8, PeerId>;
+pub type SessionConfig = bevy_ggrs::GgrsConfig<NetworkInputs, PeerId>;
 
 #[derive(Resource, Default, Clone, Copy, Debug, Deref, DerefMut)]
 pub struct SessionSeed(pub u64);
@@ -39,6 +41,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
+            .rollback_component_with_copy::<bullet::Bullet>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
@@ -219,7 +222,9 @@ fn add_local_player_components(
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
-    ]);
+    ])
+    .with(PlayerAction::Shoot, MouseButton::Left)
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
 
     let local_players_query = query
         .iter()

@@ -1,5 +1,5 @@
 (
-    central_star_radius: 100,
+    central_star_radius: 400,
 
     min_planets: 20,
     max_planets: 25,
