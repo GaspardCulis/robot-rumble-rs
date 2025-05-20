@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use crate::core::physics::Position;
 
+use super::grabber::Grabber;
 use super::graviton::{GravitonMarker, GravitonVisual};
 use super::bumper::Bumper;
 
@@ -39,6 +40,9 @@ pub struct SatelliteConfig {
     // Bumper
     pub bump_radius: f32,
     pub bump_multiplier: f32,
+
+    // Grabber
+    pub grabber_radius: f32,
 }
 
 #[derive(Resource)]
@@ -78,6 +82,8 @@ fn handle_spawn_satellite(
     let graviton_inactive = asset_server.load("skins/satellite/destroyed_graviton.png");
 
     let bumper_texture = asset_server.load("skins/satellite/working_bumper.png");
+
+    let grabber_texture = asset_server.load("skins/satellite/working_grabber.png");
 
     for event in events.read() {
         let mut entity = commands.spawn((
@@ -132,21 +138,40 @@ fn handle_spawn_satellite(
             }
 
             SatelliteKind::Grabber => {
-                warn!("Grabber not implemented yet.");
+                entity.insert(Grabber);
+
+                entity.with_children(|parent| {
+                    parent.spawn((
+                        Sprite {
+                            image: grabber_texture.clone(),
+                            ..default()
+                        },
+                        Transform::from_translation(Vec3::new(130.0, 75.0, 0.0)),
+                        GlobalTransform::default(),
+                        Visibility::Visible,
+                    ));
+                });
             }
+
         }
+        // Adapt orbit radius and color depending on satellite kind
+        let (orbit_radius, base_color) = match event.kind {
+            SatelliteKind::Graviton => (config.orbit_radius+100.0, LinearRgba::new(0.0, 0.0, 1.0, 1.0)),
+            SatelliteKind::Bumper => (config.bump_radius, LinearRgba::new(1.0, 0.5, 0.0, 1.0)),
+            SatelliteKind::Grabber => (config.grabber_radius+50.0, LinearRgba::new(0.0, 1.0, 0.0, 1.0)),
+        };
+
         let orbit_material_handle = materials.add(OrbitMaterial {
             time: 0.0,
-            base_color: LinearRgba::new(0.0, 0.0, 1.0, 1.0),
+            base_color,
             saturation: 1.0,
             alpha: 0.6,
         });
-        let orbit_radius = config.orbit_radius; 
-        let ring_thickness = 5.0; // ou une autre valeur selon ton style
+        let ring_thickness = 5.0;
         let orbit_ring = meshes.add(generate_ring(
             orbit_radius - ring_thickness,
             orbit_radius,
-            64, // résolution du cercle
+            64,
         ));
 
         entity.with_children(|parent| {
@@ -208,10 +233,16 @@ pub fn generate_ring(inner_radius: f32, outer_radius: f32, resolution: usize) ->
         indices.extend_from_slice(&[i0, i2, i1, i2, i3, i1]);
     }
 
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList,  bevy::render::render_asset::RenderAssetUsages::default());
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        bevy::render::render_asset::RenderAssetUsages::default(),
+    );
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; resolution * 2]);
+    mesh.insert_attribute(
+        Mesh::ATTRIBUTE_NORMAL,
+        vec![[0.0, 0.0, 1.0]; resolution * 2],
+    );
     mesh.insert_indices(Indices::U32(indices));
 
     mesh

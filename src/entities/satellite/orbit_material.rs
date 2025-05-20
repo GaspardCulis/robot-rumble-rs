@@ -1,10 +1,8 @@
-use bevy::color::LinearRgba;
-use bevy::{
-   render::render_resource::*, sprite::Material2d
-};
 use bevy::asset::Asset;
+use bevy::color::LinearRgba;
 use bevy::reflect::TypePath;
 use bevy::render::render_resource::AsBindGroup;
+use bevy::{render::render_resource::*, sprite::Material2d};
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct OrbitMaterial {

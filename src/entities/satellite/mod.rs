@@ -1,14 +1,15 @@
+use crate::core::physics::PhysicsSet;
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
-use crate::core::{physics::PhysicsSet};
 
-mod satellite;
-pub mod graviton;
 pub mod bumper;
+pub mod grabber;
+pub mod graviton;
 pub mod orbit_material;
+mod satellite;
 
-pub use satellite::{Satellite, SpawnSatelliteEvent, SatelliteKind};
+pub use satellite::{Satellite, SatelliteKind, SpawnSatelliteEvent};
 
 pub struct SatellitePlugin;
 
@@ -29,5 +30,6 @@ impl Plugin for SatellitePlugin {
 
         graviton::register_graviton_systems(app);
         bumper::register_bumper_systems(app);
+        grabber::register_grabber_systems(app);
     }
 }

@@ -1,10 +1,10 @@
-use bevy::prelude::*;
-use bevy_ggrs::GgrsSchedule;
+use crate::core::physics::{PhysicsSet, Velocity};
 use crate::entities::player::Player;
 use crate::entities::satellite::Satellite;
-use crate::core::physics::{PhysicsSet, Velocity};
+use bevy::prelude::*;
+use bevy_ggrs::GgrsSchedule;
 
-use super::satellite::{SatelliteConfigHandle, SatelliteConfig};
+use super::satellite::{SatelliteConfig, SatelliteConfigHandle};
 
 use bevy::asset::Assets;
 
@@ -40,7 +40,6 @@ pub fn bumper_push_player(
                 let bump_speed = incoming_speed * bump_multiplier;
 
                 velocity.0 = push_dir * bump_speed;
-
             }
         }
     }

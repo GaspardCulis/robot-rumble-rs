@@ -4,12 +4,11 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
+use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
 use crate::{
     entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent},
     network::SessionSeed,
 };
-use crate::entities::satellite::{SpawnSatelliteEvent, SatelliteKind};
-
 
 use super::physics::Position;
 
@@ -121,21 +120,19 @@ fn handle_genworld_event(
                         seed: rng.random(),
                     });
 
-
                     break;
                 }
             }
         }
 
-       for spawn_event in &planets {
+        for spawn_event in &planets {
             planet_spawn_events.send(spawn_event.clone());
         }
 
-        // Générer un certain nombre de satellites 
+        // Générer un certain nombre de satellites
         let mut satellite_positions: Vec<Position> = Vec::new();
-        let num_satellites = rng.random_range(
-            worldgen_config.min_satellites..worldgen_config.max_satellites,
-        );
+        let num_satellites =
+            rng.random_range(worldgen_config.min_satellites..worldgen_config.max_satellites);
 
         for _ in 0..num_satellites {
             let mut attempts = 0;
@@ -156,23 +153,25 @@ fn handle_genworld_event(
                 let safe_distance_satellite = worldgen_config.satellite_satellite_min_distance;
 
                 let far_from_planets = planets.iter().all(|planet| {
-                    position.0.distance(planet.position.0) > (planet.radius.0 as f32 + safe_distance_planet)
+                    position.0.distance(planet.position.0)
+                        > (planet.radius.0 as f32 + safe_distance_planet)
                 });
 
-                let far_from_satellites = satellite_positions.iter().all(|existing| {
-                    position.0.distance(existing.0) > safe_distance_satellite
-                });
+                let far_from_satellites = satellite_positions
+                    .iter()
+                    .all(|existing| position.0.distance(existing.0) > safe_distance_satellite);
 
-                let kind = if rng.random_bool(0.5) {
-                    SatelliteKind::Graviton
-                } else {
-                    SatelliteKind::Bumper
+                let kind = match rng.random_range(0..3) {
+                    0 => SatelliteKind::Graviton,
+                    1 => SatelliteKind::Bumper,
+                    _ => SatelliteKind::Grabber,
                 };
+                
 
                 if far_from_planets && far_from_satellites {
                     satellite_spawn_events.send(SpawnSatelliteEvent {
                         position: position.clone(),
-                        scale: rng.random_range(0.5..0.9),
+                        scale: 0.7,
                         kind: kind,
                     });
                     satellite_positions.push(position);
@@ -180,8 +179,6 @@ fn handle_genworld_event(
                 }
             }
         }
-
-
     }
 }
 

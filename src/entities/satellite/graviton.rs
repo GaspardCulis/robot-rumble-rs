@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 
-use crate::entities::player::Player; 
-use crate::entities::satellite::{Satellite};
-use crate::core::physics::{Position, Velocity, PhysicsSet, update_spatial_bundles};
+use crate::core::physics::{PhysicsSet, Position, Velocity, update_spatial_bundles};
+use crate::entities::player::Player;
+use crate::entities::satellite::Satellite;
 
-use bevy_ggrs::GgrsSchedule;
 use crate::core::gravity::apply_forces;
+use bevy_ggrs::GgrsSchedule;
 
 use super::satellite::{SatelliteConfig, SatelliteConfigHandle};
 
@@ -35,7 +35,10 @@ pub struct GravitonVisual {
 
 pub fn detect_player_orbit_entry(
     mut commands: Commands,
-    graviton_query: Query<(&Transform, Option<&OrbitCooldown>), (With<Satellite>, With<GravitonMarker>)>,
+    graviton_query: Query<
+        (&Transform, Option<&OrbitCooldown>),
+        (With<Satellite>, With<GravitonMarker>),
+    >,
     mut player_query: Query<(Entity, &Transform, &Velocity), (With<Player>, Without<Orbited>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -64,7 +67,8 @@ pub fn detect_player_orbit_entry(
 
             let initial_speed = velocity.length();
 
-            let dir = player_transform.translation.truncate() - graviton_transform.translation.truncate();
+            let dir =
+                player_transform.translation.truncate() - graviton_transform.translation.truncate();
             let angle = dir.angle_to(Vec2::X);
 
             if distance < orbit_radius {
@@ -97,7 +101,7 @@ pub fn update_orbiting_players(
     let orbit_radius = config.orbit_radius;
     let orbit_duration = config.orbit_duration;
     let orbit_cooldown_duration = config.orbit_cooldown;
-    let decay_rate = config.decay_rate; 
+    let decay_rate = config.decay_rate;
 
     for (entity, mut position, mut velocity, mut orbited) in query.iter_mut() {
         let delta = time.delta_secs();
@@ -128,7 +132,8 @@ pub fn update_orbiting_players(
 
         // === Calcul de la vitesse courante attendue ===
         let target_speed = orbit_radius * orbited.angular_speed * 2.2;
-        let mut current_speed = orbited.initial_speed - decay_rate * (orbit_duration - orbited.time_left);
+        let mut current_speed =
+            orbited.initial_speed - decay_rate * (orbit_duration - orbited.time_left);
         current_speed = current_speed.max(target_speed);
 
         // === Déduire la vitesse angulaire à partir de la vitesse orbitale ===
@@ -143,7 +148,6 @@ pub fn update_orbiting_players(
         position.0 = orbited.center + dir;
     }
 }
-
 
 pub fn update_orbit_cooldowns(
     mut cooldown_query: Query<(Entity, &mut OrbitCooldown, &Children), With<GravitonMarker>>,
@@ -168,22 +172,19 @@ pub fn update_orbit_cooldowns(
     }
 }
 
-
-
-
 pub fn register_graviton_systems(app: &mut App) {
     app.register_type::<Orbited>()
         .add_systems(
             GgrsSchedule,
             update_orbiting_players
                 .in_set(PhysicsSet::Gravity)
-                .after(apply_forces), 
+                .after(apply_forces),
         )
         .add_systems(
             GgrsSchedule,
             update_spatial_bundles
                 .in_set(PhysicsSet::Gravity)
-                .after(update_orbiting_players), 
+                .after(update_orbiting_players),
         )
         .add_systems(
             GgrsSchedule,
