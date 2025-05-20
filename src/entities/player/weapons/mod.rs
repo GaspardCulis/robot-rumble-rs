@@ -12,6 +12,8 @@ mod config;
 
 pub use config::{WeaponStats, WeaponType};
 
+const WEAPON_SCALE: Vec3 = Vec3::splat(3.0);
+
 #[derive(Component, Clone, Default)]
 pub struct Triggered(pub bool);
 
@@ -38,7 +40,8 @@ impl Plugin for WeaponPlugin {
                 (
                     #[cfg(debug_assertions)]
                     handle_config_reload,
-                    add_stats_component.run_if(resource_exists::<WeaponsConfigHandle>),
+                    (add_stats_component, add_sprite)
+                        .run_if(resource_exists::<WeaponsConfigHandle>),
                 ),
             )
             .add_systems(
@@ -58,7 +61,7 @@ fn load_weapons_config(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn add_stats_component(
     mut commands: Commands,
-    query: Query<(Entity, &WeaponType), (With<WeaponType>, Without<WeaponStats>)>,
+    query: Query<(Entity, &WeaponType), Without<WeaponStats>>,
     config_handle: Res<WeaponsConfigHandle>,
     config_assets: Res<Assets<config::WeaponsConfig>>,
 ) {
@@ -80,6 +83,22 @@ fn add_stats_component(
 
             commands.entity(weapon_entity).insert(weapon_stats.clone());
         }
+    }
+}
+
+fn add_sprite(
+    mut commands: Commands,
+    query: Query<(Entity, &WeaponType), Without<Sprite>>,
+    config_handle: Res<WeaponsConfigHandle>,
+    config_assets: Res<Assets<config::WeaponsConfig>>,
+    asset_server: Res<AssetServer>,
+) {
+    for (weapon_entity, _weapon_type) in query.iter() {
+        commands.entity(weapon_entity).insert((
+            Sprite::from_image(asset_server.load("weapons/pistol.png")),
+            Transform::from_xyz(0.0, 0.0, super::skin::PLAYER_SKIN_ZINDEX + 1.0)
+                .with_scale(WEAPON_SCALE),
+        ));
     }
 }
 
