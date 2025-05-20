@@ -125,14 +125,14 @@ fn fire_weapon_system(
             &Velocity,
             &Rotation,
             &WeaponStats,
-            Option<&Parent>,
+            Entity,
         ),
         With<WeaponType>,
     >,
-    mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
+    mut owner_query: Query<(&mut Velocity, &super::Weapon), Without<WeaponType>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    for (mut state, triggered, position, velocity, rotation, stats, parent) in
+    for (mut state, triggered, position, velocity, rotation, stats, entity) in
         weapon_query.iter_mut()
     {
         if triggered.0 && state.cooldown_timer.finished() && state.current_ammo > 0 {
@@ -160,12 +160,12 @@ fn fire_weapon_system(
             }
 
             // Recoil
-            if let Some(parent) = parent {
-                if let Ok(mut velocity) = owner_query.get_mut(parent.get()) {
-                    velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
-                } else {
-                    warn!("Weapon parent has no velocity");
-                };
+            if let Some((mut velocity, _)) = owner_query
+                .iter_mut()
+                // FIX: Use bevy 0.16 relationships for better performance
+                .find(|(_, weapon)| weapon.0 == entity)
+            {
+                velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
             }
         }
     }

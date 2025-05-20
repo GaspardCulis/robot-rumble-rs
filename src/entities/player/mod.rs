@@ -46,6 +46,7 @@ pub struct InAir(bool);
 pub struct PlayerSkin(pub String);
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
+// TODO: Use bevy 0.16 relationships
 pub struct Weapon(pub Entity);
 
 #[derive(Bundle)]
