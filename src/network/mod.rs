@@ -10,8 +10,7 @@ use crate::{
     core::{camera::CameraFollowTarget, physics, worldgen},
     entities::{
         bullet,
-        planet::{Planet, Radius},
-        player::{self, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle, PlayerSkin, weapons},
+        player::{self, Player, PlayerAction, weapons},
     },
 };
 use synctest::{
