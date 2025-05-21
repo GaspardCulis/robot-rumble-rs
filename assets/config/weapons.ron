@@ -79,4 +79,20 @@ WeaponsConfig({
             scale: 0.5,
         ),
     ),
+    Pulse: (
+        stats: (
+            cooldown: 2,
+            magazine_size: 5,
+            reload_time: 1.2,
+            damage_multiplier: 0.0,
+            projectile_speed: 0.0,
+            shot_bullet_count: 0,
+            recoil: 2000.0,
+            spread: 0.0001,
+        ),
+        skin: (
+            sprite: "weapons/pulse.png",
+            scale: 4.0,
+        ),
+    ),
 })

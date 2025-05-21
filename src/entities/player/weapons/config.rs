@@ -12,9 +12,10 @@ pub enum WeaponType {
     Pistol,
     Shotgun,
     Rifle,
-    #[default]
     Sniper,
     Revolver,
+    #[default]
+    Pulse,
 }
 
 #[derive(serde::Deserialize)]

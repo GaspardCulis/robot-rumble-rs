@@ -1,6 +1,6 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::bullet::{BULLET_SPEED, Bullet},
+    entities::bullet::Bullet,
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
