@@ -7,6 +7,7 @@ use clap::Parser;
 
 mod core;
 mod entities;
+mod level;
 mod network;
 mod utils;
 
@@ -53,6 +54,7 @@ fn main() {
     )
     .add_plugins(core::CorePlugins)
     .add_plugins(entities::EntitiesPlugins)
+    .add_plugins(level::LevelPlugins)
     .add_plugins(network::NetworkPlugin)
     .init_state::<GameState>()
     .insert_resource(args);
