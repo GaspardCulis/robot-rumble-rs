@@ -167,19 +167,7 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
     };
 
     for handle in 0..num_players {
-        let weapon = commands
-            .spawn((
-                weapon::WeaponType::default(),
-                physics::Position(Vec2::ZERO),
-                physics::Velocity(Vec2::ZERO),
-                physics::Rotation(0.0),
-            ))
-            .add_rollback()
-            .id();
-
-        commands
-            .spawn((Player { handle }, player::Weapon(weapon)))
-            .add_rollback();
+        commands.spawn(Player { handle }).add_rollback();
     }
 }
 
