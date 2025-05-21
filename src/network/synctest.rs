@@ -8,7 +8,7 @@ use rand::Rng;
 use crate::{
     Args, GameState,
     core::{camera, physics},
-    entities::player::{PlayerAction, PlayerBundle, PlayerSkin},
+    entities::player::{Player, PlayerAction},
     network::{SessionConfig, SessionSeed},
 };
 
@@ -85,18 +85,13 @@ pub fn spawn_synctest_players(
     commands
         .spawn((
             input_map_a,
-            PlayerBundle::new(0, physics::Position(Vec2::ONE * 200.)),
-            PlayerSkin("laika".into()),
+            Player { handle: 0 },
             camera::CameraFollowTarget,
         ))
         .add_rollback();
 
     commands
-        .spawn((
-            input_map_b,
-            PlayerBundle::new(1, physics::Position(Vec2::ONE * -200.)),
-            PlayerSkin("laika".into()),
-        ))
+        .spawn((input_map_b, Player { handle: 1 }))
         .add_rollback();
 
     next_state.set(GameState::InGame);
