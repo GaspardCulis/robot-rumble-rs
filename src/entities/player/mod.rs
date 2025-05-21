@@ -72,8 +72,9 @@ impl Plugin for PlayerPlugin {
             .register_type::<PlayerSkin>()
             .register_type::<InAir>()
             .add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
+            .add_plugins(inventory::InventoryPlugin)
+            .add_plugins(skin::SkinPlugin)
             .add_plugins(weapon::WeaponPlugin)
             .add_systems(
                 GgrsSchedule,
