@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ggrs::{AddRollbackCommandExtension as _, GgrsSchedule};
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::core::physics::{self, PhysicsSet};
+use crate::core::physics::PhysicsSet;
 
 use super::{Player, PlayerAction, Weapon, weapons};
 
@@ -27,14 +27,7 @@ impl Plugin for InventoryPlugin {
 fn load_default_weapon(mut commands: Commands, query: Query<(Entity, &Arsenal), Without<Weapon>>) {
     for (entity, arsenal) in query.iter() {
         if let Some(default_weapon_type) = arsenal.0.first().cloned() {
-            let weapon = commands
-                .spawn((
-                    default_weapon_type,
-                    physics::Position(Vec2::ZERO),
-                    physics::Velocity(Vec2::ZERO),
-                    physics::Rotation(0.0),
-                ))
-                .id();
+            let weapon = commands.spawn(default_weapon_type).id();
 
             commands.entity(entity).insert(Weapon(weapon));
         } else {
@@ -63,12 +56,7 @@ fn handle_slot_change_inputs(
                         if selected_weapon_type != current_weapon_type {
                             // FIX: State is reset so we can bypass reload time
                             let new_weapon = commands
-                                .spawn((
-                                    selected_weapon_type.clone(),
-                                    physics::Position(Vec2::ZERO),
-                                    physics::Velocity(Vec2::ZERO),
-                                    physics::Rotation(0.0),
-                                ))
+                                .spawn(selected_weapon_type.clone())
                                 .add_rollback()
                                 .id();
                             // Despawn old weapon
