@@ -6,7 +6,7 @@ pub struct AnimationIndices {
     pub last: usize,
 }
 
-#[derive(Component, Clone, Deref, DerefMut)]
+#[derive(Component, Clone, Deref, DerefMut, Reflect)]
 pub struct AnimationTimer(pub Timer);
 
 fn animate_sprite(
