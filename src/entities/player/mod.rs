@@ -60,6 +60,9 @@ pub struct PlayerSkin(pub String);
 // TODO: Use bevy 0.16 relationships
 pub struct Weapon(pub Entity);
 
+#[derive(Component, Debug, Reflect)]
+pub struct Arsenal(pub Vec<weapons::WeaponType>);
+
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
