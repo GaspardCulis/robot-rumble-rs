@@ -7,7 +7,7 @@ pub struct WeaponsConfig(pub HashMap<WeaponType, WeaponConfig>);
 
 /// Availabale weapons to spawn
 // TODO: Move to config file weapons properties
-#[derive(Component, Default, Debug, Hash, PartialEq, Eq, serde::Deserialize)]
+#[derive(Component, Default, Debug, Hash, PartialEq, Eq, Reflect, serde::Deserialize)]
 pub enum WeaponType {
     Pistol,
     Shotgun,
@@ -25,7 +25,7 @@ pub struct WeaponConfig {
 }
 
 #[serde_with::serde_as]
-#[derive(Debug, Component, Clone, serde::Deserialize)]
+#[derive(Debug, Component, Clone, Reflect, serde::Deserialize)]
 /// Static weapon properties
 pub struct WeaponStats {
     #[serde_as(as = "serde_with::DurationSecondsWithFrac")]
