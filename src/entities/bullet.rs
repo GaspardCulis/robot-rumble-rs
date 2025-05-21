@@ -11,7 +11,6 @@ use crate::{
 
 use super::planet::Radius;
 
-pub const BULLET_SPEED: f32 = 1200.;
 pub const BULLET_MASS: u32 = 20;
 
 #[derive(Component, Clone, Copy)]
