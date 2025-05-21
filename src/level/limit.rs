@@ -2,7 +2,10 @@ use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
 use crate::{
-    core::physics::{PhysicsSet, Position},
+    core::{
+        physics::{PhysicsSet, Position},
+        worldgen,
+    },
     entities::player::Player,
 };
 
@@ -23,12 +26,28 @@ impl Plugin for MapLimitPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<MapLimit>()
             .add_event::<DeathEvent>()
-            .insert_resource(MapLimit {
-                radius: 3000.0,
-                radius_squared: 3000.0f32.powi(2),
-            })
+            .add_systems(
+                Update,
+                setup.run_if(resource_added::<worldgen::WorldgenConfigHandle>),
+            )
             .add_systems(GgrsSchedule, check_outsiders.after(PhysicsSet::Movement));
     }
+}
+
+fn setup(
+    mut commands: Commands,
+    config_handle: Res<worldgen::WorldgenConfigHandle>,
+    configs: Res<Assets<worldgen::WorldgenConfig>>,
+) {
+    let Some(worldgen_config) = configs.get(&config_handle.0) else {
+        warn!("Worldgen config not loaded yet");
+        return;
+    };
+
+    commands.insert_resource(MapLimit {
+        radius: worldgen_config.edge_radius as f32,
+        radius_squared: worldgen_config.edge_radius.pow(2) as f32,
+    });
 }
 
 fn check_outsiders(
