@@ -47,6 +47,9 @@ pub enum PlayerAction {
     Left,
     Right,
     Shoot,
+    Slot1,
+    Slot2,
+    Slot3,
     #[actionlike(DualAxis)]
     PointerDirection,
 }
