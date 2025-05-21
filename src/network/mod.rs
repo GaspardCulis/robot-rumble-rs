@@ -3,8 +3,7 @@ use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
 use leafwing_input_manager::prelude::*;
-use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
-use rand_xoshiro::Xoshiro256PlusPlus;
+use rand::Rng as _;
 
 use crate::{
     GameState,
@@ -160,34 +159,15 @@ fn wait_start_match(
     next_state.set(GameState::InGame);
 }
 
-fn spawn_players(
-    mut commands: Commands,
-    planets_query: Query<(&physics::Position, &Radius), With<Planet>>,
-    session: Res<bevy_ggrs::Session<SessionConfig>>,
-    seed: Res<SessionSeed>,
-) {
-    let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed.0);
+/// Spawn position is handled by level::spawn
+fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<SessionConfig>>) {
     let num_players = match &*session {
         Session::SyncTest(s) => s.num_players(),
         Session::P2P(s) => s.num_players(),
         Session::Spectator(s) => s.num_players(),
     };
 
-    let mut planets = planets_query
-        .iter()
-        .sort::<&physics::Position>()
-        .collect::<Vec<_>>();
-    planets.shuffle(&mut rng);
-
     for handle in 0..num_players {
-        let (spawn_planet_pos, spawn_planet_radius) = planets
-            .get(handle)
-            .expect("Should have more planets than players");
-
-        let random_direction = Vec2::from_angle(rng.random::<f32>() * 2. * std::f32::consts::PI);
-        let position =
-            spawn_planet_pos.0 + random_direction * (spawn_planet_radius.0 as f32 + PLAYER_RADIUS);
-
         let weapon = commands
             .spawn((
                 weapons::WeaponType::default(),
@@ -199,11 +179,7 @@ fn spawn_players(
             .id();
 
         commands
-            .spawn((
-                PlayerBundle::new(handle, physics::Position(position)),
-                PlayerSkin("laika".into()),
-                player::Weapon(weapon),
-            ))
+            .spawn((Player { handle }, player::Weapon(weapon)))
             .add_rollback();
     }
 }
