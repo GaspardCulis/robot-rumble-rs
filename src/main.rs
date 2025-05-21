@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-#[cfg(not(debug_assertions))]
+#[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 #[cfg(debug_assertions)]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -31,7 +31,7 @@ fn main() {
     let args = Args::parse();
     let mut app = App::new();
 
-    #[cfg(not(debug_assertions))]
+    #[cfg(feature = "embedded_assets")]
     app.add_plugins(EmbeddedAssetPlugin {
         mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
     });
