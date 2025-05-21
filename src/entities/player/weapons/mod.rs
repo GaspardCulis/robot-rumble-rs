@@ -13,11 +13,10 @@ mod config;
 pub use config::{WeaponStats, WeaponType};
 
 // weapon shot
-#[derive(Component, Clone, Default)]
+#[derive(Component, Clone, Default, Reflect)]
 pub struct Triggered(pub bool);
 
-#[derive(Component, Clone, Debug)]
-/// Weapon in-game state
+#[derive(Component, Clone, Debug, Reflect)]
 pub struct WeaponState {
     current_ammo: usize,
     cooldown_timer: Timer,
@@ -30,7 +29,11 @@ struct WeaponsConfigHandle(Handle<config::WeaponsConfig>);
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
-        app.register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
+        app.register_type::<WeaponType>()
+            .register_type::<WeaponStats>()
+            .register_type::<WeaponState>()
+            .register_type::<Triggered>()
+            .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
             .register_required_components::<WeaponType, Triggered>()
             .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
             .add_systems(Startup, load_weapons_config)
