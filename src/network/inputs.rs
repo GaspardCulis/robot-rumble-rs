@@ -89,7 +89,12 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
 
         NetworkInputs {
             keys,
-            pointer_direction: self.axis_pair(&PlayerAction::PointerDirection),
+            // Avoids rollbacks for other peers as pointer_direction cannot be predicted
+            pointer_direction: if keys & INPUT_SHOOT != 0 {
+                self.axis_pair(&PlayerAction::PointerDirection)
+            } else {
+                Vec2::ZERO
+            },
         }
     }
 
