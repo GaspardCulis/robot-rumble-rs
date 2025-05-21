@@ -9,10 +9,11 @@ pub struct WeaponsConfig(pub HashMap<WeaponType, WeaponConfig>);
 // TODO: Move to config file weapons properties
 #[derive(Component, Default, Debug, Hash, PartialEq, Eq, serde::Deserialize)]
 pub enum WeaponType {
-    #[default]
     Pistol,
     Shotgun,
     Rifle,
+    #[default]
+    Sniper,
 }
 
 #[derive(serde::Deserialize)]
