@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
@@ -13,7 +15,11 @@ use super::planet::Radius;
 
 pub const BULLET_SPEED: f32 = 1200.;
 pub const BULLET_MASS: u32 = 20;
+pub const BULLET_DESPAWN_TIME: Duration = Duration::from_millis(500);
 
+// Autodespawn timer
+#[derive(Component)]
+struct DespawnTimer(Timer);
 #[derive(Component, Reflect, Clone, Copy)]
 #[require(Visibility)]
 pub struct Bullet;
@@ -27,11 +33,15 @@ impl Plugin for BulletPlugin {
         .register_required_components_with::<Bullet, Rotation>(|| Rotation(0.0))
         .register_required_components_with::<Bullet, Mass>(|| Mass(BULLET_MASS))
         .register_required_components_with::<Bullet, Passive>(|| Passive)
+        .register_required_components_with::<Bullet, DespawnTimer>(|| {
+            DespawnTimer(Timer::new(BULLET_DESPAWN_TIME, TimerMode::Once))
+        })
         .register_required_components_with::<Bullet, Name>(|| Name::new("Bullet"))
         .add_systems(
             Update,
             (add_sprite, rotate_sprite).chain().before(check_collisions),
         )
+        .add_systems(Update, tick_bullet_timer.before(check_collisions))
         .add_systems(
             GgrsSchedule,
             check_collisions
@@ -56,6 +66,19 @@ fn add_sprite(
 fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Bullet>, With<Sprite>)>) {
     for (mut rotation, velocity) in query.iter_mut() {
         rotation.0 = -velocity.angle_to(Vec2::X);
+    }
+}
+
+fn tick_bullet_timer(
+    mut commands: Commands,
+    mut bulltets_querry: Query<(Entity, &mut DespawnTimer), With<Bullet>>,
+    time: Res<Time>,
+) {
+    for (bullet, mut despawn_timer) in bulltets_querry.iter_mut() {
+        despawn_timer.0.tick(time.delta());
+        if despawn_timer.0.just_finished() {
+            commands.entity(bullet).despawn();
+        }
     }
 }
 
