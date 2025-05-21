@@ -19,7 +19,7 @@ pub const PLAYER_MASS: u32 = 800;
 pub const PLAYER_VELOCITY: f32 = 600.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
-#[derive(Component, Clone, Debug, PartialEq)]
+#[derive(Component, Clone, Debug, PartialEq, Reflect)]
 #[require(Visibility)]
 pub struct Player {
     pub handle: usize,
@@ -82,7 +82,11 @@ impl PlayerBundle {
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
+        app.register_type::<Player>()
+            .register_type::<PlayerInputVelocity>()
+            .register_type::<PlayerSkin>()
+            .register_type::<InAir>()
+            .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_plugins(weapons::WeaponPlugin)

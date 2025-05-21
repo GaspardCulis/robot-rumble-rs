@@ -31,7 +31,7 @@ struct Animation {
 #[derive(Resource)]
 struct SkinConfigHandle(pub Handle<SkinsConfig>);
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct SkinAnimationsHandle {
     pub idle: AnimationHandle,
     pub run: AnimationHandle,
@@ -39,6 +39,7 @@ pub struct SkinAnimationsHandle {
     pub fall: AnimationHandle,
 }
 
+#[derive(Reflect)]
 pub struct AnimationHandle {
     pub texture: Handle<Image>,
     pub atlas_layout: Handle<TextureAtlasLayout>,
@@ -50,7 +51,8 @@ pub struct AnimationHandle {
 pub struct SkinPlugin;
 impl Plugin for SkinPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(RonAssetPlugin::<SkinsConfig>::new(&[]))
+        app.register_type::<SkinAnimationsHandle>()
+            .add_plugins(RonAssetPlugin::<SkinsConfig>::new(&[]))
             .add_plugins(spritesheet::AnimatedSpritePlugin)
             .add_systems(Startup, load_skin_config)
             .add_systems(
