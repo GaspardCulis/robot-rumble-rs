@@ -12,6 +12,7 @@ mod config;
 
 pub use config::{WeaponStats, WeaponType};
 
+// weapon shot
 #[derive(Component, Clone, Default)]
 pub struct Triggered(pub bool);
 
@@ -156,7 +157,8 @@ fn fire_weapon_system(
                     Bullet,
                     Position(position.0),
                     Velocity(
-                        Vec2::from_angle(rotation.0 + random_angle) * BULLET_SPEED + velocity.0,
+                        Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
+                            + velocity.0,
                     ),
                 );
 
@@ -164,6 +166,7 @@ fn fire_weapon_system(
             }
 
             state.current_ammo -= 1;
+            // Reset timers if shooting
             state.cooldown_timer.reset();
 
             if state.current_ammo == 0 {

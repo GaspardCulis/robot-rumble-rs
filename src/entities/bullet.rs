@@ -13,9 +13,8 @@ use crate::{
 
 use super::planet::Radius;
 
-pub const BULLET_SPEED: f32 = 1200.;
 pub const BULLET_MASS: u32 = 20;
-pub const BULLET_DESPAWN_TIME: Duration = Duration::from_millis(500);
+pub const BULLET_DESPAWN_TIME: Duration = Duration::from_millis(1000);
 
 // Autodespawn timer
 #[derive(Component)]
