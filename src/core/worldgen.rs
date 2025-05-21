@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use rand::Rng;
@@ -32,20 +34,22 @@ fn load_worldgen_config(mut commands: Commands, asset_server: Res<AssetServer>) 
 
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct WorldgenConfig {
-    central_star_radius: u32,
+    pub central_star_radius: u32,
 
-    min_planets: u32,
-    max_planets: u32,
+    pub min_planets: u32,
+    pub max_planets: u32,
 
-    min_planet_radius: u32,
-    max_planet_radius: u32,
+    pub min_planet_radius: u32,
+    pub max_planet_radius: u32,
 
-    max_planet_surface_distance: u32,
-    min_planet_surface_distance: u32,
+    pub min_planet_surface_distance: u32,
+
+    pub edge_radius: u32,
+    pub edge_margin: u32,
 }
 
 #[derive(Resource)]
-struct WorldgenConfigHandle(pub Handle<WorldgenConfig>);
+pub struct WorldgenConfigHandle(pub Handle<WorldgenConfig>);
 
 #[derive(Component, Debug, Reflect, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GenerationSeed(pub u64);
@@ -61,7 +65,7 @@ fn handle_genworld_event(
     config_handle: Res<WorldgenConfigHandle>,
     configs: Res<Assets<WorldgenConfig>>,
 ) {
-    let Some(worldgen_config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&config_handle.0) else {
         warn!("Worldgen config not loaded yet");
         return;
     };
@@ -71,37 +75,36 @@ fn handle_genworld_event(
         let mut planets = Vec::new();
         planets.push(SpawnPlanetEvent {
             position: Position(Vec2::ZERO),
-            radius: Radius(worldgen_config.central_star_radius),
+            radius: Radius(config.central_star_radius),
             r#type: PlanetType::Star,
             seed: rng.random(),
         });
 
-        let num_planets: u32 =
-            rng.random_range(worldgen_config.min_planets..worldgen_config.max_planets);
+        let num_planets: u32 = rng.random_range(config.min_planets..config.max_planets);
         for i in 0..num_planets {
             info!("Generating planet [{}/{}]", i + 1, num_planets);
 
             loop {
-                let random_direction = Vec2::from_angle(rng.random_range(1..360) as f32);
-                let radius = Radius(rng.random_range(
-                    worldgen_config.min_planet_radius..worldgen_config.max_planet_radius,
-                ));
-                let distance = rng.random_range(
-                    worldgen_config.min_planet_surface_distance
-                        ..worldgen_config.max_planet_surface_distance,
-                );
-                let position = Position(random_direction * distance as f32);
+                let random_direction = Vec2::from_angle(rng.random_range(-PI..PI));
+                let radius = rng.random_range(config.min_planet_radius..config.max_planet_radius);
 
-                let mut collision = false;
-                planets.iter().for_each(|planet| {
-                    collision |= planet.position.0.distance(position.0)
-                        < (planet.radius.0 + radius.0) as f32 * 1.5
+                let min_distance_from_center = config.central_star_radius + radius;
+                let max_distance_from_center = config.edge_radius - config.edge_margin - radius;
+
+                let distance = rng.random_range(min_distance_from_center..max_distance_from_center);
+                let position = random_direction * distance as f32;
+
+                let valid = planets.iter().fold(true, |acc, planet| {
+                    let distance_respected = planet.position.0.distance(position)
+                        > (planet.radius.0 + radius + config.min_planet_surface_distance) as f32;
+
+                    acc && distance_respected
                 });
 
-                if !collision {
+                if valid {
                     planets.push(SpawnPlanetEvent {
-                        position,
-                        radius,
+                        position: Position(position),
+                        radius: Radius(radius),
                         r#type: PlanetType::Planet,
                         seed: rng.random(),
                     });
