@@ -16,10 +16,30 @@ impl Plugin for InventoryPlugin {
             .register_required_components::<Player, Arsenal>()
             .add_systems(
                 GgrsSchedule,
-                handle_slot_change_inputs
+                (load_default_weapon, handle_slot_change_inputs)
+                    .chain()
                     .in_set(PhysicsSet::Player)
                     .before(super::update_weapon),
             );
+    }
+}
+
+fn load_default_weapon(mut commands: Commands, query: Query<(Entity, &Arsenal), Without<Weapon>>) {
+    for (entity, arsenal) in query.iter() {
+        if let Some(default_weapon_type) = arsenal.0.first().cloned() {
+            let weapon = commands
+                .spawn((
+                    default_weapon_type,
+                    physics::Position(Vec2::ZERO),
+                    physics::Velocity(Vec2::ZERO),
+                    physics::Rotation(0.0),
+                ))
+                .id();
+
+            commands.entity(entity).insert(Weapon(weapon));
+        } else {
+            warn!("Received empty arsenal");
+        }
     }
 }
 
@@ -41,6 +61,7 @@ fn handle_slot_change_inputs(
                 if let Some(selected_weapon_type) = arsenal.0.get(slot - 1) {
                     if let Ok(current_weapon_type) = weapon_query.get(weapon_entity.0) {
                         if selected_weapon_type != current_weapon_type {
+                            // FIX: State is reset so we can bypass reload time
                             let new_weapon = commands
                                 .spawn((
                                     selected_weapon_type.clone(),
