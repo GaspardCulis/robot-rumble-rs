@@ -68,6 +68,10 @@ pub fn spawn_synctest_players(
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
+        // Slot selection
+        (PlayerAction::Slot1, KeyCode::Digit1),
+        (PlayerAction::Slot2, KeyCode::Digit2),
+        (PlayerAction::Slot3, KeyCode::Digit3),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
     .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);

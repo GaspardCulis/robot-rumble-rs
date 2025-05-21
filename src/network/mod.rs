@@ -210,6 +210,10 @@ fn add_local_player_components(
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
+        // Slot selection
+        (PlayerAction::Slot1, KeyCode::Digit1),
+        (PlayerAction::Slot2, KeyCode::Digit2),
+        (PlayerAction::Slot3, KeyCode::Digit3),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
     .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
