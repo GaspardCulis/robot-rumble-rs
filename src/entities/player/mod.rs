@@ -11,6 +11,7 @@ use crate::utils::math;
 use super::planet;
 
 mod animation;
+mod inventory;
 mod skin;
 pub mod weapon;
 
@@ -59,9 +60,6 @@ pub struct PlayerSkin(pub String);
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 // TODO: Use bevy 0.16 relationships
 pub struct Weapon(pub Entity);
-
-#[derive(Component, Debug, Reflect)]
-pub struct Arsenal(pub Vec<weapons::WeaponType>);
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
