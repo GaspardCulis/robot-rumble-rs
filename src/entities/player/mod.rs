@@ -22,12 +22,23 @@ pub const PLAYER_VELOCITY: f32 = 600.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
-#[require(Visibility)]
+#[require(
+    // Position, Velocity and Rotation not required because handled by level::spawn.
+    // Might change in the future
+    Visibility,
+    PlayerInputVelocity,
+    InAir,
+    Passive,
+    ActionState<PlayerAction>,
+    Mass(|| Mass(PLAYER_MASS)),
+    PlayerSkin(|| PlayerSkin("laika".into())),
+    Name(|| Name::new("Player")),
+)]
 pub struct Player {
     pub handle: usize,
 }
 
-#[derive(Component, Clone, Debug, PartialEq, Reflect, Deref)]
+#[derive(Component, Clone, Debug, Default, PartialEq, Reflect, Deref)]
 pub struct PlayerInputVelocity(Vec2);
 
 #[derive(Actionlike, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
@@ -44,38 +55,8 @@ pub enum PlayerAction {
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 pub struct PlayerSkin(pub String);
 
-#[derive(Component, Clone, Debug, PartialEq, Reflect)]
+#[derive(Component, Clone, Debug, Default, PartialEq, Reflect)]
 pub struct InAir(bool);
-
-#[derive(Bundle)]
-pub struct PlayerBundle {
-    name: Name,
-    marker: Player,
-    position: Position,
-    velocity: Velocity,
-    rotation: Rotation,
-    in_air: InAir,
-    input_velocity: PlayerInputVelocity,
-    action_state: ActionState<PlayerAction>,
-    mass: Mass,
-    passive: Passive,
-}
-impl PlayerBundle {
-    pub fn new(handle: usize, position: Position) -> Self {
-        Self {
-            position,
-            name: Name::new("Player"),
-            marker: Player { handle },
-            velocity: Velocity(Vec2::ZERO),
-            rotation: Rotation(0.),
-            in_air: InAir(true),
-            input_velocity: PlayerInputVelocity(Vec2::ZERO),
-            action_state: ActionState::default(),
-            mass: Mass(PLAYER_MASS),
-            passive: Passive,
-        }
-    }
-}
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {

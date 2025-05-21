@@ -8,10 +8,10 @@ const G: f32 = 800.;
 #[derive(Component, Debug, Reflect, Clone, PartialEq)]
 pub struct Mass(pub u32);
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq)]
+#[derive(Component, Debug, Default, Reflect, Clone, PartialEq)]
 pub struct Passive;
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq)]
+#[derive(Component, Debug, Default, Reflect, Clone, PartialEq)]
 pub struct Static;
 
 pub struct GravityPlugin;
