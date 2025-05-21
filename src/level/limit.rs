@@ -15,6 +15,7 @@ struct MapLimit {
 }
 
 #[derive(Event)]
+/// Points to a Player entity
 pub struct DeathEvent(pub Entity);
 
 pub struct MapLimitPlugin;
@@ -40,6 +41,9 @@ fn check_outsiders(
         if position.length_squared() > limit.radius_squared {
             if is_player {
                 death_events.send(DeathEvent(entity));
+
+                // FIX: Temporary way to handle death
+                commands.entity(entity).remove::<Position>();
             } else {
                 commands.entity(entity).despawn_recursive();
             }
