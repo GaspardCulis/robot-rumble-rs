@@ -15,7 +15,12 @@ use crate::{
 pub struct MapSpawnPlugin;
 impl Plugin for MapSpawnPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(GgrsSchedule, spawn_players.before(PhysicsSet::Player));
+        app.add_systems(
+            GgrsSchedule,
+            spawn_players
+                .before(PhysicsSet::Player)
+                .run_if(any_with_component::<Planet>),
+        );
     }
 }
 
