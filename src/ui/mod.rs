@@ -1,94 +1,71 @@
-use bevy::color::palettes::css::{BLACK, BLUE, WHITE};
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 
-use crate::GameState;
+use crate::{GameState, entities::player::weapons};
 
-const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::srgb(0.20, 0.20, 0.20);
-const PRESSED_BUTTON: Color = Color::srgb(0.10, 0.10, 0.10);
+const WEAPON_SLOTS: [weapons::WeaponType; 3] = [
+    weapons::WeaponType::Pistol,
+    weapons::WeaponType::Shotgun,
+    weapons::WeaponType::Rifle,
+];
 
 pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame), spawn_button)
-            .add_systems(Update, button_system);
+        app.add_systems(OnEnter(GameState::InGame), spawn_arsenal_hud);
     }
 }
 
-fn spawn_button(mut commands: Commands) {
-    let container_node = Node {
-        width: Val::Percent(100.0),
-        height: Val::Percent(100.0),
-        align_items: AlignItems::Center,
-        justify_content: JustifyContent::Center,
-        ..default()
-    };
-
-    let button_node = Node {
-        width: Val::Px(150.0),
-        height: Val::Px(65.0),
-        border: UiRect::all(Val::Px(5.0)),
-        // horizontally center child text
-        justify_content: JustifyContent::Center,
-        // vertically center child text
-        align_items: AlignItems::Center,
-        ..default()
-    };
-
-    let button_text_node = Text::new("Button");
-    let button_text_color = TextColor(Color::srgb(0.9, 0.9, 0.9));
-    let button_text_font = TextFont {
-        font_size: 40.0,
-        ..default()
-    };
-
-    let container = commands.spawn(container_node).id();
-    let button = commands
-        .spawn((
-            button_node,
-            Button,
-            BorderColor(Color::BLACK),
-            BackgroundColor(NORMAL_BUTTON),
-        ))
-        .id();
-
-    let button_text = commands
-        .spawn((button_text_node, button_text_color, button_text_font))
-        .id();
-    commands.entity(button).add_children(&[button_text]);
-    commands.entity(container).add_children(&[button]);
-}
-
-fn button_system(
-    mut interaction_query: Query<
-        (
-            &Interaction,
-            &mut BackgroundColor,
-            &mut BorderColor,
-            &Children,
-        ),
-        (Changed<Interaction>, With<Button>),
-    >,
-    mut text_query: Query<&mut Text>,
+fn spawn_arsenal_hud(
+    mut commands: Commands,
+    config_handle: Res<weapons::WeaponsConfigHandle>,
+    config_assets: Res<Assets<weapons::config::WeaponsConfig>>,
+    asset_server: Res<AssetServer>,
 ) {
-    for (interaction, mut color, mut border_color, children) in &mut interaction_query {
-        let mut text = text_query.get_mut(children[0]).unwrap();
-        match *interaction {
-            Interaction::Pressed => {
-                text.0 = "Press".to_string();
-                *color = PRESSED_BUTTON.into();
-                border_color.0 = BLUE.into();
-            }
-            Interaction::Hovered => {
-                text.0 = "Hover".to_string();
-                *color = HOVERED_BUTTON.into();
-                border_color.0 = WHITE.into();
-            }
-            Interaction::None => {
-                text.0 = "Button".to_string();
-                *color = NORMAL_BUTTON.into();
-                border_color.0 = BLACK.into();
-            }
-        }
-    }
+    let weapons_config = if let Some(c) = config_assets.get(config_handle.0.id()) {
+        c
+    } else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
+
+    commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            align_items: AlignItems::End,
+            justify_content: JustifyContent::End,
+            ..default()
+        })
+        .with_children(|builder| {
+            builder
+                .spawn(Node {
+                    display: Display::Grid,
+                    grid_template_columns: (0..WEAPON_SLOTS.len())
+                        .map(|_| GridTrack::auto())
+                        .collect(),
+                    grid_template_rows: vec![GridTrack::auto()],
+                    ..default()
+                })
+                .with_children(|builder| {
+                    for weapon_type in WEAPON_SLOTS {
+                        let weapon_config = weapons_config
+                            .0
+                            .get(&weapon_type)
+                            .expect("Failed to get weapon config");
+                        let skin = weapon_config.skin.clone();
+
+                        builder.spawn((
+                            Node {
+                                display: Display::Grid,
+                                width: Val::Px(128.0),
+                                height: Val::Px(128.0),
+                                margin: UiRect::all(Val::Px(24.0)),
+                                ..default()
+                            },
+                            ImageNode::new(asset_server.load(skin.sprite)),
+                            Outline::new(Val::Px(4.0), Val::ZERO, css::CRIMSON.into()),
+                        ));
+                    }
+                });
+        });
 }
