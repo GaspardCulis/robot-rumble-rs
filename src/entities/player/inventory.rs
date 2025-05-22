@@ -36,7 +36,11 @@ fn spawn_arsenal(mut commands: Commands, query: Query<Entity, (With<Player>, Wit
             DEFAULT_ARSENAL
                 .iter()
                 .map(|weapon_type| {
-                    let weapon_entity = commands.spawn(weapon_type.clone()).add_rollback().id();
+                    let weapon_entity = commands
+                        .spawn(weapon_type.clone())
+                        .insert(Visibility::Hidden)
+                        .add_rollback()
+                        .id();
 
                     (weapon_type.clone(), weapon_entity)
                 })
@@ -60,7 +64,8 @@ fn summon_current_weapon(
         if let Ok(weapon_entity) = weapon_query.get(weapon_ref.0) {
             commands
                 .entity(weapon_entity)
-                .insert(physics::PhysicsBundle::default());
+                .insert(physics::PhysicsBundle::default())
+                .insert(Visibility::Visible);
         }
     }
 }
@@ -84,7 +89,7 @@ fn handle_slot_change_inputs(
                         commands
                             .entity(current_weapon.0)
                             .remove::<physics::PhysicsBundle>()
-                            .remove::<Sprite>();
+                            .insert(Visibility::Hidden);
 
                         current_weapon.0 = *selected_weapon;
                     }
