@@ -15,9 +15,14 @@ pub struct Rotation(pub f32);
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PhysicsSet {
-    Movement,
-    Gravity,
+    /// Where player inputs are processed
     Player,
+    /// Where Velocity gets updated
+    Gravity,
+    /// Where Position gets updated
+    Movement,
+    /// Where collision detection systems are run
+    Collision,
 }
 
 pub struct PhysicsPlugin;
@@ -32,6 +37,7 @@ impl Plugin for PhysicsPlugin {
                     PhysicsSet::Player,
                     PhysicsSet::Gravity,
                     PhysicsSet::Movement,
+                    PhysicsSet::Collision,
                 )
                     .chain()
                     .run_if(in_state(GameState::InGame)),
