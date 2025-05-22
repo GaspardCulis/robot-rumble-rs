@@ -1,8 +1,10 @@
 ProjectilesConfig({
     Bullet: (
         stats: (
-            mass: 1000,
-            damage: 1.0,
+            mass: 20,
+            damage: 1000.0,
+            radius: 0.0,
+            knockback: 40,
         ),
         skin: (
             sprite: "projectiles/bullet.png",
