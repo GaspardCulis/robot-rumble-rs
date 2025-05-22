@@ -31,10 +31,6 @@ impl Plugin for WeaponPlugin {
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
             .register_type::<Triggered>()
-            // Register physics components for now, maybe refactor later if it gets annoying
-            .register_required_components::<WeaponType, Position>()
-            .register_required_components::<WeaponType, Rotation>()
-            .register_required_components::<WeaponType, Velocity>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
             .register_required_components::<WeaponType, Triggered>()
             .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
@@ -45,6 +41,7 @@ impl Plugin for WeaponPlugin {
                     #[cfg(debug_assertions)]
                     handle_config_reload,
                     (add_stats_component, add_sprite)
+                        .before(PhysicsSet::Player)
                         .run_if(resource_exists::<WeaponsConfigHandle>),
                 ),
             )

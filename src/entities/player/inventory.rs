@@ -1,38 +1,68 @@
 use bevy::prelude::*;
-use bevy_ggrs::{AddRollbackCommandExtension as _, GgrsSchedule};
+use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::core::physics::PhysicsSet;
+use crate::core::physics;
 
 use super::{Player, PlayerAction, Weapon, weapons};
 
+const DEFAULT_ARSENAL: [weapons::WeaponType; 3] = [
+    weapons::WeaponType::Pistol,
+    weapons::WeaponType::Shotgun,
+    weapons::WeaponType::Rifle,
+];
+
 #[derive(Component, Debug, Reflect)]
-pub struct Arsenal(pub Vec<weapons::WeaponType>);
+pub struct Arsenal(pub Vec<(weapons::WeaponType, Entity)>);
 
 pub struct InventoryPlugin;
 impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Arsenal>()
-            .register_required_components::<Player, Arsenal>()
-            .add_systems(Update, load_default_weapon)
+            .add_systems(Update, spawn_arsenal)
             .add_systems(
                 GgrsSchedule,
-                (handle_slot_change_inputs)
+                (handle_slot_change_inputs, summon_current_weapon)
                     .chain()
-                    .in_set(PhysicsSet::Player)
+                    .in_set(physics::PhysicsSet::Player)
                     .before(super::update_weapon),
             );
     }
 }
 
-fn load_default_weapon(mut commands: Commands, query: Query<(Entity, &Arsenal), Without<Weapon>>) {
-    for (entity, arsenal) in query.iter() {
-        if let Some(default_weapon_type) = arsenal.0.first().cloned() {
-            let weapon = commands.spawn(default_weapon_type).add_rollback().id();
+fn spawn_arsenal(mut commands: Commands, query: Query<Entity, (With<Player>, Without<Arsenal>)>) {
+    for player_entity in query.iter() {
+        let arsenal = Arsenal(
+            DEFAULT_ARSENAL
+                .iter()
+                .map(|weapon_type| {
+                    let weapon_entity = commands.spawn(weapon_type.clone()).add_rollback().id();
 
-            commands.entity(entity).insert(Weapon(weapon));
-        } else {
-            warn!("Received empty arsenal");
+                    (weapon_type.clone(), weapon_entity)
+                })
+                .collect(),
+        );
+
+        let current_weapon = Weapon(arsenal.0.first().expect("Arsenal should not be empty").1);
+
+        commands
+            .entity(player_entity)
+            .insert((arsenal, current_weapon));
+    }
+}
+
+fn summon_current_weapon(
+    mut commands: Commands,
+    owner_query: Query<&Weapon, Changed<Weapon>>,
+    weapon_query: Query<Entity, Without<physics::Position>>,
+) {
+    for weapon_ref in owner_query.iter() {
+        if let Ok(weapon_entity) = weapon_query.get(weapon_ref.0) {
+            commands.entity(weapon_entity).insert((
+                physics::Position::default(),
+                physics::Velocity::default(),
+                physics::Rotation::default(),
+            ));
         }
     }
 }
@@ -40,9 +70,8 @@ fn load_default_weapon(mut commands: Commands, query: Query<(Entity, &Arsenal), 
 fn handle_slot_change_inputs(
     mut commands: Commands,
     mut query: Query<(&mut Weapon, &Arsenal, &ActionState<PlayerAction>)>,
-    weapon_query: Query<&weapons::WeaponType>,
 ) {
-    for (mut weapon_entity, arsenal, action_state) in query.iter_mut() {
+    for (mut current_weapon, arsenal, action_state) in query.iter_mut() {
         for action in action_state.get_pressed() {
             let selected_slot = match action {
                 PlayerAction::Slot1 => Some(1),
@@ -52,38 +81,18 @@ fn handle_slot_change_inputs(
             };
 
             if let Some(slot) = selected_slot {
-                if let Some(selected_weapon_type) = arsenal.0.get(slot - 1) {
-                    if let Ok(current_weapon_type) = weapon_query.get(weapon_entity.0) {
-                        if selected_weapon_type != current_weapon_type {
-                            // FIX: State is reset so we can bypass reload time
-                            let new_weapon = commands
-                                .spawn(selected_weapon_type.clone())
-                                .add_rollback()
-                                .id();
-                            // Despawn old weapon
-                            commands.entity(weapon_entity.0).despawn();
-                            // Update player weapon pointer
-                            weapon_entity.0 = new_weapon;
-                        }
-                    } else {
-                        warn!(
-                            "Player Weapon component holds a reference to an invalid Weapon entity"
-                        );
+                if let Some((_, selected_weapon)) = arsenal.0.get(slot - 1) {
+                    if &current_weapon.0 != selected_weapon {
+                        commands
+                            .entity(current_weapon.0)
+                            .remove::<physics::Position>();
+
+                        current_weapon.0 = *selected_weapon;
                     }
                 } else {
                     warn!("Weapon slot overflow");
                 }
             }
         }
-    }
-}
-
-impl Default for Arsenal {
-    fn default() -> Self {
-        Self(vec![
-            weapons::WeaponType::Pistol,
-            weapons::WeaponType::Shotgun,
-            weapons::WeaponType::Rifle,
-        ])
     }
 }
