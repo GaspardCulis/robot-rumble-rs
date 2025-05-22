@@ -65,13 +65,13 @@ WeaponsConfig({
     ),
     Revolver: (
         stats: (
-            cooldown: 0.3   ,
+            cooldown: 0.8   ,
             magazine_size: 6,
             reload_time: 2,
             damage_multiplier: 1.0,
-            projectile_speed: 2000.0,
+            projectile_speed: 1800.0,
             shot_bullet_count: 1,
-            recoil: 400.0,
+            recoil: 200.0,
             spread: 0.0001,
         ),
         skin: (
