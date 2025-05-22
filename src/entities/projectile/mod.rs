@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
 
-mod config;
-pub use config::Projectile;
+pub mod config;
+pub use config::{Projectile, ProjectilesConfig};
 #[derive(Resource)]
-struct ProjectilesConfigHandle(Handle<config::ProjectilesConfig>);
+pub struct ProjectilesConfigHandle(pub Handle<config::ProjectilesConfig>);
 
 use crate::core::{
     gravity::{Mass, Passive},
@@ -20,6 +20,8 @@ pub struct DecayTimer(pub Timer);
 
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
+#[derive(Component, Reflect, Clone, Copy)]
+pub struct Knockback(pub f32);
 
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
@@ -45,10 +47,7 @@ impl Plugin for ProjectilePlugin {
         )
         .add_systems(
             GgrsSchedule,
-            (
-                add_physical_properties.before(PhysicsSet::Gravity),
-                check_collisions.after(PhysicsSet::Movement),
-            ),
+            (check_collisions.after(PhysicsSet::Movement),),
         );
     }
 }
@@ -60,9 +59,9 @@ fn load_projectiles_config(mut commands: Commands, asset_server: Res<AssetServer
 
 fn add_physical_properties(
     mut commands: Commands,
-    query: Query<(Entity, &Projectile), (Without<Mass>, Without<Damage>)>,
+    query: Query<(Entity, &Projectile), (Without<Mass>, Without<Damage>, Without<Damage>)>,
     config_handle: Res<ProjectilesConfigHandle>,
-    config_assets: Res<Assets<config::ProjectilesConfig>>,
+    config_assets: Res<Assets<ProjectilesConfig>>,
 ) {
     let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
         c
@@ -154,6 +153,9 @@ fn handle_config_reload(
             AssetEvent::Modified { id: _ } => {
                 for projectile in projectiles.iter() {
                     commands.entity(projectile).remove::<Sprite>();
+                    commands.entity(projectile).remove::<Mass>();
+                    commands.entity(projectile).remove::<Damage>();
+                    commands.entity(projectile).remove::<Knockback>();
                 }
             }
             _ => {}
