@@ -14,9 +14,10 @@ impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Arsenal>()
             .register_required_components::<Player, Arsenal>()
+            .add_systems(Update, load_default_weapon)
             .add_systems(
                 GgrsSchedule,
-                (load_default_weapon, handle_slot_change_inputs)
+                (handle_slot_change_inputs)
                     .chain()
                     .in_set(PhysicsSet::Player)
                     .before(super::update_weapon),
@@ -27,7 +28,7 @@ impl Plugin for InventoryPlugin {
 fn load_default_weapon(mut commands: Commands, query: Query<(Entity, &Arsenal), Without<Weapon>>) {
     for (entity, arsenal) in query.iter() {
         if let Some(default_weapon_type) = arsenal.0.first().cloned() {
-            let weapon = commands.spawn(default_weapon_type).id();
+            let weapon = commands.spawn(default_weapon_type).add_rollback().id();
 
             commands.entity(entity).insert(Weapon(weapon));
         } else {
