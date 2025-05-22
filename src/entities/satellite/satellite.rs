@@ -88,7 +88,7 @@ fn handle_spawn_satellite(
     for event in events.read() {
         let mut entity = commands.spawn((
             Transform {
-                translation: event.position.0.extend(5.0),
+                translation: event.position.0.extend(0.0),
                 scale: Vec3::splat(event.scale),
                 ..default()
             },
