@@ -41,7 +41,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .rollback_component_with_clone::<weapon::Triggered>()
             .rollback_component_with_clone::<weapon::WeaponState>()
-            .rollback_component_with_copy::<projectile::Projectile>()
+            .rollback_component_with_clone::<projectile::Projectile>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),

@@ -1,10 +1,10 @@
 use bevy::{prelude::*, utils::HashMap};
 
 #[derive(serde::Deserialize, Asset, TypePath)]
-pub struct ProjectilesConfig(pub HashMap<ProjectileType, ProjectileConfig>);
+pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
 
-#[derive(Component, Default, Debug, Hash, PartialEq, Eq, serde::Deserialize)]
-pub enum ProjectileType {
+#[derive(Component, Default, Clone, Debug, Hash, PartialEq, Eq, serde::Deserialize)]
+pub enum Projectile {
     #[default]
     Bullet,
     Rocket,
