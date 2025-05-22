@@ -1,6 +1,6 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::{Projectile, ProjectileType},
+    entities::projectile::Projectile,
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -155,8 +155,7 @@ fn fire_weapon_system(
                 let random_angle = rng.random_range(-stats.spread..stats.spread);
 
                 let bullet = (
-                    Projectile,
-                    ProjectileType::Bullet,
+                    Projectile::Bullet,
                     Position(position.0),
                     Velocity(
                         Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
