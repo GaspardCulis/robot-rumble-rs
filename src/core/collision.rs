@@ -33,7 +33,7 @@ where
             })
             .add_systems(
                 GgrsSchedule,
-                check_collisions::<A, B>.after(PhysicsSet::Movement),
+                check_collisions::<A, B>.in_set(PhysicsSet::Collision),
             );
     }
 }
