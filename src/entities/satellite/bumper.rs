@@ -1,4 +1,4 @@
-use crate::core::physics::{PhysicsSet, Velocity};
+use crate::core::physics::{PhysicsSet, Position, Velocity};
 use crate::entities::player::Player;
 use crate::entities::satellite::Satellite;
 use bevy::prelude::*;
@@ -13,7 +13,7 @@ pub struct Bumper;
 
 pub fn bumper_push_player(
     bumper_query: Query<&Transform, (With<Satellite>, With<Bumper>)>,
-    mut player_query: Query<(&Transform, &mut Velocity), With<Player>>,
+    mut player_query: Query<(&Position, &mut Velocity), With<Player>>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
 ) {
@@ -28,8 +28,8 @@ pub fn bumper_push_player(
     for bumper_transform in bumper_query.iter() {
         let bumper_pos = bumper_transform.translation.truncate();
 
-        for (player_transform, mut velocity) in player_query.iter_mut() {
-            let player_pos = player_transform.translation.truncate();
+        for (player_position, mut velocity) in player_query.iter_mut() {
+            let player_pos = player_position.0;
 
             let distance = player_pos.distance(bumper_pos);
 

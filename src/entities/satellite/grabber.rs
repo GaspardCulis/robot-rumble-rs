@@ -270,7 +270,7 @@ pub fn adjust_rope_length(
 
         if delta != 0.0 {
             let old = orbit.distance;
-            let new = (old + delta).clamp(50.0, 400.0);
+            let new = (old + delta).clamp(50.0, 275.0);
 
             if old > 1.0 && new != old {
                 let speed = orbit.initial_speed * old / new;
