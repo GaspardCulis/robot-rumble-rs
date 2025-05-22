@@ -69,7 +69,7 @@ pub fn detect_player_orbit_entry(
 
             let dir =
                 player_transform.translation.truncate() - graviton_transform.translation.truncate();
-            let angle = dir.angle_to(Vec2::X);
+            let angle = dir.y.atan2(dir.x);
 
             if distance < orbit_radius {
                 commands.entity(player_entity).insert(Orbited {
