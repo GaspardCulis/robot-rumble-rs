@@ -46,9 +46,9 @@ fn check_collisions<A, B>(
     B: Component,
 {
     for (mut a_collision_state, a_position, a_shape) in query_a.iter_mut() {
-        // FIX: Order non-deterministic
         let collider = query_b
             .iter()
+            .sort::<&Position>()
             .find(|(_, b_position, b_shape)| a_shape.collides_with(a_position, b_shape, b_position))
             .map(|(b_entity, _, _)| b_entity);
 
