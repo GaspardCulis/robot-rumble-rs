@@ -9,8 +9,8 @@ use crate::{
     GameState,
     core::{camera::CameraFollowTarget, physics, worldgen},
     entities::{
-        bullet,
-        player::{self, Player, PlayerAction, weapons},
+        projectile,
+        player::{self, Player, PlayerAction, weapon},
     },
 };
 use synctest::{
@@ -39,9 +39,9 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
-            .rollback_component_with_clone::<weapons::Triggered>()
-            .rollback_component_with_clone::<weapons::WeaponState>()
-            .rollback_component_with_copy::<bullet::Bullet>()
+            .rollback_component_with_clone::<weapon::Triggered>()
+            .rollback_component_with_clone::<weapon::WeaponState>()
+            .rollback_component_with_copy::<projectile::Projectile>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
@@ -169,7 +169,7 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
     for handle in 0..num_players {
         let weapon = commands
             .spawn((
-                weapons::WeaponType::default(),
+                weapon::WeaponType::default(),
                 physics::Position(Vec2::ZERO),
                 physics::Velocity(Vec2::ZERO),
                 physics::Rotation(0.0),

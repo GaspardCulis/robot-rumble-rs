@@ -12,7 +12,7 @@ use super::planet;
 
 mod animation;
 mod skin;
-pub mod weapons;
+pub mod weapon;
 
 // TODO: Move to config file
 pub const PLAYER_MASS: u32 = 800;
@@ -70,7 +70,7 @@ impl Plugin for PlayerPlugin {
             .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
-            .add_plugins(weapons::WeaponPlugin)
+            .add_plugins(weapon::WeaponPlugin)
             .add_systems(
                 GgrsSchedule,
                 (player_physics, player_movement, update_weapon)
@@ -129,7 +129,7 @@ fn update_weapon(
     player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
     mut weapon_query: Query<
         (
-            &mut weapons::Triggered,
+            &mut weapon::Triggered,
             &mut Position,
             &mut Velocity,
             &mut Rotation,
