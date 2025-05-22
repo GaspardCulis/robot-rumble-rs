@@ -135,7 +135,7 @@ fn handle_genworld_event(
         // Générer un certain nombre de satellites
         let mut satellite_positions: Vec<Position> = Vec::new();
         let num_satellites =
-            rng.random_range(worldgen_config.min_satellites..worldgen_config.max_satellites);
+            rng.random_range(config.min_satellites..config.max_satellites);
 
         for _ in 0..num_satellites {
             let mut attempts = 0;
@@ -148,12 +148,12 @@ fn handle_genworld_event(
 
                 let angle = rng.random_range(0.0..std::f32::consts::TAU);
                 let distance = rng.random_range(
-                    worldgen_config.satellite_min_distance..worldgen_config.satellite_max_distance,
+                    config.satellite_min_distance..config.satellite_max_distance,
                 );
                 let position = Position(Vec2::from_angle(angle) * distance);
 
-                let safe_distance_planet = worldgen_config.satellite_planet_min_distance;
-                let safe_distance_satellite = worldgen_config.satellite_satellite_min_distance;
+                let safe_distance_planet = config.satellite_planet_min_distance;
+                let safe_distance_satellite = config.satellite_satellite_min_distance;
 
                 let far_from_planets = planets.iter().all(|planet| {
                     position.0.distance(planet.position.0)
