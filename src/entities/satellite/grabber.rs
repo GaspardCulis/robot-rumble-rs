@@ -7,9 +7,9 @@ use leafwing_input_manager::prelude::ActionState;
 
 use super::Satellite;
 use super::satellite::{SatelliteConfig, SatelliteConfigHandle};
+use crate::GameState;
 use crate::core::physics::{PhysicsSet, Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
-use crate::GameState;
 
 #[derive(Component)]
 pub struct Grabber;
@@ -67,14 +67,16 @@ fn detect_player_entry(
 
         match closest_grabber {
             Some((grabber_entity, _)) => {
-                commands.entity(player_entity)
+                commands
+                    .entity(player_entity)
                     .insert(ShowInteractPrompt {
                         message: "E pour s'accrocher".to_string(),
                     })
                     .insert(NearbyGrabber(grabber_entity));
             }
             None => {
-                commands.entity(player_entity)
+                commands
+                    .entity(player_entity)
                     .remove::<ShowInteractPrompt>()
                     .remove::<NearbyGrabber>();
             }
@@ -100,15 +102,23 @@ fn display_interact_prompt(
                 let font = asset_server.load("fonts/FiraSans-Bold.ttf");
                 commands.spawn((
                     Text2d::new(prompt.message.clone()),
-                    TextFont { font, font_size: 30.0, ..Default::default() },
+                    TextFont {
+                        font,
+                        font_size: 30.0,
+                        ..Default::default()
+                    },
                     TextColor(Color::WHITE),
                     TextLayout {
                         justify: JustifyText::Center,
                         ..Default::default()
                     },
-                    Transform::from_translation(grabber_transform.translation + Vec3::new(0.0, -100.0, 2.0)),
+                    Transform::from_translation(
+                        grabber_transform.translation + Vec3::new(0.0, -100.0, 2.0),
+                    ),
                     GlobalTransform::default(),
-                    PlayerPrompt { player: player_entity },
+                    PlayerPrompt {
+                        player: player_entity,
+                    },
                 ));
             }
         }
@@ -131,14 +141,24 @@ pub fn handle_grabber_interaction(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut player_query: Query<(
-        Entity, &Player, &ActionState<PlayerAction>, &Position,
-        Option<&NearbyGrabber>, Option<&GrabbedBy>, &Velocity,
-    ), With<Player>>,
+    mut player_query: Query<
+        (
+            Entity,
+            &Player,
+            &ActionState<PlayerAction>,
+            &Position,
+            Option<&NearbyGrabber>,
+            Option<&GrabbedBy>,
+            &Velocity,
+        ),
+        With<Player>,
+    >,
     grabber_query: Query<&Transform, With<Grabber>>,
     local_players: Res<LocalPlayers>,
 ) {
-    for (player_entity, player, actions, position, nearby, grabbed_by, vel) in player_query.iter_mut() {
+    for (player_entity, player, actions, position, nearby, grabbed_by, vel) in
+        player_query.iter_mut()
+    {
         if !local_players.0.contains(&player.handle) {
             continue;
         }
@@ -149,7 +169,7 @@ pub fn handle_grabber_interaction(
             if let Some(nearby) = nearby {
                 if let Ok(grabber_tf) = grabber_query.get(nearby.0) {
                     let center = grabber_tf.translation.truncate();
-                    let pos = position.0; 
+                    let pos = position.0;
                     let offset = pos - center;
                     let distance = offset.length();
                     let angle = offset.y.atan2(offset.x);
@@ -166,8 +186,8 @@ pub fn handle_grabber_interaction(
                         speed = 600.0 * sign;
                     }
 
-
-                    commands.entity(player_entity)
+                    commands
+                        .entity(player_entity)
                         .insert(GrabbedBy(nearby.0))
                         .insert(GrabbedOrbit {
                             center: center,
@@ -178,31 +198,36 @@ pub fn handle_grabber_interaction(
                     let mesh = meshes.add(Rectangle::new(4.0, 1.0));
                     let material = materials.add(Color::srgb(0.0, 0.0, 1.0));
 
-                
                     commands.spawn((
                         Mesh2d(mesh),
                         MeshMaterial2d(material),
                         Transform::from_translation(((center + pos) / 2.0).extend(1.0))
                             .looking_at((pos - center).extend(0.0), Vec3::Y),
                         GlobalTransform::default(),
-                        GrabberRope { player: player_entity, grabber: nearby.0 },
+                        GrabberRope {
+                            player: player_entity,
+                            grabber: nearby.0,
+                        },
                     ));
                 }
             }
         } else if !is_pressed && grabbed_by.is_some() {
-            commands.entity(player_entity)
+            commands
+                .entity(player_entity)
                 .remove::<GrabbedBy>()
                 .remove::<GrabbedOrbit>();
         }
-
     }
 }
 
 pub fn update_grabbed_players(
     mut commands: Commands,
     mut query: Query<(
-        Entity, &mut Position, &mut Velocity,
-        &mut GrabbedOrbit, &GrabbedBy,
+        Entity,
+        &mut Position,
+        &mut Velocity,
+        &mut GrabbedOrbit,
+        &GrabbedBy,
     )>,
     satellite_query: Query<&Transform, With<Satellite>>,
     time: Res<Time>,
@@ -220,7 +245,10 @@ pub fn update_grabbed_players(
             vel.0 = tangent * orbit.initial_speed;
             pos.0 = orbit.center + offset;
         } else {
-            commands.entity(entity).remove::<GrabbedOrbit>().remove::<GrabbedBy>();
+            commands
+                .entity(entity)
+                .remove::<GrabbedOrbit>()
+                .remove::<GrabbedBy>();
         }
     }
 }
@@ -232,7 +260,10 @@ pub fn update_grabber_ropes(
     satellite_query: Query<&Transform, With<Satellite>>,
 ) {
     for (entity, rope) in rope_query.iter() {
-        match (player_query.get(rope.player), satellite_query.get(rope.grabber)) {
+        match (
+            player_query.get(rope.player),
+            satellite_query.get(rope.grabber),
+        ) {
             (Ok(p_tf), Ok(g_tf)) => {
                 let player = p_tf.translation.truncate();
                 let grabber = g_tf.translation.truncate();
@@ -253,10 +284,10 @@ pub fn update_grabber_ropes(
 }
 
 pub fn adjust_rope_length(
-    mut query: Query<(
-        &ActionState<PlayerAction>,
-        &mut GrabbedOrbit,
-    ), (With<Player>, With<GrabbedBy>)>,
+    mut query: Query<
+        (&ActionState<PlayerAction>, &mut GrabbedOrbit),
+        (With<Player>, With<GrabbedBy>),
+    >,
 ) {
     for (actions, mut orbit) in query.iter_mut() {
         let delta = match (
@@ -312,8 +343,7 @@ pub fn register_grabber_systems(app: &mut App) {
     );
     app.add_systems(
         Update,
-        (display_interact_prompt, remove_interact_prompt)
-            .run_if(in_state(GameState::InGame)),
+        (display_interact_prompt, remove_interact_prompt).run_if(in_state(GameState::InGame)),
     );
     app.add_systems(
         GgrsSchedule,

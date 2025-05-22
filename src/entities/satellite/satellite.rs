@@ -1,16 +1,14 @@
-use bevy::prelude::*;
 use crate::core::physics::Position;
+use bevy::prelude::*;
 
+use super::bumper::Bumper;
 use super::grabber::Grabber;
 use super::graviton::{GravitonMarker, GravitonVisual};
-use super::bumper::Bumper;
 
 use super::orbit_material::OrbitMaterial;
-use bevy::sprite::Material2dPlugin;
-use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
 use bevy::math::Vec2;
-
-
+use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
+use bevy::sprite::Material2dPlugin;
 
 #[derive(Component)]
 pub struct Satellite;
@@ -56,12 +54,15 @@ impl Plugin for SatellitePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnSatelliteEvent>()
             .add_plugins(Material2dPlugin::<OrbitMaterial>::default())
-            .insert_resource(OrbitTime::default()) 
-            .add_systems(Update, (
-                update_orbit_time,
-                update_orbit_material,
-                handle_spawn_satellite
-            ));
+            .insert_resource(OrbitTime::default())
+            .add_systems(
+                Update,
+                (
+                    update_orbit_time,
+                    update_orbit_material,
+                    handle_spawn_satellite,
+                ),
+            );
     }
 }
 
@@ -152,13 +153,18 @@ fn handle_spawn_satellite(
                     ));
                 });
             }
-
         }
         // Adapt orbit radius and color depending on satellite kind
         let (orbit_radius, base_color) = match event.kind {
-            SatelliteKind::Graviton => (config.orbit_radius+100.0, LinearRgba::new(0.0, 0.0, 1.0, 1.0)),
+            SatelliteKind::Graviton => (
+                config.orbit_radius + 100.0,
+                LinearRgba::new(0.0, 0.0, 1.0, 1.0),
+            ),
             SatelliteKind::Bumper => (config.bump_radius, LinearRgba::new(1.0, 0.5, 0.0, 1.0)),
-            SatelliteKind::Grabber => (config.grabber_radius+50.0, LinearRgba::new(0.0, 1.0, 0.0, 1.0)),
+            SatelliteKind::Grabber => (
+                config.grabber_radius + 50.0,
+                LinearRgba::new(0.0, 1.0, 0.0, 1.0),
+            ),
         };
 
         let orbit_material_handle = materials.add(OrbitMaterial {
@@ -185,10 +191,7 @@ fn handle_spawn_satellite(
     }
 }
 
-pub fn load_satellite_config(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
+pub fn load_satellite_config(mut commands: Commands, asset_server: Res<AssetServer>) {
     let handle = asset_server.load("config/satellites.ron");
     commands.insert_resource(SatelliteConfigHandle(handle));
 }
@@ -197,10 +200,7 @@ fn update_orbit_time(mut orbit_time: ResMut<OrbitTime>, time: Res<Time>) {
     orbit_time.0 += time.delta_secs();
 }
 
-fn update_orbit_material(
-    orbit_time: Res<OrbitTime>,
-    mut materials: ResMut<Assets<OrbitMaterial>>,
-) {
+fn update_orbit_material(orbit_time: Res<OrbitTime>, mut materials: ResMut<Assets<OrbitMaterial>>) {
     for material in materials.iter_mut() {
         material.1.time = orbit_time.0;
     }

@@ -6,10 +6,8 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
+use crate::entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
-use crate::{
-    entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent}
-};
 
 use super::physics::Position;
 
@@ -134,8 +132,7 @@ fn handle_genworld_event(
 
         // Générer un certain nombre de satellites
         let mut satellite_positions: Vec<Position> = Vec::new();
-        let num_satellites =
-            rng.random_range(config.min_satellites..config.max_satellites);
+        let num_satellites = rng.random_range(config.min_satellites..config.max_satellites);
 
         for _ in 0..num_satellites {
             let mut attempts = 0;
@@ -147,9 +144,8 @@ fn handle_genworld_event(
                 }
 
                 let angle = rng.random_range(0.0..std::f32::consts::TAU);
-                let distance = rng.random_range(
-                    config.satellite_min_distance..config.satellite_max_distance,
-                );
+                let distance =
+                    rng.random_range(config.satellite_min_distance..config.satellite_max_distance);
                 let position = Position(Vec2::from_angle(angle) * distance);
 
                 let safe_distance_planet = config.satellite_planet_min_distance;
@@ -164,12 +160,11 @@ fn handle_genworld_event(
                     .iter()
                     .all(|existing| position.0.distance(existing.0) > safe_distance_satellite);
 
-                let kind =  match rng.random_range(0..3) {
+                let kind = match rng.random_range(0..3) {
                     0 => SatelliteKind::Graviton,
                     1 => SatelliteKind::Bumper,
                     _ => SatelliteKind::Grabber,
                 };
-                
 
                 if far_from_planets && far_from_satellites {
                     satellite_spawn_events.send(SpawnSatelliteEvent {

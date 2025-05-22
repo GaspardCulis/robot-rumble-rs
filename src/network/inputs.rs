@@ -22,7 +22,7 @@ const INPUT_SHOOT: u32 = 1 << 4;
 const INPUT_SLOT1: u32 = 1 << 5;
 const INPUT_SLOT2: u32 = 1 << 6;
 const INPUT_SLOT3: u32 = 1 << 7;
-const INPUT_INTERACT: u32 = 1 << 8; 
+const INPUT_INTERACT: u32 = 1 << 8;
 const INPUT_ROPE_EXTEND: u32 = 1 << 9;
 const INPUT_ROPE_RETRACT: u32 = 1 << 10;
 

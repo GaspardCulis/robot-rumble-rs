@@ -6,10 +6,13 @@ use leafwing_input_manager::prelude::*;
 use rand::Rng as _;
 
 use crate::{
-    core::{camera::CameraFollowTarget, physics, worldgen}, entities::{
-        player::{self, weapon, Player, PlayerAction},
-        projectile, satellite::{grabber, graviton},
-    }, GameState
+    GameState,
+    core::{camera::CameraFollowTarget, physics, worldgen},
+    entities::{
+        player::{self, Player, PlayerAction, weapon},
+        projectile,
+        satellite::{grabber, graviton},
+    },
 };
 use synctest::{
     checksum_position, handle_ggrs_events, p2p_mode, spawn_synctest_players,
