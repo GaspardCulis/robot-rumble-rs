@@ -1,18 +1,16 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::bullet::Bullet,
+    entities::projectile::{DecayTimer, PROJECTILE_DESPAWN_TIME, Projectile, ProjectileType},
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
-
 mod config;
 
 pub use config::{WeaponStats, WeaponType};
 
-// weapon shot
 #[derive(Component, Clone, Default, Reflect)]
 pub struct Triggered(pub bool);
 
@@ -157,7 +155,8 @@ fn fire_weapon_system(
                 let random_angle = rng.random_range(-stats.spread..stats.spread);
 
                 let bullet = (
-                    Bullet,
+                    Projectile,
+                    ProjectileType::Bullet,
                     Position(position.0),
                     Velocity(
                         Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
