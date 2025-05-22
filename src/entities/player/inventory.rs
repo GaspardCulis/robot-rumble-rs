@@ -83,7 +83,8 @@ fn handle_slot_change_inputs(
                     if &current_weapon.0 != selected_weapon {
                         commands
                             .entity(current_weapon.0)
-                            .remove::<physics::PhysicsBundle>();
+                            .remove::<physics::PhysicsBundle>()
+                            .remove::<Sprite>();
 
                         current_weapon.0 = *selected_weapon;
                     }
