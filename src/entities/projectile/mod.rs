@@ -47,7 +47,10 @@ impl Plugin for ProjectilePlugin {
         )
         .add_systems(
             GgrsSchedule,
-            (check_collisions.after(PhysicsSet::Movement),),
+            (
+                check_collisions.after(PhysicsSet::Movement),
+                add_physical_properties.before(PhysicsSet::Gravity),
+            ),
         );
     }
 }
@@ -59,7 +62,7 @@ fn load_projectiles_config(mut commands: Commands, asset_server: Res<AssetServer
 
 fn add_physical_properties(
     mut commands: Commands,
-    query: Query<(Entity, &Projectile), (Without<Mass>, Without<Damage>, Without<Damage>)>,
+    query: Query<(Entity, &Projectile), (Without<Mass>)>,
     config_handle: Res<ProjectilesConfigHandle>,
     config_assets: Res<Assets<ProjectilesConfig>>,
 ) {
@@ -76,8 +79,7 @@ fn add_physical_properties(
 
             commands
                 .entity(projectile_entity)
-                .insert(Mass(projectile_stats.mass))
-                .insert(Damage(projectile_stats.damage));
+                .insert(Mass(projectile_stats.mass));
         }
     }
 }
