@@ -1,11 +1,9 @@
-use std::time::Duration;
-
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
 
 mod config;
-pub use config::{ProjectileStats, ProjectileType};
+pub use config::ProjectileType;
 #[derive(Resource)]
 struct ProjectilesConfigHandle(Handle<config::ProjectilesConfig>);
 
@@ -18,7 +16,6 @@ use crate::{
 };
 
 use super::planet::Radius;
-pub const PROJECTILE_DESPAWN_TIME: Duration = Duration::from_millis(1000);
 
 // Autodespawn timer
 #[derive(Component)]

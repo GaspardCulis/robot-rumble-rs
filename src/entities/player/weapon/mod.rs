@@ -1,6 +1,6 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::{DecayTimer, PROJECTILE_DESPAWN_TIME, Projectile, ProjectileType},
+    entities::projectile::{Projectile, ProjectileType},
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
