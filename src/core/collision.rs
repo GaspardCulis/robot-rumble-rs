@@ -48,9 +48,21 @@ fn check_collisions<A, B>(
     for (mut a_collision_state, a_position, a_shape) in query_a.iter_mut() {
         let collider = query_b
             .iter()
-            .sort::<&Position>()
-            .find(|(_, b_position, b_shape)| a_shape.collides_with(a_position, b_shape, b_position))
-            .map(|(b_entity, _, _)| b_entity);
+            // Sort by distance for determinism
+            .sort_by::<&Position>(|x_position, y_position| {
+                a_position
+                    .distance_squared(x_position.0)
+                    .total_cmp(&a_position.distance_squared(y_position.0))
+            })
+            // Get closest, others are irrelevant
+            .next()
+            .and_then(|(b_entity, b_position, b_shape)| {
+                if a_shape.collides_with(a_position, b_shape, b_position) {
+                    Some(b_entity)
+                } else {
+                    None
+                }
+            });
 
         if a_collision_state.collider != collider {
             // Update only if changed in order to properly trigger Changed<C> events
