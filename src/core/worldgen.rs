@@ -6,8 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
 use crate::{
-    entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent},
-    network::SessionSeed,
+    entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent}
 };
 
 use super::physics::Position;
@@ -162,7 +161,7 @@ fn handle_genworld_event(
                     .iter()
                     .all(|existing| position.0.distance(existing.0) > safe_distance_satellite);
 
-                let kind = match rng.random_range(0..3) {
+                let kind =  match rng.random_range(0..3) {
                     0 => SatelliteKind::Graviton,
                     1 => SatelliteKind::Bumper,
                     _ => SatelliteKind::Grabber,

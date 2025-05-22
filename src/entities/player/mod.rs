@@ -40,6 +40,9 @@ pub enum PlayerAction {
     Shoot,
     #[actionlike(DualAxis)]
     PointerDirection,
+    Interact,
+    RopeExtend,
+    RopeRetract,
 }
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]

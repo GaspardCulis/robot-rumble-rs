@@ -7,13 +7,11 @@ use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 use crate::{
-    GameState,
-    core::{camera::CameraFollowTarget, physics, worldgen},
-    entities::{
+    core::{camera::CameraFollowTarget, physics, worldgen}, entities::{
         bullet,
         planet::{Planet, Radius},
-        player::{self, PLAYER_RADIUS, Player, PlayerAction, PlayerBundle, PlayerSkin},
-    },
+        player::{self, Player, PlayerAction, PlayerBundle, PlayerSkin, PLAYER_RADIUS}, satellite::grabber,
+    }, GameState
 };
 use synctest::{
     checksum_position, handle_ggrs_events, p2p_mode, spawn_synctest_players,
@@ -42,6 +40,9 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .rollback_component_with_copy::<bullet::Bullet>()
+            .rollback_component_with_clone::<grabber::GrabbedOrbit>()
+            .rollback_component_with_clone::<grabber::GrabbedBy>()
+            .rollback_component_with_clone::<grabber::NearbyGrabber>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
@@ -222,9 +223,13 @@ fn add_local_player_components(
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
+        // Interaction
+        (PlayerAction::Interact, KeyCode::KeyE),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
+    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
+    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
 
     let local_players_query = query
         .iter()

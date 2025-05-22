@@ -19,7 +19,7 @@ impl Plugin for CameraPlugin {
 #[derive(Component)]
 pub struct CameraFollowTarget;
 
-fn camera_movement(
+pub fn camera_movement(
     mut camera: Query<&mut Transform, (With<Camera2d>, Without<CameraFollowTarget>)>,
     window: Query<&Window>,
     target: Query<&Transform, With<CameraFollowTarget>>,
