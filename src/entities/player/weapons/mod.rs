@@ -123,7 +123,7 @@ fn tick_weapon_timers(mut query: Query<(&mut WeaponState, &WeaponStats)>, time: 
         state.cooldown_timer.tick(time.delta());
         state.reload_timer.tick(time.delta());
 
-        // Verify current_ammo is 0 to avoid a subtle bug where we fire when WeaponState is instanciated
+        // Verify current_ammo is 0 to avoid a subtle bug where we fire when WeaponState is instantiated
         if state.reload_timer.just_finished() && state.current_ammo == 0 {
             state.current_ammo = stats.magazine_size;
         }
