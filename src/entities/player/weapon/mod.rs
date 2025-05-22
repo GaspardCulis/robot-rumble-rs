@@ -1,6 +1,11 @@
 use crate::{
-    core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::Projectile,
+    core::{
+        gravity::Mass,
+        physics::{PhysicsSet, Position, Rotation, Velocity},
+    },
+    entities::projectile::{
+        self, Damage, Knockback, Projectile, ProjectilesConfigHandle, config::ProjectilesConfig,
+    },
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -8,12 +13,10 @@ use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 mod config;
-
 pub use config::{WeaponStats, WeaponType};
 
 #[derive(Component, Clone, Default, Reflect)]
 pub struct Triggered(pub bool);
-
 #[derive(Component, Clone, Debug, Reflect)]
 pub struct WeaponState {
     current_ammo: usize,
@@ -46,7 +49,10 @@ impl Plugin for WeaponPlugin {
             )
             .add_systems(
                 GgrsSchedule,
-                (tick_weapon_timers, fire_weapon_system)
+                (
+                    tick_weapon_timers,
+                    fire_weapon_system.before(PhysicsSet::Gravity),
+                )
                     .chain()
                     .in_set(PhysicsSet::Player)
                     .after(super::update_weapon),
@@ -143,8 +149,18 @@ fn fire_weapon_system(
         With<WeaponType>,
     >,
     mut owner_query: Query<(&mut Velocity, &super::Weapon), Without<WeaponType>>,
+    projectile_config_handle: Res<ProjectilesConfigHandle>,
+    projectile_config_assets: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
+    let projectile_config =
+        if let Some(c) = projectile_config_assets.get(projectile_config_handle.0.id()) {
+            c
+        } else {
+            warn!("Couldn't load ProjectileConfig");
+            return;
+        };
+
     for (mut state, triggered, position, velocity, rotation, stats, entity) in
         weapon_query.iter_mut()
     {
@@ -152,18 +168,25 @@ fn fire_weapon_system(
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
-                let random_angle = rng.random_range(-stats.spread..stats.spread);
+                if let Some(projectile_config) = projectile_config.0.get(&stats.projectile) {
+                    let projectile_stats = &projectile_config.stats;
+                    let random_angle = rng.random_range(-stats.spread..stats.spread);
 
-                let bullet = (
-                    Projectile::Bullet,
-                    Position(position.0),
-                    Velocity(
-                        Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
-                            + velocity.0,
-                    ),
-                );
+                    let new_projectile = (
+                        Projectile::Bullet,
+                        Position(position.0),
+                        Velocity(
+                            Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
+                                + velocity.0,
+                        ),
+                        Damage(stats.damage_multiplier * projectile_stats.damage),
+                        Knockback(projectile_stats.knockback),
+                    );
 
-                commands.spawn(bullet).add_rollback();
+                    commands.spawn(new_projectile).add_rollback();
+                } else {
+                    warn!("Empy projectile config!")
+                }
             }
 
             state.current_ammo -= 1;
