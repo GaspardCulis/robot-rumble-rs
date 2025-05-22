@@ -3,16 +3,13 @@ use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
 
 mod config;
-pub use config::ProjectileType;
+pub use config::Projectile;
 #[derive(Resource)]
 struct ProjectilesConfigHandle(Handle<config::ProjectilesConfig>);
 
-use crate::{
-    GameState,
-    core::{
-        gravity::{Mass, Passive},
-        physics::{PhysicsSet, Position, Rotation, Velocity},
-    },
+use crate::core::{
+    gravity::{Mass, Passive},
+    physics::{PhysicsSet, Position, Rotation, Velocity},
 };
 
 use super::planet::Radius;
@@ -20,9 +17,6 @@ use super::planet::Radius;
 // Autodespawn timer
 #[derive(Component)]
 pub struct DecayTimer(pub Timer);
-#[derive(Component, Reflect, Clone, Copy)]
-#[require(Visibility)]
-pub struct Projectile;
 
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
@@ -43,20 +37,18 @@ impl Plugin for ProjectilePlugin {
             (
                 #[cfg(debug_assertions)]
                 handle_config_reload,
-                (add_physical_properties, add_sprite)
-                    .run_if(resource_exists::<ProjectilesConfigHandle>),
-            ),
+                add_sprite,
+                rotate_sprite,
+            )
+                .chain()
+                .run_if(resource_exists::<ProjectilesConfigHandle>),
         )
-        .add_systems(
-            Update,
-            (add_sprite, rotate_sprite).chain().before(check_collisions),
-        )
-        .add_systems(Update, tick_projectile_timer.before(check_collisions))
         .add_systems(
             GgrsSchedule,
-            check_collisions
-                .run_if(in_state(GameState::InGame))
-                .after(PhysicsSet::Movement),
+            (
+                add_physical_properties.before(PhysicsSet::Gravity),
+                check_collisions.after(PhysicsSet::Movement),
+            ),
         );
     }
 }
@@ -68,7 +60,7 @@ fn load_projectiles_config(mut commands: Commands, asset_server: Res<AssetServer
 
 fn add_physical_properties(
     mut commands: Commands,
-    query: Query<(Entity, &ProjectileType), (Without<Mass>, Without<Damage>)>,
+    query: Query<(Entity, &Projectile), (Without<Mass>, Without<Damage>)>,
     config_handle: Res<ProjectilesConfigHandle>,
     config_assets: Res<Assets<config::ProjectilesConfig>>,
 ) {
@@ -93,7 +85,7 @@ fn add_physical_properties(
 
 fn add_sprite(
     mut commands: Commands,
-    query: Query<(Entity, &ProjectileType), Without<Sprite>>,
+    query: Query<(Entity, &Projectile), Without<Sprite>>,
     config_handle: Res<ProjectilesConfigHandle>,
     config_assets: Res<Assets<config::ProjectilesConfig>>,
     asset_server: Res<AssetServer>,
