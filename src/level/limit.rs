@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
 use crate::{
+    GameState,
     core::{
         physics::{PhysicsSet, Position},
         worldgen,
@@ -30,7 +31,12 @@ impl Plugin for MapLimitPlugin {
                 Update,
                 setup.run_if(resource_added::<worldgen::WorldgenConfigHandle>),
             )
-            .add_systems(GgrsSchedule, check_outsiders.after(PhysicsSet::Movement));
+            .add_systems(
+                GgrsSchedule,
+                check_outsiders
+                    .after(PhysicsSet::Movement)
+                    .run_if(in_state(GameState::InGame)),
+            );
     }
 }
 
