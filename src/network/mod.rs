@@ -9,8 +9,8 @@ use crate::{
     GameState,
     core::{camera::CameraFollowTarget, physics, worldgen},
     entities::{
-        projectile,
         player::{self, Player, PlayerAction, weapon},
+        projectile,
     },
 };
 use synctest::{
