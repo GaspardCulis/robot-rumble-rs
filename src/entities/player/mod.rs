@@ -152,7 +152,7 @@ fn update_weapon(
             position.0 = player_position.0;
             velocity.0 = player_velocity.0;
         } else {
-            warn!("AYO");
+            warn!("Failed to retrieve weapon entity with ID {:?}", weapon.0);
         }
     }
 }
