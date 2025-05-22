@@ -58,11 +58,9 @@ fn summon_current_weapon(
 ) {
     for weapon_ref in owner_query.iter() {
         if let Ok(weapon_entity) = weapon_query.get(weapon_ref.0) {
-            commands.entity(weapon_entity).insert((
-                physics::Position::default(),
-                physics::Velocity::default(),
-                physics::Rotation::default(),
-            ));
+            commands
+                .entity(weapon_entity)
+                .insert(physics::PhysicsBundle::default());
         }
     }
 }
@@ -85,7 +83,7 @@ fn handle_slot_change_inputs(
                     if &current_weapon.0 != selected_weapon {
                         commands
                             .entity(current_weapon.0)
-                            .remove::<physics::Position>();
+                            .remove::<physics::PhysicsBundle>();
 
                         current_weapon.0 = *selected_weapon;
                     }
