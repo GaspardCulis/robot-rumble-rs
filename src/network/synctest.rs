@@ -8,7 +8,7 @@ use rand::Rng;
 use crate::{
     Args, GameState,
     core::{camera, physics},
-    entities::player::{Player, PlayerAction, Weapon, weapon},
+    entities::player::{Player, PlayerAction},
     network::{SessionConfig, SessionSeed},
 };
 
@@ -68,6 +68,10 @@ pub fn spawn_synctest_players(
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
+        // Slot selection
+        (PlayerAction::Slot1, KeyCode::Digit1),
+        (PlayerAction::Slot2, KeyCode::Digit2),
+        (PlayerAction::Slot3, KeyCode::Digit3),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
     .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
@@ -82,21 +86,10 @@ pub fn spawn_synctest_players(
         (PlayerAction::Left, KeyCode::KeyJ),
     ]);
 
-    let weapon = commands
-        .spawn((
-            weapon::WeaponType::default(),
-            physics::Position(Vec2::ZERO),
-            physics::Velocity(Vec2::ZERO),
-            physics::Rotation(0.0),
-        ))
-        .add_rollback()
-        .id();
-
     commands
         .spawn((
             input_map_a,
             Player { handle: 0 },
-            Weapon(weapon),
             camera::CameraFollowTarget,
         ))
         .add_rollback();
