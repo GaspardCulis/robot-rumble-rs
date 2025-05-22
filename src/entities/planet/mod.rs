@@ -61,7 +61,9 @@ impl PlanetBundle {
 pub struct PlanetPlugin;
 impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(RonAssetPlugin::<PlanetsConfig>::new(&[]))
+        app.register_type::<Radius>()
+            .register_type::<PlanetType>()
+            .add_plugins(RonAssetPlugin::<PlanetsConfig>::new(&[]))
             .add_plugins(materials::PlanetMaterialsPlugin)
             .add_event::<SpawnPlanetEvent>()
             .add_systems(Startup, load_planets_config)

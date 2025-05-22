@@ -3,14 +3,12 @@ use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
 use leafwing_input_manager::prelude::*;
-use rand::{Rng as _, SeedableRng as _, seq::SliceRandom};
-use rand_xoshiro::Xoshiro256PlusPlus;
+use rand::Rng as _;
 
 use crate::{
     core::{camera::CameraFollowTarget, physics, worldgen}, entities::{
-        bullet,
-        planet::{Planet, Radius},
-        player::{self, Player, PlayerAction, PlayerBundle, PlayerSkin, PLAYER_RADIUS}, satellite::{grabber, graviton},
+        player::{self, weapon, Player, PlayerAction},
+        projectile, satellite::{grabber, graviton},
     }, GameState
 };
 use synctest::{
@@ -39,7 +37,10 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
-            .rollback_component_with_copy::<bullet::Bullet>()
+            .rollback_component_with_clone::<player::Weapon>()
+            .rollback_component_with_clone::<weapon::Triggered>()
+            .rollback_component_with_clone::<weapon::WeaponState>()
+            .rollback_component_with_clone::<projectile::Projectile>()
             .rollback_component_with_clone::<grabber::GrabbedOrbit>()
             .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
@@ -160,40 +161,16 @@ fn wait_start_match(
     next_state.set(GameState::InGame);
 }
 
-fn spawn_players(
-    mut commands: Commands,
-    planets_query: Query<(&physics::Position, &Radius), With<Planet>>,
-    session: Res<bevy_ggrs::Session<SessionConfig>>,
-    seed: Res<SessionSeed>,
-) {
-    let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed.0);
+/// Spawn position is handled by level::spawn
+fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<SessionConfig>>) {
     let num_players = match &*session {
         Session::SyncTest(s) => s.num_players(),
         Session::P2P(s) => s.num_players(),
         Session::Spectator(s) => s.num_players(),
     };
 
-    let mut planets = planets_query
-        .iter()
-        .sort::<&physics::Position>()
-        .collect::<Vec<_>>();
-    planets.shuffle(&mut rng);
-
     for handle in 0..num_players {
-        let (spawn_planet_pos, spawn_planet_radius) = planets
-            .get(handle)
-            .expect("Should have more planets than players");
-
-        let random_direction = Vec2::from_angle(rng.random::<f32>() * 2. * std::f32::consts::PI);
-        let position =
-            spawn_planet_pos.0 + random_direction * (spawn_planet_radius.0 as f32 + PLAYER_RADIUS);
-
-        commands
-            .spawn((
-                PlayerBundle::new(handle, physics::Position(position)),
-                PlayerSkin("laika".into()),
-            ))
-            .add_rollback();
+        commands.spawn(Player { handle }).add_rollback();
     }
 }
 
@@ -224,6 +201,10 @@ fn add_local_player_components(
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
+        // Slot selection
+        (PlayerAction::Slot1, KeyCode::Digit1),
+        (PlayerAction::Slot2, KeyCode::Digit2),
+        (PlayerAction::Slot3, KeyCode::Digit3),
         // Interaction
         (PlayerAction::Interact, KeyCode::KeyE),
     ])

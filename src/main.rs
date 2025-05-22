@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-#[cfg(not(debug_assertions))]
+#[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 #[cfg(debug_assertions)]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -7,6 +7,7 @@ use clap::Parser;
 
 mod core;
 mod entities;
+mod level;
 mod network;
 mod utils;
 
@@ -31,7 +32,7 @@ fn main() {
     let args = Args::parse();
     let mut app = App::new();
 
-    #[cfg(not(debug_assertions))]
+    #[cfg(feature = "embedded_assets")]
     app.add_plugins(EmbeddedAssetPlugin {
         mode: bevy_embedded_assets::PluginMode::ReplaceDefault,
     });
@@ -53,6 +54,7 @@ fn main() {
     )
     .add_plugins(core::CorePlugins)
     .add_plugins(entities::EntitiesPlugins)
+    .add_plugins(level::LevelPlugins)
     .add_plugins(network::NetworkPlugin)
     .init_state::<GameState>()
     .insert_resource(args);

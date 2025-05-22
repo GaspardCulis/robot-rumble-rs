@@ -1,34 +1,44 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule, RollbackFrameCount};
+use bevy_ggrs::GgrsSchedule;
 use leafwing_input_manager::prelude::*;
-use rand::{Rng as _, SeedableRng as _};
-use rand_xoshiro::Xoshiro256PlusPlus;
 
 use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
-use super::bullet::{BULLET_SPEED, Bullet};
 use super::planet;
 use crate::entities::satellite::graviton::Orbited;
 
 mod animation;
+mod inventory;
 mod skin;
+pub mod weapon;
 
 // TODO: Move to config file
 pub const PLAYER_MASS: u32 = 800;
 pub const PLAYER_VELOCITY: f32 = 600.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
-#[derive(Component, Clone, Debug, PartialEq)]
-#[require(Visibility)]
+#[derive(Component, Clone, Debug, PartialEq, Reflect)]
+#[require(
+    // Position, Velocity and Rotation not required because handled by level::spawn.
+    // Might change in the future
+    Visibility,
+    PlayerInputVelocity,
+    InAir,
+    Passive,
+    ActionState<PlayerAction>,
+    Mass(|| Mass(PLAYER_MASS)),
+    PlayerSkin(|| PlayerSkin("laika".into())),
+    Name(|| Name::new("Player")),
+)]
 pub struct Player {
     pub handle: usize,
 }
 
-#[derive(Component, Clone, Debug, PartialEq, Reflect, Deref)]
+#[derive(Component, Clone, Debug, Default, PartialEq, Reflect, Deref)]
 pub struct PlayerInputVelocity(Vec2);
 
 #[derive(Actionlike, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
@@ -38,6 +48,9 @@ pub enum PlayerAction {
     Left,
     Right,
     Shoot,
+    Slot1,
+    Slot2,
+    Slot3,
     #[actionlike(DualAxis)]
     PointerDirection,
     Interact,
@@ -45,51 +58,32 @@ pub enum PlayerAction {
     RopeRetract,
 }
 
+#[derive(Component, Clone, Debug, Default, PartialEq, Reflect)]
+pub struct InAir(bool);
+
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 pub struct PlayerSkin(pub String);
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
-pub struct InAir(bool);
-
-#[derive(Bundle)]
-pub struct PlayerBundle {
-    name: Name,
-    marker: Player,
-    position: Position,
-    velocity: Velocity,
-    rotation: Rotation,
-    in_air: InAir,
-    input_velocity: PlayerInputVelocity,
-    action_state: ActionState<PlayerAction>,
-    mass: Mass,
-    passive: Passive,
-}
-impl PlayerBundle {
-    pub fn new(handle: usize, position: Position) -> Self {
-        Self {
-            position,
-            name: Name::new("Player"),
-            marker: Player { handle },
-            velocity: Velocity(Vec2::ZERO),
-            rotation: Rotation(0.),
-            in_air: InAir(true),
-            input_velocity: PlayerInputVelocity(Vec2::ZERO),
-            action_state: ActionState::default(),
-            mass: Mass(PLAYER_MASS),
-            passive: Passive,
-        }
-    }
-}
+// TODO: Use bevy 0.16 relationships
+pub struct Weapon(pub Entity);
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .add_plugins(skin::SkinPlugin)
+        app.register_type::<Player>()
+            .register_type::<PlayerInputVelocity>()
+            .register_type::<PlayerSkin>()
+            .register_type::<InAir>()
+            .register_type::<Weapon>()
+            .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(animation::PlayerAnimationPlugin)
+            .add_plugins(inventory::InventoryPlugin)
+            .add_plugins(skin::SkinPlugin)
+            .add_plugins(weapon::WeaponPlugin)
             .add_systems(
                 GgrsSchedule,
-                (player_physics, player_movement, player_shooting)
+                (player_physics, player_movement, update_weapon)
                     .chain()
                     .in_set(PhysicsSet::Player),
             );
@@ -141,26 +135,34 @@ fn player_movement(
     }
 }
 
-fn player_shooting(
-    mut commands: Commands,
-    query: Query<(&ActionState<PlayerAction>, &Position, &Velocity), With<Player>>,
-    time: Res<RollbackFrameCount>,
+fn update_weapon(
+    player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
+    mut weapon_query: Query<
+        (
+            &mut weapon::Triggered,
+            &mut Position,
+            &mut Velocity,
+            &mut Rotation,
+        ),
+        Without<Player>,
+    >,
 ) {
-    for (action_state, position, velocity) in query.iter() {
-        // Putting it here is important as query iter order is non-deterministic
-        if action_state.pressed(&PlayerAction::Shoot) {
-            let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
-
-            let pointer_direction = action_state.axis_pair(&PlayerAction::PointerDirection);
-            let random_angle = Vec2::from_angle(rng.random_range(-0.04..0.04));
-
-            let bullet = (
-                Bullet,
-                Position(position.0),
-                Velocity(pointer_direction.rotate(random_angle) * BULLET_SPEED + velocity.0),
-            );
-
-            commands.spawn(bullet).add_rollback();
+    for (action_state, player_position, player_velocity, weapon) in player_query.iter() {
+        let axis_pair = action_state.axis_pair(&PlayerAction::PointerDirection);
+        let is_shooting = action_state.pressed(&PlayerAction::Shoot);
+        if let Ok((mut triggered, mut position, mut velocity, mut direction)) =
+            weapon_query.get_mut(weapon.0)
+        {
+            direction.0 = if axis_pair != Vec2::ZERO {
+                axis_pair.to_angle()
+            } else {
+                0.0
+            };
+            triggered.0 = is_shooting;
+            position.0 = player_position.0;
+            velocity.0 = player_velocity.0;
+        } else {
+            warn!("Failed to retrieve weapon entity with ID {:?}", weapon.0);
         }
     }
 }

@@ -7,6 +7,7 @@ use crate::{core::physics::Position, utils::spritesheet};
 use super::{Player, PlayerSkin};
 
 pub const PLAYER_SKIN_SCALE: f32 = 2.4;
+pub const PLAYER_SKIN_ZINDEX: f32 = 10.0;
 
 #[derive(serde::Deserialize, Asset, TypePath, Deref)]
 struct SkinsConfig(HashMap<String, AnimationsConfig>);
@@ -30,7 +31,7 @@ struct Animation {
 #[derive(Resource)]
 struct SkinConfigHandle(pub Handle<SkinsConfig>);
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct SkinAnimationsHandle {
     pub idle: AnimationHandle,
     pub run: AnimationHandle,
@@ -38,6 +39,7 @@ pub struct SkinAnimationsHandle {
     pub fall: AnimationHandle,
 }
 
+#[derive(Reflect)]
 pub struct AnimationHandle {
     pub texture: Handle<Image>,
     pub atlas_layout: Handle<TextureAtlasLayout>,
@@ -49,7 +51,8 @@ pub struct AnimationHandle {
 pub struct SkinPlugin;
 impl Plugin for SkinPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(RonAssetPlugin::<SkinsConfig>::new(&[]))
+        app.register_type::<SkinAnimationsHandle>()
+            .add_plugins(RonAssetPlugin::<SkinsConfig>::new(&[]))
             .add_plugins(spritesheet::AnimatedSpritePlugin)
             .add_systems(Startup, load_skin_config)
             .add_systems(
@@ -106,7 +109,7 @@ fn load_skin_on_player(
                         },
                     ),
                     Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE)).with_translation(
-                        Vec3::new(player_position.0.x, player_position.0.y, 10.0),
+                        Vec3::new(player_position.0.x, player_position.0.y, PLAYER_SKIN_ZINDEX),
                     ),
                     default_anim.indices.clone(),
                     default_anim.timer.clone(),

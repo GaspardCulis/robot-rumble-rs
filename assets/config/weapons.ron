@@ -1,0 +1,98 @@
+WeaponsConfig({
+    Pistol: (
+        stats: (
+            cooldown: 0.25,
+            magazine_size: 15,
+            reload_time: 1.2,
+            damage_multiplier: 1.0,
+            projectile_speed: 1200.0,
+            shot_bullet_count: 1,
+            recoil: 50.0,
+            spread: 0.04,
+        ),
+        skin: (
+            sprite: "weapons/pistol.png",
+            scale: 3.0,
+        ),
+    ),
+    Shotgun: (
+        stats: (
+            cooldown: 0.5,
+            magazine_size: 8,
+            reload_time: 5.0,
+            damage_multiplier: 1.0,
+            projectile_speed: 1200.0,
+            shot_bullet_count: 10,
+            recoil: 800.0,
+            spread: 0.1,
+        ),
+        skin: (
+            sprite: "weapons/shotgun.png",
+            scale: 3.0,
+        ),
+    ),
+    Rifle: (
+        stats: (
+            cooldown: 0.1,
+            magazine_size: 30,
+            reload_time: 3,
+            damage_multiplier: 1.5,
+            projectile_speed: 1400.0,
+            shot_bullet_count: 1,
+            recoil: 100.0,
+            spread: 0.02,
+        ),
+        skin: (
+            sprite: "weapons/assaultrifle.png",
+            scale: 0.25,
+        ),
+    ),
+    Sniper: (
+        stats: (
+            cooldown: 1.25   ,
+            magazine_size: 10,
+            reload_time: 2.5,
+            damage_multiplier: 1.2,
+            projectile_speed: 2500.0,
+            shot_bullet_count: 1,
+            recoil: 400.0,
+            spread: 0.0001,
+        ),
+        skin: (
+            sprite: "weapons/sniper.png",
+            scale: 0.25,
+        ),
+    ),
+    Revolver: (
+        stats: (
+            cooldown: 0.8   ,
+            magazine_size: 6,
+            reload_time: 2,
+            damage_multiplier: 1.0,
+            projectile_speed: 1800.0,
+            shot_bullet_count: 1,
+            recoil: 200.0,
+            spread: 0.0001,
+        ),
+        skin: (
+            sprite: "weapons/revolver.png",
+            scale: 0.5,
+        ),
+    ),
+    Pulse: (
+        stats: (
+            cooldown: 2,
+            magazine_size: 5,
+            reload_time: 1.2,
+            damage_multiplier: 0.0,
+            projectile_speed: 0.0,
+            shot_bullet_count: 0,
+            recoil: 2000.0,
+            spread: 0.0001,
+        ),
+        skin: (
+            sprite: "weapons/pulse.png",
+            scale: 4.0,
+        ),
+    ),
+})

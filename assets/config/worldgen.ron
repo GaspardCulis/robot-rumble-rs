@@ -1,14 +1,16 @@
 (
     central_star_radius: 400,
 
-    min_planets: 20,
-    max_planets: 25,
+    min_planets: 10,
+    max_planets: 12,
 
     min_planet_radius: 80,
     max_planet_radius: 400,
 
-    max_planet_surface_distance: 2000,
-    min_planet_surface_distance: 100,
+    min_planet_surface_distance: 200,
+
+    edge_radius: 3000,
+    edge_margin: 800,
 
     min_satellites: 5,
     max_satellites: 10,
