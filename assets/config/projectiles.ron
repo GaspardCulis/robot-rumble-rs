@@ -1,0 +1,12 @@
+ProjectilesConfig({
+    Bullet: (
+        stats: (
+            mass: 1000,
+            damage: 1.0,
+        ),
+        skin: (
+            sprite: "projectiles/bullet.png",
+            scale: 3.0,
+        ),
+    ),
+})
