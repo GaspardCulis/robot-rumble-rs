@@ -9,7 +9,7 @@ use bevy_ggrs::GgrsSchedule;
 
 use super::satellite::{SatelliteConfig, SatelliteConfigHandle};
 
-#[derive(Component, Debug, Reflect)]
+#[derive(Component, Debug, Reflect, Clone)]
 #[reflect(Component)]
 pub struct Orbited {
     pub center: Vec2,

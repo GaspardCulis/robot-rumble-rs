@@ -10,7 +10,7 @@ use crate::{
     core::{camera::CameraFollowTarget, physics, worldgen}, entities::{
         bullet,
         planet::{Planet, Radius},
-        player::{self, Player, PlayerAction, PlayerBundle, PlayerSkin, PLAYER_RADIUS}, satellite::grabber,
+        player::{self, Player, PlayerAction, PlayerBundle, PlayerSkin, PLAYER_RADIUS}, satellite::{grabber, graviton},
     }, GameState
 };
 use synctest::{
@@ -43,6 +43,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<grabber::GrabbedOrbit>()
             .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
+            .rollback_component_with_clone::<graviton::Orbited>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
