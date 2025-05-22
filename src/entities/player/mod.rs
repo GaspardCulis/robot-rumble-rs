@@ -71,6 +71,7 @@ impl Plugin for PlayerPlugin {
             .register_type::<PlayerInputVelocity>()
             .register_type::<PlayerSkin>()
             .register_type::<InAir>()
+            .register_type::<Weapon>()
             .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_plugins(inventory::InventoryPlugin)
