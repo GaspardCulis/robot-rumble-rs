@@ -5,7 +5,7 @@ use bevy_ggrs::GgrsSchedule;
 
 use super::physics::{PhysicsSet, Position};
 
-#[derive(Component, Debug, Default, Reflect)]
+#[derive(Component, Clone, Debug, Default, Reflect)]
 pub enum CollisionShape {
     #[default]
     Point,
@@ -15,7 +15,8 @@ pub enum CollisionShape {
 
 #[derive(Component, Reflect)]
 pub struct CollisionState<A, B> {
-    pub collider: Option<Entity>,
+    pub closest: Option<Entity>,
+    pub collides: bool,
     _data: PhantomData<(A, B)>,
 }
 
@@ -28,7 +29,8 @@ where
     fn build(&self, app: &mut App) {
         app.register_type::<CollisionShape>()
             .register_required_components_with::<A, CollisionState<A, B>>(|| CollisionState {
-                collider: None,
+                closest: None,
+                collides: false,
                 _data: default(),
             })
             .add_systems(
@@ -46,7 +48,7 @@ fn check_collisions<A, B>(
     B: Component,
 {
     for (mut a_collision_state, a_position, a_shape) in query_a.iter_mut() {
-        let collider = query_b
+        let (closest, collides) = query_b
             .iter()
             // Sort by distance for determinism
             .sort_by::<&Position>(|x_position, y_position| {
@@ -56,17 +58,21 @@ fn check_collisions<A, B>(
             })
             // Get closest, others are irrelevant
             .next()
-            .and_then(|(b_entity, b_position, b_shape)| {
-                if a_shape.collides_with(a_position, b_shape, b_position) {
-                    Some(b_entity)
-                } else {
-                    None
-                }
-            });
+            .map_or_else(
+                || (None, false),
+                |(b_entity, b_position, b_shape)| {
+                    let collides = a_shape.collides_with(a_position, b_shape, b_position);
+                    (Some(b_entity), collides)
+                },
+            );
 
-        if a_collision_state.collider != collider {
+        if a_collision_state.closest != closest {
             // Update only if changed in order to properly trigger Changed<C> events
-            a_collision_state.collider = collider;
+            a_collision_state.closest = closest;
+        }
+        if a_collision_state.collides != collides {
+            // Same
+            a_collision_state.collides = collides;
         }
     }
 }
