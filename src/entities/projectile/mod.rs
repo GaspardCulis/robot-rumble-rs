@@ -151,7 +151,6 @@ fn check_player_collisions(
     mut commands: Commands,
     query: Query<(Entity, &Velocity, &Mass, &PlayerCollision), With<Projectile>>,
     mut player_query: Query<(&mut Velocity, &Mass), Without<Projectile>>,
-    time: Res<Time>,
 ) {
     for (projectile, projectile_velocity, projectile_mass, player_collision) in query.iter() {
         if player_collision.collides {
