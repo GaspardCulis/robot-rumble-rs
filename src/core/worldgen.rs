@@ -167,7 +167,7 @@ fn handle_genworld_event(
                     satellite_spawn_events.send(SpawnSatelliteEvent {
                         position: position.clone(),
                         scale: 0.7,
-                        kind: kind,
+                        kind,
                     });
                     satellite_positions.push(position);
                     break;
