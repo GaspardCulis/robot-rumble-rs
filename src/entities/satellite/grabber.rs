@@ -11,6 +11,10 @@ use crate::GameState;
 use crate::core::physics::{PhysicsSet, Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
 
+const ROPE_MIN_LENGTH: f32 = 50.0;
+const ROPE_MAX_LENGTH: f32 = 275.0;
+const ROPE_ADJUST_SPEED: f32 = 50.0;
+
 #[derive(Component)]
 pub struct Grabber;
 
@@ -44,6 +48,57 @@ pub struct GrabberRope {
     pub grabber: Entity,
 }
 
+pub struct GrabberPlugin;
+impl Plugin for GrabberPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            GgrsSchedule,
+            detect_player_entry
+                .before(handle_grabber_interaction)
+                .before(crate::entities::satellite::graviton::update_orbiting_players),
+        );
+        app.add_systems(
+            GgrsSchedule,
+            handle_grabber_interaction
+                .after(detect_player_entry)
+                .after(PhysicsSet::Gravity) // gravity modifie velocity en premier
+                .before(crate::entities::satellite::bumper::bumper_push_player), // éviter conflit
+        );
+        app.add_systems(
+            GgrsSchedule,
+            adjust_rope_length
+                .after(handle_grabber_interaction)
+                .before(update_grabbed_players),
+        );
+        app.add_systems(
+            GgrsSchedule,
+            update_grabbed_players
+                .after(adjust_rope_length)
+                .after(crate::entities::satellite::bumper::bumper_push_player) // éviter conflit
+                .before(PhysicsSet::Movement),
+        );
+        app.add_systems(
+            GgrsSchedule,
+            (
+                cleanup_grabbed_orbits,
+                cleanup_grabber_ropes.after(cleanup_grabbed_orbits),
+            )
+                .after(update_grabbed_players),
+        );
+        app.add_systems(
+            Update,
+            update_grabber_ropes
+                .after(update_grabbed_players)
+                .after(crate::core::physics::update_spatial_bundles)
+                .after(crate::core::camera::camera_movement),
+        );
+        app.add_systems(
+            Update,
+            (display_interact_prompt, remove_interact_prompt).run_if(in_state(GameState::InGame)),
+        );
+    }
+}
+
 fn detect_player_entry(
     mut commands: Commands,
     player_query: Query<(Entity, &Position), With<Player>>,
@@ -70,7 +125,7 @@ fn detect_player_entry(
                 commands
                     .entity(player_entity)
                     .insert(ShowInteractPrompt {
-                        message: "E pour s'accrocher".to_string(),
+                        message: "Press E to hang".to_string(),
                     })
                     .insert(NearbyGrabber(grabber_entity));
             }
@@ -294,14 +349,14 @@ pub fn adjust_rope_length(
             actions.pressed(&PlayerAction::RopeRetract),
             actions.pressed(&PlayerAction::RopeExtend),
         ) {
-            (true, false) => -50.0,
-            (false, true) => 50.0,
+            (true, false) => -ROPE_ADJUST_SPEED,
+            (false, true) => ROPE_ADJUST_SPEED,
             _ => 0.0,
         };
 
         if delta != 0.0 {
             let old = orbit.distance;
-            let new = (old + delta).clamp(50.0, 275.0);
+            let new = (old + delta).clamp(ROPE_MIN_LENGTH, ROPE_MAX_LENGTH);
 
             if old > 1.0 && new != old {
                 let speed = orbit.initial_speed * old / new;
@@ -332,50 +387,4 @@ pub fn cleanup_grabber_ropes(
             commands.entity(entity).despawn_recursive();
         }
     }
-}
-
-pub fn register_grabber_systems(app: &mut App) {
-    app.add_systems(
-        GgrsSchedule,
-        detect_player_entry
-            .in_set(PhysicsSet::Gravity)
-            .before(crate::entities::satellite::graviton::update_orbiting_players),
-    );
-    app.add_systems(
-        Update,
-        (display_interact_prompt, remove_interact_prompt).run_if(in_state(GameState::InGame)),
-    );
-    app.add_systems(
-        GgrsSchedule,
-        remove_interact_prompt.after(detect_player_entry),
-    );
-    app.add_systems(
-        GgrsSchedule,
-        (
-            handle_grabber_interaction
-                .after(detect_player_entry)
-                .before(crate::entities::satellite::graviton::update_orbiting_players),
-            update_grabbed_players
-                .after(handle_grabber_interaction)
-                .before(crate::core::gravity::apply_forces)
-                .before(crate::entities::satellite::bumper::bumper_push_player)
-                .before(crate::entities::satellite::graviton::update_orbiting_players),
-            cleanup_grabbed_orbits.after(update_grabbed_players),
-            cleanup_grabber_ropes.after(cleanup_grabbed_orbits),
-        ),
-    );
-    app.add_systems(
-        Update,
-        update_grabber_ropes
-            .after(update_grabbed_players)
-            .after(crate::core::physics::update_spatial_bundles)
-            .after(crate::core::camera::camera_movement),
-    );
-
-    app.add_systems(
-        GgrsSchedule,
-        adjust_rope_length
-            .after(handle_grabber_interaction)
-            .before(update_grabbed_players),
-    );
 }

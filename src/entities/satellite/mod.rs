@@ -27,9 +27,10 @@ impl Plugin for SatellitePlugin {
                     .after(crate::core::physics::update_spatial_bundles),
             )
             .add_systems(Startup, satellite::load_satellite_config)
-            .add_plugins(bumper::BumperPlugin);
+            .add_plugins(bumper::BumperPlugin)
+            .add_plugins(grabber::GrabberPlugin);
 
         graviton::register_graviton_systems(app);
-        grabber::register_grabber_systems(app);
+  
     }
 }
