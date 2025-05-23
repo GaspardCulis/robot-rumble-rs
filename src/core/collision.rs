@@ -53,7 +53,7 @@ fn check_collisions<A, B>(
         let (closest, collides) = query_b
             .iter()
             // Find the closest entity using min_by for O(n) complexity
-            .min_by(|(x_entity, x_pos, x_shape), (y_entity, y_pos, y_shape)| {
+            .min_by(|(_, x_pos, x_shape), (_, y_pos, y_shape)| {
                 let x_dist =
                     x_pos.distance_squared(a_position.0) - x_shape.bounding_radius().powi(2);
                 let y_dist =
@@ -61,8 +61,6 @@ fn check_collisions<A, B>(
 
                 x_dist.total_cmp(&y_dist)
             })
-            // Get closest, others are irrelevant
-            .next()
             .map_or_else(
                 || (None, false),
                 |(b_entity, b_position, b_shape)| {
