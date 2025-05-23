@@ -13,7 +13,7 @@ var<uniform> orbit: OrbitMaterial;
 
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
-    //TODO: corriger un problème sur le passage de la variable de temps (actuellement, elle est toujours à 0)
+    //TODO: fix an issue with the time variable passing (currently, it is always 0)
     let centered_uv = in.uv - vec2(0.5, 0.5);
 
     let angle = atan2(centered_uv.y, centered_uv.x);  
