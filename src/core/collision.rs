@@ -52,9 +52,8 @@ fn check_collisions<A, B>(
     for (mut a_collision_state, a_position, a_shape) in query_a.iter_mut() {
         let (closest, collides) = query_b
             .iter()
-            // Sort by distance for determinism
-            // PERF: Precompute instead of 1 distance compute per sort cmp
-            .sort_by::<(&Position, &CollisionShape)>(|(x_pos, x_shape), (y_pos, y_shape)| {
+            // Find the closest entity using min_by for O(n) complexity
+            .min_by(|(x_entity, x_pos, x_shape), (y_entity, y_pos, y_shape)| {
                 let x_dist =
                     x_pos.distance_squared(a_position.0) - x_shape.bounding_radius().powi(2);
                 let y_dist =
