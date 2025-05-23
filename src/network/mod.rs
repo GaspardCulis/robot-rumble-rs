@@ -9,6 +9,7 @@ use crate::{
     GameState,
     core::{camera::CameraFollowTarget, collision, physics, worldgen},
     entities::{
+        planet,
         player::{self, Player, PlayerAction, weapon},
         projectile,
     },
@@ -41,6 +42,9 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<weapon::Triggered>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
+            // Collisions
+            .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
+            .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),

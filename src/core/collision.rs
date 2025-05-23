@@ -13,7 +13,7 @@ pub enum CollisionShape {
     Circle(f32),
 }
 
-#[derive(Component, Reflect)]
+#[derive(Component, Clone, Reflect)]
 pub struct CollisionState<A, B> {
     pub closest: Option<Entity>,
     pub collides: bool,
