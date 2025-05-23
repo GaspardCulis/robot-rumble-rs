@@ -127,10 +127,6 @@ fn handle_genworld_event(
             }
         }
 
-        for spawn_event in &planets {
-            planet_spawn_events.send(spawn_event.clone());
-        }
-
         // Générer un certain nombre de satellites
         let mut satellite_positions: Vec<Position> = Vec::new();
         let num_satellites = rng.random_range(config.min_satellites..config.max_satellites);
@@ -177,6 +173,10 @@ fn handle_genworld_event(
                     break;
                 }
             }
+        }
+
+        for spawn_event in planets {
+            planet_spawn_events.send(spawn_event);
         }
     }
 }
