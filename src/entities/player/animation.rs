@@ -1,5 +1,5 @@
 use super::{
-    InAir, Player, PlayerAction,
+    PlanetCollision, Player, PlayerAction,
     skin::{PLAYER_SKIN_SCALE, SkinAnimationsHandle},
 };
 use bevy::prelude::*;
@@ -77,13 +77,13 @@ fn update_animation_state(
             &mut PlayerAnimationState,
             &SkinAnimationsHandle,
             &ActionState<PlayerAction>,
-            &InAir,
+            &PlanetCollision,
         ),
         With<Player>,
     >,
     time: Res<Time>,
 ) {
-    for (mut state, anims, inputs, in_air) in query.iter_mut() {
+    for (mut state, anims, inputs, planet_collision) in query.iter_mut() {
         match state.bypass_change_detection() {
             PlayerAnimationState::Jump(timer) => {
                 timer.tick(time.delta());
@@ -95,7 +95,7 @@ fn update_animation_state(
             _ => (),
         };
 
-        let new_state = if in_air.0 {
+        let new_state = if !planet_collision.collides {
             PlayerAnimationState::Fall
         } else if inputs.just_pressed(&PlayerAction::Jump) {
             let timer = Timer::new(anims.jump.duration, TimerMode::Once);
