@@ -59,7 +59,7 @@ impl Plugin for SkinPlugin {
                 Update,
                 (
                     load_skin_on_player,
-                    #[cfg(debug_assertions)]
+                    #[cfg(feature = "dev_tools")]
                     handle_config_reload,
                 ),
             );
@@ -124,7 +124,7 @@ fn load_skin_on_player(
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "dev_tools")]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<SkinsConfig>>,
