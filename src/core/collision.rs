@@ -20,6 +20,8 @@ pub struct CollisionState<A, B> {
     _data: PhantomData<(A, B)>,
 }
 
+/// Adds systems that checks collisions between entities with component `A`, and entities with component `B`.
+/// Entity `A` gets added the `CollisionState` component to get collisions notified.
 pub struct CollisionPlugin<A, B>(PhantomData<(A, B)>);
 impl<A, B> Plugin for CollisionPlugin<A, B>
 where
