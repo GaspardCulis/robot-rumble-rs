@@ -157,7 +157,7 @@ fn fire_weapon_system(
 
                 let bullet = (
                     Projectile::Bullet,
-                    Position(position.0),
+                    Position(position.0 + Vec2::from_angle(rotation.0) * 50.0),
                     Velocity(
                         Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
                             + velocity.0,
