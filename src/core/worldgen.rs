@@ -20,7 +20,7 @@ impl Plugin for WorldgenPlugin {
                 Update,
                 (
                     handle_genworld_event,
-                    #[cfg(debug_assertions)]
+                    #[cfg(feature = "dev_tools")]
                     handle_config_reload.run_if(resource_exists::<crate::network::SessionSeed>),
                 ),
             );
@@ -120,7 +120,7 @@ fn handle_genworld_event(
 }
 
 /// Re-generates world on config changes. Will cause desyncs
-#[cfg(debug_assertions)]
+#[cfg(feature = "dev_tools")]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<WorldgenConfig>>,
