@@ -174,7 +174,7 @@ fn fire_weapon_system(
                     let random_angle = rng.random_range(-stats.spread..stats.spread);
 
                     let new_projectile = (
-                        Projectile::Bullet,
+                        stats.projectile,
                         Position(position.0),
                         Velocity(
                             Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
