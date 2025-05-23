@@ -7,7 +7,7 @@ use crate::entities::satellite::Satellite;
 use crate::core::gravity::apply_forces;
 use bevy_ggrs::GgrsSchedule;
 
-use super::satellite::{SatelliteConfig, SatelliteConfigHandle};
+use super::{SatelliteConfig, SatelliteConfigHandle};
 
 #[derive(Component, Debug, Reflect, Clone)]
 #[reflect(Component)]

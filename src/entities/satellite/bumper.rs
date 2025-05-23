@@ -4,7 +4,7 @@ use crate::entities::satellite::Satellite;
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
-use super::satellite::{SatelliteConfig, SatelliteConfigHandle};
+use super::{SatelliteConfig, SatelliteConfigHandle};
 
 use bevy::asset::Assets;
 

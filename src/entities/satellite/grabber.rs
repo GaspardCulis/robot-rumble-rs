@@ -6,7 +6,7 @@ use bevy_ggrs::{GgrsSchedule, LocalPlayers};
 use leafwing_input_manager::prelude::ActionState;
 
 use super::Satellite;
-use super::satellite::{SatelliteConfig, SatelliteConfigHandle};
+use super::{SatelliteConfig, SatelliteConfigHandle};
 use crate::GameState;
 use crate::core::physics::{PhysicsSet, Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
