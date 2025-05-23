@@ -53,6 +53,12 @@ impl Plugin for GravitonPlugin {
             update_orbit_cooldowns
                 .before(detect_player_orbit_entry), 
         );
+        app.add_systems(
+        GgrsSchedule,
+        detect_player_orbit_entry
+            .after(update_orbit_cooldowns)
+            .after(update_spatial_bundles), 
+        );
     }
 }
 
