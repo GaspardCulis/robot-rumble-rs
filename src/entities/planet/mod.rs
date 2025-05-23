@@ -1,4 +1,5 @@
 use crate::core::{
+    collision::CollisionShape,
     gravity::Mass,
     physics::Position,
     worldgen::{self, GenerationSeed},
@@ -41,6 +42,7 @@ struct PlanetBundle {
     marker: Planet,
     position: Position,
     radius: Radius,
+    collision_shape: CollisionShape,
     r#type: PlanetType,
     mass: Mass,
 }
@@ -54,6 +56,7 @@ impl PlanetBundle {
             name: Name::new("Planet"),
             marker: Planet,
             mass: Mass(radius_to_mass(radius)),
+            collision_shape: CollisionShape::Circle(radius.0 as f32),
         }
     }
 }
