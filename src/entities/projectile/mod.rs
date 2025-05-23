@@ -25,11 +25,11 @@ pub struct Damage(pub f32);
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Knockback(pub f32);
 
-pub const KNOCKBACK_INFLUENCE: f32 = 0.75;
+// TODO move this tob projectiles config
+pub const BLAST_RADIUS: f32 = 20.;
 
 #[derive(Event)]
 struct CollisionEvent {
-    entity: Entity,
     position: Vec2,
     radius: f32,
     damage: f32,
@@ -63,9 +63,10 @@ impl Plugin for ProjectilePlugin {
             (
                 add_physical_properties.before(PhysicsSet::Gravity),
                 check_collisions.after(PhysicsSet::Movement),
-                take_hit,
-            )
-                .chain(),
+                take_hit
+                    .before(PhysicsSet::Movement)
+                    .after(PhysicsSet::Gravity),
+            ),
         );
     }
 }
@@ -94,7 +95,8 @@ fn add_physical_properties(
 
             commands
                 .entity(projectile_entity)
-                .insert(Mass(projectile_stats.mass));
+                .insert(Mass(projectile_stats.mass))
+                .insert(Radius(projectile_stats.radius as u32));
         }
     }
 }
@@ -163,14 +165,12 @@ fn check_collisions(
             let collision_distance = (projectile_radius.0 + target_radius.0) as f32;
             if distance <= collision_distance {
                 collision_events.send(CollisionEvent {
-                    entity: projectile,
                     position: projectile_position.0,
                     radius: projectile_radius.0 as f32,
                     damage: projectile_damage.0,
                     knockback: projectile_knockback.0,
                 });
                 commands.entity(projectile).despawn();
-                break;
             }
         }
     }
@@ -183,23 +183,29 @@ fn take_hit(
     for event in collision_events.read() {
         for (player_position, mut player_velocity) in player_query.iter_mut() {
             let distance = (event.position).distance(player_position.0);
-            if distance <= (event.radius + PLAYER_RADIUS) {
+            if distance <= (BLAST_RADIUS + PLAYER_RADIUS) {
                 // apply just knockback for now
                 let knockback_direction = (player_position.0 - event.position).normalize();
-                let player_speed = player_velocity.length();
-                let player_direction;
-                if player_speed > 0.0 {
-                    player_direction = player_velocity.normalize();
-                } else {
-                    player_direction = Vec2::ZERO;
-                };
-                let distance_factor = (1.0 - distance / event.radius).clamp(0.0, 1.0);
-                let new_direction = ((1.0 - distance_factor) * player_direction
-                    + distance_factor * knockback_direction)
-                    .normalize_or_zero();
-                let new_direction = new_direction.normalize_or_zero(); // to avoid NaN if zero vector
-                player_velocity.0 = new_direction * player_speed;
+                //let distance_factor = (1.0 - distance / BLAST_RADIUS).clamp(0.0, 1.0);
+                let knockback_velocity = knockback_direction * event.knockback; //* distance_factor;
+                player_velocity.0 += knockback_velocity;
             }
+            // a more advanced version to carry out, its a scratch
+            /*
+            let player_speed = player_velocity.length();
+            let player_direction;
+            if player_speed > 0.0 {
+                player_direction = player_velocity.normalize();
+            } else {
+                player_direction = Vec2::ZERO;
+            };
+            let distance_factor = (1.0 - distance / event.radius).clamp(0.0, 1.0);
+            let new_direction = ((1.0 - distance_factor) * player_direction
+                + distance_factor * knockback_direction)
+                .normalize_or_zero();
+            let new_direction = new_direction.normalize_or_zero(); // to avoid NaN if zero vector
+            player_velocity.0 = new_direction * player_speed;
+            */
         }
     }
 }
