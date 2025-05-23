@@ -6,6 +6,7 @@ struct OrbitMaterial {
     base_color: vec4<f32>, // Tu peux l'utiliser pour un effet de teinte
     saturation: f32,
     alpha: f32,
+    _wasm_padding: f32,
 }
 
 @group(0) @binding(0)

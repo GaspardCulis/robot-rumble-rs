@@ -14,6 +14,8 @@ pub struct OrbitMaterial {
     pub saturation: f32,
     #[uniform(0)]
     pub alpha: f32,
+    #[uniform(0)]
+    pub _wasm_padding: f32,
 }
 
 impl Material2d for OrbitMaterial {

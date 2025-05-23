@@ -200,6 +200,7 @@ fn handle_spawn_satellite(
             base_color,
             saturation: 1.0,
             alpha: 0.6,
+            _wasm_padding: 0.0,
         });
 
         let ring_thickness = 5.0;
