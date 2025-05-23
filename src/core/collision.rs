@@ -51,10 +51,14 @@ fn check_collisions<A, B>(
         let (closest, collides) = query_b
             .iter()
             // Sort by distance for determinism
-            .sort_by::<&Position>(|x_position, y_position| {
-                a_position
-                    .distance_squared(x_position.0)
-                    .total_cmp(&a_position.distance_squared(y_position.0))
+            // PERF: Precompute instead of 1 distance compute per sort cmp
+            .sort_by::<(&Position, &CollisionShape)>(|(x_pos, x_shape), (y_pos, y_shape)| {
+                let x_dist =
+                    x_pos.distance_squared(a_position.0) - x_shape.bounding_radius().powi(2);
+                let y_dist =
+                    y_pos.distance_squared(a_position.0) - y_shape.bounding_radius().powi(2);
+
+                x_dist.total_cmp(&y_dist)
             })
             // Get closest, others are irrelevant
             .next()
