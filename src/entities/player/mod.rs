@@ -12,6 +12,7 @@ use crate::utils::math;
 use super::planet;
 
 mod animation;
+mod inventory;
 mod skin;
 pub mod weapon;
 
@@ -49,6 +50,9 @@ pub enum PlayerAction {
     Left,
     Right,
     Shoot,
+    Slot1,
+    Slot2,
+    Slot3,
     #[actionlike(DualAxis)]
     PointerDirection,
 }
@@ -66,10 +70,12 @@ impl Plugin for PlayerPlugin {
         app.register_type::<Player>()
             .register_type::<PlayerInputVelocity>()
             .register_type::<PlayerSkin>()
+            .register_type::<Weapon>()
             .add_plugins(CollisionPlugin::<Player, planet::Planet>::new())
             .add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .add_plugins(skin::SkinPlugin)
             .add_plugins(animation::PlayerAnimationPlugin)
+            .add_plugins(inventory::InventoryPlugin)
+            .add_plugins(skin::SkinPlugin)
             .add_plugins(weapon::WeaponPlugin)
             .add_systems(
                 GgrsSchedule,

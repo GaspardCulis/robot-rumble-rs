@@ -19,6 +19,9 @@ const INPUT_DOWN: u32 = 1 << 1;
 const INPUT_LEFT: u32 = 1 << 2;
 const INPUT_RIGHT: u32 = 1 << 3;
 const INPUT_SHOOT: u32 = 1 << 4;
+const INPUT_SLOT1: u32 = 1 << 5;
+const INPUT_SLOT2: u32 = 1 << 6;
+const INPUT_SLOT3: u32 = 1 << 7;
 
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
@@ -83,6 +86,9 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
                 PlayerAction::Left => INPUT_LEFT,
                 PlayerAction::Right => INPUT_RIGHT,
                 PlayerAction::Shoot => INPUT_SHOOT,
+                PlayerAction::Slot1 => INPUT_SLOT1,
+                PlayerAction::Slot2 => INPUT_SLOT2,
+                PlayerAction::Slot3 => INPUT_SLOT3,
                 PlayerAction::PointerDirection => unimplemented!("Should not get called"),
             };
         }
@@ -117,6 +123,15 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
         }
         if keys & INPUT_SHOOT != 0 {
             action_state.press(&PlayerAction::Shoot);
+        }
+        if keys & INPUT_SLOT1 != 0 {
+            action_state.press(&PlayerAction::Slot1);
+        }
+        if keys & INPUT_SLOT2 != 0 {
+            action_state.press(&PlayerAction::Slot2);
+        }
+        if keys & INPUT_SLOT3 != 0 {
+            action_state.press(&PlayerAction::Slot3);
         }
 
         action_state.set_axis_pair(&PlayerAction::PointerDirection, input.pointer_direction);

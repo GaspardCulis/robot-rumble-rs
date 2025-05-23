@@ -13,6 +13,13 @@ pub struct Velocity(pub Vec2);
 #[derive(Component, Debug, Default, Reflect, Clone, PartialEq, Deref, DerefMut)]
 pub struct Rotation(pub f32);
 
+#[derive(Bundle, Default)]
+pub struct PhysicsBundle {
+    pub position: Position,
+    pub velocity: Velocity,
+    pub rotation: Rotation,
+}
+
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PhysicsSet {
     /// Where player inputs are processed
