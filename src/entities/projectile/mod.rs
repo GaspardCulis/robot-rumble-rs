@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
-
 pub mod config;
 pub use config::{Projectile, ProjectilesConfig};
 #[derive(Resource)]
@@ -12,7 +11,10 @@ use crate::core::{
     physics::{PhysicsSet, Position, Rotation, Velocity},
 };
 
-use super::planet::Radius;
+use super::{
+    planet::Radius,
+    player::{self, PLAYER_RADIUS, Player},
+};
 
 // Autodespawn timer
 #[derive(Component)]
@@ -23,6 +25,16 @@ pub struct Damage(pub f32);
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Knockback(pub f32);
 
+pub const KNOCKBACK_INFLUENCE: f32 = 0.75;
+
+#[derive(Event)]
+struct CollisionEvent {
+    entity: Entity,
+    position: Vec2,
+    radius: f32,
+    damage: f32,
+    knockback: f32,
+}
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
@@ -33,6 +45,7 @@ impl Plugin for ProjectilePlugin {
         .register_required_components_with::<Projectile, Passive>(|| Passive)
         .register_required_components_with::<Projectile, Name>(|| Name::new("Projectile"))
         .add_plugins(RonAssetPlugin::<config::ProjectilesConfig>::new(&[]))
+        .add_event::<CollisionEvent>()
         .add_systems(Startup, load_projectiles_config)
         .add_systems(
             Update,
@@ -48,9 +61,11 @@ impl Plugin for ProjectilePlugin {
         .add_systems(
             GgrsSchedule,
             (
-                check_collisions.after(PhysicsSet::Movement),
                 add_physical_properties.before(PhysicsSet::Gravity),
-            ),
+                check_collisions.after(PhysicsSet::Movement),
+                take_hit,
+            )
+                .chain(),
         );
     }
 }
@@ -62,7 +77,7 @@ fn load_projectiles_config(mut commands: Commands, asset_server: Res<AssetServer
 
 fn add_physical_properties(
     mut commands: Commands,
-    query: Query<(Entity, &Projectile), (Without<Mass>)>,
+    query: Query<(Entity, &Projectile), Without<Mass>>,
     config_handle: Res<ProjectilesConfigHandle>,
     config_assets: Res<Assets<ProjectilesConfig>>,
 ) {
@@ -131,14 +146,59 @@ fn tick_projectile_timer(
 
 fn check_collisions(
     mut commands: Commands,
-    projectile_query: Query<(Entity, &Position), With<Projectile>>,
-    planet_query: Query<(&Position, &Radius)>,
+    projectile_query: Query<(Entity, &Position, &Radius, &Knockback, &Damage)>,
+    target_query: Query<(&Position, &Radius), Without<Projectile>>,
+    mut collision_events: EventWriter<CollisionEvent>,
 ) {
-    for (projectile, projectile_position) in projectile_query.iter() {
-        for (planet_position, planet_radius) in planet_query.iter() {
-            let distance = projectile_position.distance(planet_position.0) - planet_radius.0 as f32;
-            if distance <= 0.0 {
-                commands.entity(projectile).despawn_recursive();
+    for (
+        projectile,
+        projectile_position,
+        projectile_radius,
+        projectile_knockback,
+        projectile_damage,
+    ) in projectile_query.iter()
+    {
+        for (target_position, target_radius) in target_query.iter() {
+            let distance = projectile_position.distance(target_position.0);
+            let collision_distance = (projectile_radius.0 + target_radius.0) as f32;
+            if distance <= collision_distance {
+                collision_events.send(CollisionEvent {
+                    entity: projectile,
+                    position: projectile_position.0,
+                    radius: projectile_radius.0 as f32,
+                    damage: projectile_damage.0,
+                    knockback: projectile_knockback.0,
+                });
+                commands.entity(projectile).despawn();
+                break;
+            }
+        }
+    }
+}
+
+fn take_hit(
+    mut collision_events: EventReader<CollisionEvent>,
+    mut player_query: Query<(&Position, &mut Velocity), With<Player>>,
+) {
+    for event in collision_events.read() {
+        for (player_position, mut player_velocity) in player_query.iter_mut() {
+            let distance = (event.position).distance(player_position.0);
+            if distance <= (event.radius + PLAYER_RADIUS) {
+                // apply just knockback for now
+                let knockback_direction = (player_position.0 - event.position).normalize();
+                let player_speed = player_velocity.length();
+                let player_direction;
+                if player_speed > 0.0 {
+                    player_direction = player_velocity.normalize();
+                } else {
+                    player_direction = Vec2::ZERO;
+                };
+                let distance_factor = (1.0 - distance / event.radius).clamp(0.0, 1.0);
+                let new_direction = ((1.0 - distance_factor) * player_direction
+                    + distance_factor * knockback_direction)
+                    .normalize_or_zero();
+                let new_direction = new_direction.normalize_or_zero(); // to avoid NaN if zero vector
+                player_velocity.0 = new_direction * player_speed;
             }
         }
     }
