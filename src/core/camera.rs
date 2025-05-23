@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
-use crate::{utils::math};
+use crate::utils::math;
 
 use super::physics::{self, PhysicsSet};
 
@@ -12,8 +12,11 @@ impl Plugin for CameraPlugin {
         app.add_systems(Startup, |mut commands: Commands| {
             commands.spawn((Camera2d, Msaa::Off, Transform::from_scale(Vec3::splat(1.2))));
         })
-        .add_systems(GgrsSchedule, camera_movement.after(PhysicsSet::Movement)
-            .before(physics::update_spatial_bundles)
+        .add_systems(
+            GgrsSchedule,
+            camera_movement
+                .after(PhysicsSet::Movement)
+                .before(physics::update_spatial_bundles),
         );
     }
 }

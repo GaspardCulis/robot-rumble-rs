@@ -37,19 +37,19 @@ pub struct GravitonPlugin;
 impl Plugin for GravitonPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Orbited>();
-        app.add_systems(GgrsSchedule, 
+        app.add_systems(
+            GgrsSchedule,
             detect_player_orbit_entry
                 .before(apply_forces)
+                .before(PhysicsSet::Gravity)
                 .before(PhysicsSet::Movement),
         );
         app.add_systems(
             GgrsSchedule,
-            (
-                update_orbiting_players
-                    .after(detect_player_orbit_entry)
-                    .after(apply_forces)
-                    .before(PhysicsSet::Movement),
-            ),
+            (update_orbiting_players
+                .after(detect_player_orbit_entry)
+                .after(apply_forces)
+                .before(PhysicsSet::Movement),),
         );
         app.add_systems(
             GgrsSchedule,
@@ -58,7 +58,7 @@ impl Plugin for GravitonPlugin {
         app.add_systems(
             GgrsSchedule,
             update_orbit_cooldowns.after(update_orbiting_players),
-        ); 
+        );
     }
 }
 

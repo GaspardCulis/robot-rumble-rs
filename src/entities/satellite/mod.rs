@@ -1,9 +1,9 @@
+use crate::core::physics::Position;
 use bevy::math::Vec2;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
 use bevy::sprite::Material2dPlugin;
 use bevy_common_assets::ron::RonAssetPlugin;
-use crate::core::physics::{Position};
 
 pub mod bumper;
 pub mod grabber;
