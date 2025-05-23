@@ -39,6 +39,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
+            .rollback_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::Triggered>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
@@ -170,19 +171,7 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
     };
 
     for handle in 0..num_players {
-        let weapon = commands
-            .spawn((
-                weapon::WeaponType::default(),
-                physics::Position(Vec2::ZERO),
-                physics::Velocity(Vec2::ZERO),
-                physics::Rotation(0.0),
-            ))
-            .add_rollback()
-            .id();
-
-        commands
-            .spawn((Player { handle }, player::Weapon(weapon)))
-            .add_rollback();
+        commands.spawn(Player { handle }).add_rollback();
     }
 }
 
@@ -213,6 +202,10 @@ fn add_local_player_components(
         // Directions
         (PlayerAction::Right, KeyCode::KeyD),
         (PlayerAction::Left, KeyCode::KeyA),
+        // Slot selection
+        (PlayerAction::Slot1, KeyCode::Digit1),
+        (PlayerAction::Slot2, KeyCode::Digit2),
+        (PlayerAction::Slot3, KeyCode::Digit3),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
     .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);

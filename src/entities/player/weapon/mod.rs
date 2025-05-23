@@ -41,6 +41,7 @@ impl Plugin for WeaponPlugin {
                     #[cfg(debug_assertions)]
                     handle_config_reload,
                     (add_stats_component, add_sprite)
+                        .before(PhysicsSet::Player)
                         .run_if(resource_exists::<WeaponsConfigHandle>),
                 ),
             )
