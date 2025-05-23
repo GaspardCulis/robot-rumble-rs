@@ -34,7 +34,7 @@ impl Plugin for MapLimitPlugin {
             .add_systems(
                 GgrsSchedule,
                 check_outsiders
-                    .after(PhysicsSet::Movement)
+                    .in_set(PhysicsSet::Collision)
                     .run_if(in_state(GameState::InGame)),
             );
     }
