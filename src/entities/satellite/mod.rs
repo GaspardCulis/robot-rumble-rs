@@ -1,12 +1,12 @@
-use bevy::prelude::*;
 use bevy::math::Vec2;
+use bevy::prelude::*;
 use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
 use bevy::sprite::Material2dPlugin;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
 
-use crate::core::physics::{PhysicsSet, Position};
 use crate::core::physics::update_spatial_bundles;
+use crate::core::physics::{PhysicsSet, Position};
 
 pub mod bumper;
 pub mod grabber;
@@ -139,47 +139,47 @@ fn handle_spawn_satellite(
 
         match event.kind {
             SatelliteKind::Graviton => {
-            entity.insert((
-                GravitonMarker,
-                GravitonVisual {
-                active: graviton_active.clone(),
-                inactive: graviton_inactive.clone(),
-                },
-            ));
-
-            entity.with_children(|parent| {
-                parent.spawn((
-                Sprite {
-                    image: graviton_active.clone(),
-                    ..default()
-                },
-                child_transform.clone(),
+                entity.insert((
+                    GravitonMarker,
+                    GravitonVisual {
+                        active: graviton_active.clone(),
+                        inactive: graviton_inactive.clone(),
+                    },
                 ));
-            });
+
+                entity.with_children(|parent| {
+                    parent.spawn((
+                        Sprite {
+                            image: graviton_active.clone(),
+                            ..default()
+                        },
+                        child_transform.clone(),
+                    ));
+                });
             }
             SatelliteKind::Bumper => {
-            entity.insert(Bumper);
-            entity.with_children(|parent| {
-                parent.spawn((
-                Sprite {
-                    image: bumper_texture.clone(),
-                    ..default()
-                },
-                child_transform.clone(),
-                ));
-            });
+                entity.insert(Bumper);
+                entity.with_children(|parent| {
+                    parent.spawn((
+                        Sprite {
+                            image: bumper_texture.clone(),
+                            ..default()
+                        },
+                        child_transform.clone(),
+                    ));
+                });
             }
             SatelliteKind::Grabber => {
-            entity.insert(Grabber);
-            entity.with_children(|parent| {
-                parent.spawn((
-                Sprite {
-                    image: grabber_texture.clone(),
-                    ..default()
-                },
-                child_transform.clone(),
-                ));
-            });
+                entity.insert(Grabber);
+                entity.with_children(|parent| {
+                    parent.spawn((
+                        Sprite {
+                            image: grabber_texture.clone(),
+                            ..default()
+                        },
+                        child_transform.clone(),
+                    ));
+                });
             }
         }
 

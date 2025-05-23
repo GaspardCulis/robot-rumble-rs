@@ -44,12 +44,11 @@ impl Plugin for GravitonPlugin {
                 update_orbiting_players
                     .after(apply_forces)
                     .before(PhysicsSet::Movement),
-                update_spatial_bundles
-                    .after(update_orbiting_players),
+                update_spatial_bundles.after(update_orbiting_players),
                 update_orbit_cooldowns
-                    .after(update_orbiting_players) 
+                    .after(update_orbiting_players)
                     .before(detect_player_orbit_entry),
-            )
+            ),
         );
     }
 }

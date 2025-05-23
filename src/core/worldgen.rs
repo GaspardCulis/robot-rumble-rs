@@ -7,8 +7,7 @@ use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
 use crate::entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent};
-use crate::entities::satellite::{Satellite,SatelliteKind, SpawnSatelliteEvent};
-
+use crate::entities::satellite::{Satellite, SatelliteKind, SpawnSatelliteEvent};
 
 use super::physics::Position;
 

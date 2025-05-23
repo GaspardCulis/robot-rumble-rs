@@ -24,7 +24,6 @@ impl Plugin for BumperPlugin {
     }
 }
 
-
 pub fn bumper_push_player(
     bumper_query: Query<&Transform, (With<Satellite>, With<Bumper>)>,
     mut player_query: Query<(&Position, &mut Velocity), With<Player>>,
