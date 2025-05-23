@@ -7,7 +7,8 @@ use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
 use crate::entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent};
-use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
+use crate::entities::satellite::{Satellite,SatelliteKind, SpawnSatelliteEvent};
+
 
 use super::physics::Position;
 
@@ -185,14 +186,14 @@ fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<WorldgenConfig>>,
     mut worldgen_events: EventWriter<GenerateWorldEvent>,
-    planets: Query<Entity, With<Planet>>,
+    entities: Query<Entity, Or<(With<Planet>, With<Satellite>)>>,
     seed: Res<crate::network::SessionSeed>,
 ) {
     for event in events.read() {
         match event {
             AssetEvent::Modified { id: _ } => {
-                for planet in planets.iter() {
-                    commands.entity(planet).despawn_recursive();
+                for entity in entities.iter() {
+                    commands.entity(entity).despawn_recursive();
                 }
 
                 worldgen_events.send(GenerateWorldEvent { seed: seed.0 });
