@@ -7,12 +7,15 @@ pub use config::Projectile;
 #[derive(Resource)]
 struct ProjectilesConfigHandle(Handle<config::ProjectilesConfig>);
 
-use super::planet::Planet;
+use super::{planet::Planet, player::Player};
 use crate::core::{
     collision::{CollisionPlugin, CollisionShape, CollisionState},
     gravity::{Mass, Passive},
     physics::{PhysicsSet, Rotation, Velocity},
 };
+
+type PlanetCollision = CollisionState<Projectile, Planet>;
+type PlayerCollision = CollisionState<Projectile, Player>;
 
 // Autodespawn timer
 #[derive(Component)]
@@ -33,6 +36,7 @@ impl Plugin for ProjectilePlugin {
             .register_required_components_with::<Projectile, Name>(|| Name::new("Projectile"))
             .add_plugins(RonAssetPlugin::<config::ProjectilesConfig>::new(&[]))
             .add_plugins(CollisionPlugin::<Projectile, Planet>::new())
+            .add_plugins(CollisionPlugin::<Projectile, Player>::new())
             .add_systems(Startup, load_projectiles_config)
             .add_systems(
                 Update,
@@ -48,8 +52,10 @@ impl Plugin for ProjectilePlugin {
             .add_systems(
                 GgrsSchedule,
                 (
-                    add_physical_properties.before(PhysicsSet::Gravity),
-                    check_collisions.after(PhysicsSet::Collision),
+                    (add_physical_properties, check_player_collisions)
+                        .before(PhysicsSet::Gravity)
+                        .after(PhysicsSet::Player),
+                    check_planet_collisions.after(PhysicsSet::Collision),
                 ),
             );
     }
@@ -130,12 +136,32 @@ fn tick_projectile_timer(
     }
 }
 
-fn check_collisions(
+fn check_planet_collisions(
     mut commands: Commands,
-    query: Query<(Entity, &CollisionState<Projectile, Planet>), With<Projectile>>,
+    query: Query<(Entity, &PlanetCollision), With<Projectile>>,
 ) {
-    for (projectile, collision_state) in query.iter() {
-        if collision_state.collides {
+    for (projectile, planet_collision) in query.iter() {
+        if planet_collision.collides {
+            commands.entity(projectile).despawn_recursive();
+        }
+    }
+}
+
+fn check_player_collisions(
+    mut commands: Commands,
+    query: Query<(Entity, &Velocity, &Mass, &PlayerCollision), With<Projectile>>,
+    mut player_query: Query<(&mut Velocity, &Mass), Without<Projectile>>,
+    time: Res<Time>,
+) {
+    for (projectile, projectile_velocity, projectile_mass, player_collision) in query.iter() {
+        if player_collision.collides {
+            if let Some((mut player_velocity, player_mass)) =
+                player_query.get_mut(player_collision.closest.unwrap()).ok()
+            {
+                let knockback_force = projectile_velocity.0 * projectile_mass.0 as f32;
+                player_velocity.0 += knockback_force / player_mass.0 as f32;
+            }
+
             commands.entity(projectile).despawn_recursive();
         }
     }
