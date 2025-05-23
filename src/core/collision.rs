@@ -49,35 +49,37 @@ fn check_collisions<A, B>(
     A: Component,
     B: Component,
 {
-    for (mut a_collision_state, a_position, a_shape) in query_a.iter_mut() {
-        let (closest, collides) = query_b
-            .iter()
-            // Find the closest entity using min_by for O(n) complexity
-            .min_by(|(_, x_pos, x_shape), (_, y_pos, y_shape)| {
-                let x_dist =
-                    x_pos.distance_squared(a_position.0) - x_shape.bounding_radius().powi(2);
-                let y_dist =
-                    y_pos.distance_squared(a_position.0) - y_shape.bounding_radius().powi(2);
+    query_a
+        .par_iter_mut()
+        .for_each(|(mut a_collision_state, a_position, a_shape)| {
+            let (closest, collides) = query_b
+                .iter()
+                // Find the closest entity using min_by for O(n) complexity
+                .min_by(|(_, x_pos, x_shape), (_, y_pos, y_shape)| {
+                    let x_dist =
+                        x_pos.distance_squared(a_position.0) - x_shape.bounding_radius().powi(2);
+                    let y_dist =
+                        y_pos.distance_squared(a_position.0) - y_shape.bounding_radius().powi(2);
 
-                x_dist.total_cmp(&y_dist)
-            })
-            .map_or_else(
-                || (None, false),
-                |(b_entity, b_position, b_shape)| {
-                    let collides = a_shape.collides_with(a_position, b_shape, b_position);
-                    (Some(b_entity), collides)
-                },
-            );
+                    x_dist.total_cmp(&y_dist)
+                })
+                .map_or_else(
+                    || (None, false),
+                    |(b_entity, b_position, b_shape)| {
+                        let collides = a_shape.collides_with(a_position, b_shape, b_position);
+                        (Some(b_entity), collides)
+                    },
+                );
 
-        if a_collision_state.closest != closest {
-            // Update only if changed in order to properly trigger Changed<C> events
-            a_collision_state.closest = closest;
-        }
-        if a_collision_state.collides != collides {
-            // Same
-            a_collision_state.collides = collides;
-        }
-    }
+            if a_collision_state.closest != closest {
+                // Update only if changed in order to properly trigger Changed<C> events
+                a_collision_state.closest = closest;
+            }
+            if a_collision_state.collides != collides {
+                // Same
+                a_collision_state.collides = collides;
+            }
+        });
 }
 
 impl<A, B> CollisionPlugin<A, B>
