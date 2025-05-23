@@ -3,10 +3,7 @@ use bevy::prelude::*;
 use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
 use bevy::sprite::Material2dPlugin;
 use bevy_common_assets::ron::RonAssetPlugin;
-use bevy_ggrs::GgrsSchedule;
-
-use crate::core::physics::update_spatial_bundles;
-use crate::core::physics::{PhysicsSet, Position};
+use crate::core::physics::{Position};
 
 pub mod bumper;
 pub mod grabber;
@@ -72,15 +69,7 @@ impl Plugin for SatellitePlugin {
             )
             .add_plugins(graviton::GravitonPlugin)
             .add_plugins(bumper::BumperPlugin)
-            .add_plugins(grabber::GrabberPlugin)
-            .add_systems(
-                GgrsSchedule,
-                graviton::detect_player_orbit_entry
-                    .in_set(PhysicsSet::Gravity)
-                    .after(graviton::update_orbiting_players)
-                    .after(graviton::update_orbit_cooldowns)
-                    .after(update_spatial_bundles),
-            );
+            .add_plugins(grabber::GrabberPlugin);
     }
 }
 

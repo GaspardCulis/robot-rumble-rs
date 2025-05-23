@@ -135,7 +135,7 @@ fn player_movement(
     }
 }
 
-fn update_weapon(
+pub fn update_weapon(
     player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
     mut weapon_query: Query<
         (
@@ -176,7 +176,7 @@ pub fn player_physics(
             &mut Velocity,
             &PlayerInputVelocity,
         ),
-        (With<Player>, Without<planet::Planet>),
+        (With<Player>, Without<planet::Planet>, Without<Orbited>),
     >,
     planet_query: Query<(&Position, &planet::Radius), With<planet::Planet>>,
     time: Res<Time>,

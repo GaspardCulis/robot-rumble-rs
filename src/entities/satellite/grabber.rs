@@ -61,8 +61,9 @@ impl Plugin for GrabberPlugin {
             GgrsSchedule,
             handle_grabber_interaction
                 .after(detect_player_entry)
-                .after(PhysicsSet::Gravity) // gravity modifie velocity en premier
-                .before(crate::entities::satellite::bumper::bumper_push_player), // éviter conflit
+                .after(PhysicsSet::Gravity)
+                .before(crate::entities::satellite::bumper::bumper_push_player)
+                .before(crate::entities::satellite::graviton::update_orbiting_players),
         );
         app.add_systems(
             GgrsSchedule,
@@ -74,7 +75,8 @@ impl Plugin for GrabberPlugin {
             GgrsSchedule,
             update_grabbed_players
                 .after(adjust_rope_length)
-                .after(crate::entities::satellite::bumper::bumper_push_player) // éviter conflit
+                .after(crate::entities::satellite::bumper::bumper_push_player)
+                .before(crate::entities::satellite::graviton::update_orbiting_players)
                 .before(PhysicsSet::Movement),
         );
         app.add_systems(

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::core::physics::{PhysicsSet, Position, Velocity, update_spatial_bundles};
-use crate::entities::player::Player;
+use crate::entities::player::{self, Player};
 use crate::entities::satellite::Satellite;
 
 use crate::core::gravity::apply_forces;
@@ -37,19 +37,28 @@ pub struct GravitonPlugin;
 impl Plugin for GravitonPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Orbited>();
-
+        app.add_systems(GgrsSchedule, 
+            detect_player_orbit_entry
+                .before(apply_forces)
+                .before(PhysicsSet::Movement),
+        );
         app.add_systems(
             GgrsSchedule,
             (
                 update_orbiting_players
+                    .after(detect_player_orbit_entry)
                     .after(apply_forces)
                     .before(PhysicsSet::Movement),
-                update_spatial_bundles.after(update_orbiting_players),
-                update_orbit_cooldowns
-                    .after(update_orbiting_players)
-                    .before(detect_player_orbit_entry),
             ),
         );
+        app.add_systems(
+            GgrsSchedule,
+            update_spatial_bundles.after(update_orbiting_players),
+        );
+        app.add_systems(
+            GgrsSchedule,
+            update_orbit_cooldowns.after(update_orbiting_players),
+        ); 
     }
 }
 
@@ -59,7 +68,7 @@ pub fn detect_player_orbit_entry(
         (&Transform, Option<&OrbitCooldown>),
         (With<Satellite>, With<GravitonMarker>),
     >,
-    mut player_query: Query<(Entity, &Transform, &Velocity), (With<Player>, Without<Orbited>)>,
+    mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
 ) {
@@ -72,7 +81,7 @@ pub fn detect_player_orbit_entry(
     let min_angular_speed = config.min_angular_speed;
     let orbit_duration = config.orbit_duration;
 
-    for (player_entity, player_transform, velocity) in player_query.iter_mut() {
+    for (player_entity, player_position, velocity) in player_query.iter_mut() {
         for (graviton_transform, maybe_cooldown) in graviton_query.iter() {
             if let Some(cooldown) = maybe_cooldown {
                 if !cooldown.timer.finished() {
@@ -80,20 +89,17 @@ pub fn detect_player_orbit_entry(
                 }
             }
 
-            let distance = player_transform
-                .translation
-                .truncate()
-                .distance(graviton_transform.translation.truncate());
+            let graviton_pos = graviton_transform.translation.truncate();
+            let distance = player_position.0.distance(graviton_pos);
 
             let initial_speed = velocity.length();
 
-            let dir =
-                player_transform.translation.truncate() - graviton_transform.translation.truncate();
+            let dir = player_position.0 - graviton_pos;
             let angle = dir.y.atan2(dir.x);
 
             if distance < orbit_radius {
                 commands.entity(player_entity).insert(Orbited {
-                    center: graviton_transform.translation.truncate(),
+                    center: graviton_pos,
                     angular_speed: min_angular_speed,
                     time_left: orbit_duration,
                     initial_speed,
