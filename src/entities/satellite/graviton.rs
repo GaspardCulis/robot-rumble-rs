@@ -47,7 +47,7 @@ impl Plugin for GravitonPlugin {
                 update_spatial_bundles
                     .after(update_orbiting_players),
                 update_orbit_cooldowns
-                    .after(update_orbiting_players) // facultatif mais logique
+                    .after(update_orbiting_players) 
                     .before(detect_player_orbit_entry),
             )
         );

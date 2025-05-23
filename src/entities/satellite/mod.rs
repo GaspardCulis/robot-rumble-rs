@@ -131,55 +131,55 @@ fn handle_spawn_satellite(
             event.kind,
         ));
 
+        let child_transform = (
+            Transform::from_translation(Vec3::new(130.0, 75.0, 0.0)),
+            GlobalTransform::default(),
+            Visibility::Visible,
+        );
+
         match event.kind {
             SatelliteKind::Graviton => {
-                entity.insert((
-                    GravitonMarker,
-                    GravitonVisual {
-                        active: graviton_active.clone(),
-                        inactive: graviton_inactive.clone(),
-                    },
-                ));
+            entity.insert((
+                GravitonMarker,
+                GravitonVisual {
+                active: graviton_active.clone(),
+                inactive: graviton_inactive.clone(),
+                },
+            ));
 
-                entity.with_children(|parent| {
-                    parent.spawn((
-                        Sprite {
-                            image: graviton_active.clone(),
-                            ..default()
-                        },
-                        Transform::from_translation(Vec3::new(130.0, 75.0, 0.0)),
-                        GlobalTransform::default(),
-                        Visibility::Visible,
-                    ));
-                });
+            entity.with_children(|parent| {
+                parent.spawn((
+                Sprite {
+                    image: graviton_active.clone(),
+                    ..default()
+                },
+                child_transform.clone(),
+                ));
+            });
             }
             SatelliteKind::Bumper => {
-                entity.insert(Bumper);
-                entity.with_children(|parent| {
-                    parent.spawn((
-                        Sprite {
-                            image: bumper_texture.clone(),
-                            ..default()
-                        },
-                        Transform::from_translation(Vec3::new(130.0, 75.0, 0.0)),
-                        GlobalTransform::default(),
-                        Visibility::Visible,
-                    ));
-                });
+            entity.insert(Bumper);
+            entity.with_children(|parent| {
+                parent.spawn((
+                Sprite {
+                    image: bumper_texture.clone(),
+                    ..default()
+                },
+                child_transform.clone(),
+                ));
+            });
             }
             SatelliteKind::Grabber => {
-                entity.insert(Grabber);
-                entity.with_children(|parent| {
-                    parent.spawn((
-                        Sprite {
-                            image: grabber_texture.clone(),
-                            ..default()
-                        },
-                        Transform::from_translation(Vec3::new(130.0, 75.0, 0.0)),
-                        GlobalTransform::default(),
-                        Visibility::Visible,
-                    ));
-                });
+            entity.insert(Grabber);
+            entity.with_children(|parent| {
+                parent.spawn((
+                Sprite {
+                    image: grabber_texture.clone(),
+                    ..default()
+                },
+                child_transform.clone(),
+                ));
+            });
             }
         }
 
