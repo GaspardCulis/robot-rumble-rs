@@ -11,6 +11,20 @@ use bevy::asset::Assets;
 #[derive(Component)]
 pub struct Bumper;
 
+pub struct BumperPlugin;
+
+impl Plugin for BumperPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            GgrsSchedule,
+            bumper_push_player
+                .after(PhysicsSet::Gravity)
+                .before(PhysicsSet::Movement),
+        );
+    }
+}
+
+
 pub fn bumper_push_player(
     bumper_query: Query<&Transform, (With<Satellite>, With<Bumper>)>,
     mut player_query: Query<(&Position, &mut Velocity), With<Player>>,
@@ -43,14 +57,4 @@ pub fn bumper_push_player(
             }
         }
     }
-}
-
-pub fn register_bumper_systems(app: &mut App) {
-    app.add_systems(
-        GgrsSchedule,
-        bumper_push_player
-            .in_set(PhysicsSet::Gravity)
-            .after(crate::core::gravity::apply_forces)
-            .before(crate::entities::satellite::graviton::update_orbiting_players),
-    );
 }
