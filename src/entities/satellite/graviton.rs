@@ -33,6 +33,29 @@ pub struct GravitonVisual {
     pub inactive: Handle<Image>,
 }
 
+pub struct GravitonPlugin;
+impl Plugin for GravitonPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<Orbited>();
+        app.add_systems(
+            GgrsSchedule,
+            update_orbiting_players
+                .after(apply_forces) 
+                .before(PhysicsSet::Movement), 
+        );
+        app.add_systems(
+            GgrsSchedule,
+            update_spatial_bundles
+                .after(update_orbiting_players),
+        );
+        app.add_systems(
+            GgrsSchedule,
+            update_orbit_cooldowns
+                .before(detect_player_orbit_entry), 
+        );
+    }
+}
+
 pub fn detect_player_orbit_entry(
     mut commands: Commands,
     graviton_query: Query<
@@ -170,26 +193,4 @@ pub fn update_orbit_cooldowns(
             }
         }
     }
-}
-
-pub fn register_graviton_systems(app: &mut App) {
-    app.register_type::<Orbited>()
-        .add_systems(
-            GgrsSchedule,
-            update_orbiting_players
-                .in_set(PhysicsSet::Gravity)
-                .after(apply_forces),
-        )
-        .add_systems(
-            GgrsSchedule,
-            update_spatial_bundles
-                .in_set(PhysicsSet::Gravity)
-                .after(update_orbiting_players),
-        )
-        .add_systems(
-            GgrsSchedule,
-            update_orbit_cooldowns
-                .in_set(PhysicsSet::Gravity)
-                .before(detect_player_orbit_entry),
-        );
 }
