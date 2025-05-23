@@ -135,7 +135,7 @@ fn check_collisions(
     query: Query<(Entity, &CollisionState<Projectile, Planet>), With<Projectile>>,
 ) {
     for (projectile, collision_state) in query.iter() {
-        if collision_state.collider.is_some() {
+        if collision_state.collides {
             commands.entity(projectile).despawn_recursive();
         }
     }
