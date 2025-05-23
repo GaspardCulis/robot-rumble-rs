@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 use leafwing_input_manager::prelude::*;
 
+use crate::core::collision::{CollisionPlugin, CollisionShape, CollisionState};
 use crate::core::gravity::{Mass, Passive};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
@@ -21,16 +22,18 @@ pub const PLAYER_MASS: u32 = 800;
 pub const PLAYER_VELOCITY: f32 = 600.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
+type PlanetCollision = CollisionState<Player, planet::Planet>;
+
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 #[require(
     // Position, Velocity and Rotation not required because handled by level::spawn.
     // Might change in the future
     Visibility,
     PlayerInputVelocity,
-    InAir,
     Passive,
     ActionState<PlayerAction>,
     Mass(|| Mass(PLAYER_MASS)),
+    CollisionShape(|| CollisionShape::Circle(PLAYER_RADIUS)),
     PlayerSkin(|| PlayerSkin("laika".into())),
     Name(|| Name::new("Player")),
 )]
@@ -58,9 +61,6 @@ pub enum PlayerAction {
     RopeRetract,
 }
 
-#[derive(Component, Clone, Debug, Default, PartialEq, Reflect)]
-pub struct InAir(bool);
-
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 pub struct PlayerSkin(pub String);
 
@@ -74,8 +74,8 @@ impl Plugin for PlayerPlugin {
         app.register_type::<Player>()
             .register_type::<PlayerInputVelocity>()
             .register_type::<PlayerSkin>()
-            .register_type::<InAir>()
             .register_type::<Weapon>()
+            .add_plugins(CollisionPlugin::<Player, planet::Planet>::new())
             .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_plugins(inventory::InventoryPlugin)
@@ -97,7 +97,7 @@ fn player_movement(
             &mut Velocity,
             &mut PlayerInputVelocity,
             &Rotation,
-            &InAir,
+            &PlanetCollision,
         ),
         (With<Player>, Without<Orbited>),
     >,
@@ -105,8 +105,10 @@ fn player_movement(
 ) {
     let delta = time.delta_secs();
 
-    for (action_state, mut velocity, mut input_velocity, rotation, in_air) in query.iter_mut() {
-        if action_state.pressed(&PlayerAction::Jump) && !in_air.0 {
+    for (action_state, mut velocity, mut input_velocity, rotation, planet_collision) in
+        query.iter_mut()
+    {
+        if action_state.pressed(&PlayerAction::Jump) && planet_collision.collides {
             velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
         }
 
@@ -121,7 +123,7 @@ fn player_movement(
             || action_state.pressed(&PlayerAction::Left))
         {
             let mut slow_down_rate = 6.;
-            if in_air.0 {
+            if !planet_collision.collides {
                 slow_down_rate = 1.;
             }
             input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * slow_down_rate);
@@ -170,36 +172,35 @@ pub fn update_weapon(
 pub fn player_physics(
     mut player_query: Query<
         (
-            &mut InAir,
             &mut Position,
             &mut Rotation,
             &mut Velocity,
+            &PlanetCollision,
             &PlayerInputVelocity,
         ),
         (With<Player>, Without<planet::Planet>, Without<Orbited>),
     >,
-    planet_query: Query<(&Position, &planet::Radius), With<planet::Planet>>,
+    planet_query: Query<(&Position, &CollisionShape), With<planet::Planet>>,
     time: Res<Time>,
 ) {
-    for (mut in_air, mut player_position, mut player_rotation, mut velocity, input_velocity) in
-        player_query.iter_mut()
+    for (
+        mut player_position,
+        mut player_rotation,
+        mut velocity,
+        planet_collision,
+        input_velocity,
+    ) in player_query.iter_mut()
     {
         // Find nearest planet (asserts that one planet exists)
-        let mut nearest_position = Vec2::ZERO;
-        let mut nearest_radius: u32 = 0;
-        let mut nearest_distance = f32::MAX;
-        for (position, radius) in planet_query.iter() {
-            let distance = position.0.distance(player_position.0) - radius.0 as f32;
-            if distance < nearest_distance {
-                nearest_position = position.0;
-                nearest_radius = radius.0;
-                nearest_distance = distance;
-            }
-        }
+        let (nearest_planet_pos, nearest_planet_shape) = planet_collision
+            .closest
+            .and_then(|entity| planet_query.get(entity).ok())
+            .map(|(pos, shape)| (pos.clone(), shape.clone()))
+            .unwrap_or_default();
 
         // Rotate towards it
-        let target_angle = (nearest_position.y - player_position.0.y)
-            .atan2(nearest_position.x - player_position.0.x)
+        let target_angle = (nearest_planet_pos.y - player_position.0.y)
+            .atan2(nearest_planet_pos.x - player_position.0.x)
             + PI / 2.;
         let mut short_angle = (target_angle - player_rotation.0) % math::RAD;
         short_angle = (2. * short_angle) % math::RAD - short_angle;
@@ -209,12 +210,12 @@ pub fn player_physics(
             Vec2::from_angle(player_rotation.0).rotate(input_velocity.0) * time.delta_secs();
 
         // Check if collides
-        if nearest_distance - PLAYER_RADIUS <= 0. {
+        if planet_collision.collides {
             // Compute collision normal
-            let collision_normal = (player_position.0 - nearest_position).normalize();
+            let collision_normal = (player_position.0 - nearest_planet_pos.0).normalize();
             // Clip player to ground
-            let clip_position =
-                nearest_position + collision_normal * (PLAYER_RADIUS + nearest_radius as f32);
+            let clip_position = nearest_planet_pos.0
+                + collision_normal * (PLAYER_RADIUS + nearest_planet_shape.bounding_radius());
             player_position.0 = clip_position;
 
             // Bounce if not on feet
@@ -227,10 +228,6 @@ pub fn player_physics(
                 // Reset velocity
                 velocity.0 = Vec2::ZERO;
             }
-
-            in_air.0 = false;
-        } else {
-            in_air.0 = true;
         }
     }
 }

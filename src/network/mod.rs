@@ -7,8 +7,9 @@ use rand::Rng as _;
 
 use crate::{
     GameState,
-    core::{camera::CameraFollowTarget, physics, worldgen},
+    core::{camera::CameraFollowTarget, collision, physics, worldgen},
     entities::{
+        planet,
         player::{self, Player, PlayerAction, weapon},
         projectile,
         satellite::{grabber, graviton},
@@ -38,7 +39,6 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Position>()
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
-            .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .rollback_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::Triggered>()
@@ -48,6 +48,9 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
             .rollback_component_with_clone::<graviton::Orbited>()
+            // Collisions
+            .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
+            .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),

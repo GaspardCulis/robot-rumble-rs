@@ -7,12 +7,12 @@ pub use config::Projectile;
 #[derive(Resource)]
 struct ProjectilesConfigHandle(Handle<config::ProjectilesConfig>);
 
+use super::planet::Planet;
 use crate::core::{
+    collision::{CollisionPlugin, CollisionShape, CollisionState},
     gravity::{Mass, Passive},
-    physics::{PhysicsSet, Position, Rotation, Velocity},
+    physics::{PhysicsSet, Rotation, Velocity},
 };
-
-use super::planet::Radius;
 
 // Autodespawn timer
 #[derive(Component)]
@@ -24,32 +24,34 @@ pub struct Damage(pub f32);
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
-        app.register_required_components_with::<Projectile, Transform>(|| {
-            Transform::from_scale(Vec3::splat(1.5))
-        })
-        .register_required_components_with::<Projectile, Rotation>(|| Rotation(0.))
-        .register_required_components_with::<Projectile, Passive>(|| Passive)
-        .register_required_components_with::<Projectile, Name>(|| Name::new("Projectile"))
-        .add_plugins(RonAssetPlugin::<config::ProjectilesConfig>::new(&[]))
-        .add_systems(Startup, load_projectiles_config)
-        .add_systems(
-            Update,
-            (
-                #[cfg(debug_assertions)]
-                handle_config_reload,
-                add_sprite,
-                rotate_sprite,
+        app.register_required_components::<Projectile, CollisionShape>()
+            .register_required_components_with::<Projectile, Transform>(|| {
+                Transform::from_scale(Vec3::splat(1.5))
+            })
+            .register_required_components_with::<Projectile, Rotation>(|| Rotation(0.))
+            .register_required_components_with::<Projectile, Passive>(|| Passive)
+            .register_required_components_with::<Projectile, Name>(|| Name::new("Projectile"))
+            .add_plugins(RonAssetPlugin::<config::ProjectilesConfig>::new(&[]))
+            .add_plugins(CollisionPlugin::<Projectile, Planet>::new())
+            .add_systems(Startup, load_projectiles_config)
+            .add_systems(
+                Update,
+                (
+                    #[cfg(debug_assertions)]
+                    handle_config_reload,
+                    add_sprite,
+                    rotate_sprite,
+                )
+                    .chain()
+                    .run_if(resource_exists::<ProjectilesConfigHandle>),
             )
-                .chain()
-                .run_if(resource_exists::<ProjectilesConfigHandle>),
-        )
-        .add_systems(
-            GgrsSchedule,
-            (
-                add_physical_properties.before(PhysicsSet::Gravity),
-                check_collisions.after(PhysicsSet::Movement),
-            ),
-        );
+            .add_systems(
+                GgrsSchedule,
+                (
+                    add_physical_properties.before(PhysicsSet::Gravity),
+                    check_collisions.after(PhysicsSet::Collision),
+                ),
+            );
     }
 }
 
@@ -130,15 +132,11 @@ fn tick_projectile_timer(
 
 fn check_collisions(
     mut commands: Commands,
-    projectile_query: Query<(Entity, &Position), With<Projectile>>,
-    planet_query: Query<(&Position, &Radius)>,
+    query: Query<(Entity, &CollisionState<Projectile, Planet>), With<Projectile>>,
 ) {
-    for (projectile, projectile_position) in projectile_query.iter() {
-        for (planet_position, planet_radius) in planet_query.iter() {
-            let distance = projectile_position.distance(planet_position.0) - planet_radius.0 as f32;
-            if distance <= 0.0 {
-                commands.entity(projectile).despawn_recursive();
-            }
+    for (projectile, collision_state) in query.iter() {
+        if collision_state.collides {
+            commands.entity(projectile).despawn_recursive();
         }
     }
 }
