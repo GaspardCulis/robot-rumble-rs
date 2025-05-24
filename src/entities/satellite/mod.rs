@@ -13,7 +13,7 @@ pub mod orbit_material;
 use bevy_ggrs::GgrsSchedule;
 use bumper::Bumper;
 use grabber::Grabber;
-use graviton::{GravitonMarker, GravitonVisual};
+use graviton::{Graviton, GravitonVisual};
 use orbit_material::OrbitMaterial;
 
 #[derive(Component)]
@@ -147,7 +147,7 @@ fn handle_spawn_satellite(
         match event.kind {
             SatelliteKind::Graviton => {
                 entity.insert((
-                    GravitonMarker,
+                    Graviton,
                     GravitonVisual {
                         active: graviton_active.clone(),
                         inactive: graviton_inactive.clone(),

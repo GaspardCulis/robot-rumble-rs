@@ -25,7 +25,7 @@ pub struct OrbitCooldown {
 
 #[derive(Component)]
 #[require(Name(|| Name::new("Graviton")))]
-pub struct GravitonMarker;
+pub struct Graviton;
 
 #[derive(Component)]
 pub struct GravitonVisual {
@@ -51,10 +51,7 @@ impl Plugin for GravitonPlugin {
 
 fn detect_player_orbit_entry(
     mut commands: Commands,
-    graviton_query: Query<
-        (&Transform, Option<&OrbitCooldown>),
-        (With<Satellite>, With<GravitonMarker>),
-    >,
+    graviton_query: Query<(&Transform, Option<&OrbitCooldown>), (With<Satellite>, With<Graviton>)>,
     mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -101,7 +98,7 @@ fn detect_player_orbit_entry(
 fn update_orbiting_players(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Position, &mut Velocity, &mut Orbited)>,
-    graviton_query: Query<(Entity, &Transform), (With<Satellite>, With<GravitonMarker>)>,
+    graviton_query: Query<(Entity, &Transform), (With<Satellite>, With<Graviton>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
     time: Res<Time>,
@@ -163,7 +160,7 @@ fn update_orbiting_players(
 }
 
 fn update_orbit_cooldowns(
-    mut cooldown_query: Query<(Entity, &mut OrbitCooldown, &Children), With<GravitonMarker>>,
+    mut cooldown_query: Query<(Entity, &mut OrbitCooldown, &Children), With<Graviton>>,
     mut sprite_query: Query<&mut Sprite>,
     visual_query: Query<&GravitonVisual>,
     time: Res<Time>,
