@@ -8,13 +8,13 @@ use bevy_common_assets::ron::RonAssetPlugin;
 pub mod bumper;
 pub mod grabber;
 pub mod graviton;
-pub mod orbit_material;
+mod visuals;
 
 use bevy_ggrs::GgrsSchedule;
 use bumper::Bumper;
 use grabber::Grabber;
 use graviton::{Graviton, GravitonVisual};
-use orbit_material::OrbitMaterial;
+use visuals::OrbitMaterial;
 
 #[derive(Component)]
 pub struct Satellite;
@@ -226,43 +226,4 @@ fn handle_spawn_satellite(
             ));
         });
     }
-}
-
-fn generate_ring(inner_radius: f32, outer_radius: f32, resolution: usize) -> Mesh {
-    let mut positions = Vec::with_capacity(resolution * 2);
-    let mut uvs: Vec<Vec2> = Vec::with_capacity(resolution * 2);
-    let mut indices = Vec::with_capacity(resolution * 6);
-
-    for i in 0..resolution {
-        let angle = i as f32 / resolution as f32 * std::f32::consts::TAU;
-        let dir = Vec2::new(angle.cos(), angle.sin());
-        positions.push((dir * outer_radius).extend(0.0));
-        positions.push((dir * inner_radius).extend(0.0));
-
-        uvs.push((dir * 0.5 + Vec2::splat(0.5)).into());
-        uvs.push((dir * 0.5 + Vec2::splat(0.5)).into());
-    }
-
-    for i in 0..resolution {
-        let i0 = (i * 2) as u32;
-        let i1 = (i * 2 + 1) as u32;
-        let i2 = ((i * 2 + 2) % (resolution * 2)) as u32;
-        let i3 = ((i * 2 + 3) % (resolution * 2)) as u32;
-
-        indices.extend_from_slice(&[i0, i2, i1, i2, i3, i1]);
-    }
-
-    let mut mesh = Mesh::new(
-        PrimitiveTopology::TriangleList,
-        bevy::render::render_asset::RenderAssetUsages::default(),
-    );
-    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-    mesh.insert_attribute(
-        Mesh::ATTRIBUTE_NORMAL,
-        vec![[0.0, 0.0, 1.0]; resolution * 2],
-    );
-    mesh.insert_indices(Indices::U32(indices));
-
-    mesh
 }
