@@ -9,10 +9,10 @@ use super::{SatelliteConfig, SatelliteConfigHandle, SatelliteSet};
 use bevy::asset::Assets;
 
 #[derive(Component)]
+#[require(Name(|| Name::new("Bumper")))]
 pub struct Bumper;
 
 pub struct BumperPlugin;
-
 impl Plugin for BumperPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
