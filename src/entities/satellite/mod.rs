@@ -1,7 +1,6 @@
 use crate::core::physics::{PhysicsSet, Position};
-use bevy::math::Vec2;
 use bevy::prelude::*;
-use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
+use bevy::render::mesh::Mesh;
 use bevy::sprite::Material2dPlugin;
 use bevy_common_assets::ron::RonAssetPlugin;
 
@@ -14,7 +13,7 @@ use bevy_ggrs::GgrsSchedule;
 use bumper::Bumper;
 use grabber::Grabber;
 use graviton::{Graviton, GravitonVisual};
-use visuals::OrbitMaterial;
+use visuals::{OrbitMaterial, generate_ring};
 
 #[derive(Component)]
 pub struct Satellite;
