@@ -47,9 +47,6 @@ pub struct SatelliteConfig {
 #[derive(Resource)]
 pub struct SatelliteConfigHandle(pub Handle<SatelliteConfig>);
 
-#[derive(Resource, Default, Clone, Copy)]
-struct OrbitTime(f32);
-
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 enum SatelliteSet {
     Graviton,
@@ -73,17 +70,9 @@ impl Plugin for SatellitePlugin {
                     .chain()
                     .in_set(PhysicsSet::Interaction),
             )
-            .insert_resource(OrbitTime::default())
             .add_event::<SpawnSatelliteEvent>()
             .add_systems(Startup, load_satellite_config)
-            .add_systems(
-                Update,
-                (
-                    update_orbit_time,
-                    update_orbit_material,
-                    handle_spawn_satellite,
-                ),
-            )
+            .add_systems(Update, handle_spawn_satellite)
             .add_plugins(graviton::GravitonPlugin)
             .add_plugins(bumper::BumperPlugin)
             .add_plugins(grabber::GrabberPlugin);
@@ -93,16 +82,6 @@ impl Plugin for SatellitePlugin {
 fn load_satellite_config(mut commands: Commands, asset_server: Res<AssetServer>) {
     let handle = asset_server.load("config/satellites.ron");
     commands.insert_resource(SatelliteConfigHandle(handle));
-}
-
-fn update_orbit_time(mut orbit_time: ResMut<OrbitTime>, time: Res<Time>) {
-    orbit_time.0 += time.delta_secs();
-}
-
-fn update_orbit_material(orbit_time: Res<OrbitTime>, mut materials: ResMut<Assets<OrbitMaterial>>) {
-    for material in materials.iter_mut() {
-        material.1.time = orbit_time.0;
-    }
 }
 
 fn handle_spawn_satellite(
@@ -202,11 +181,10 @@ fn handle_spawn_satellite(
         };
 
         let orbit_material_handle = materials.add(OrbitMaterial {
-            time: 0.0,
             base_color,
             saturation: 1.0,
             alpha: 0.6,
-            _wasm_padding: 0.0,
+            _wasm_padding: default(),
         });
 
         let ring_thickness = 5.0;
