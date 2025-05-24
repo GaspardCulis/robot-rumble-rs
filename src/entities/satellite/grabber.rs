@@ -220,9 +220,9 @@ fn handle_grabber_interaction(
                         .entity(player_entity)
                         .insert(GrabbedBy(nearby.0))
                         .insert(GrabbedOrbit {
-                            center: center,
-                            distance: distance,
-                            angle: angle,
+                            center,
+                            distance,
+                            angle,
                             initial_speed: speed,
                         });
                     let mesh = meshes.add(Rectangle::new(4.0, 1.0));
