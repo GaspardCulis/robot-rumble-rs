@@ -23,7 +23,7 @@ pub const PLAYER_RADIUS: f32 = 16. * 2.;
 
 type PlanetCollision = CollisionState<Player, planet::Planet>;
 
-#[derive(Component, Clone, Debug, PartialEq, Reflect)]
+#[derive(Component, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Reflect)]
 #[require(
     // Position, Velocity and Rotation not required because handled by level::spawn.
     // Might change in the future
