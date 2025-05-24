@@ -1,10 +1,10 @@
-use crate::core::physics::{PhysicsSet, Position, Velocity};
+use crate::core::physics::{Position, Velocity};
 use crate::entities::player::Player;
 use crate::entities::satellite::Satellite;
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
-use super::{SatelliteConfig, SatelliteConfigHandle};
+use super::{SatelliteConfig, SatelliteConfigHandle, SatelliteSet};
 
 use bevy::asset::Assets;
 
@@ -17,14 +17,12 @@ impl Plugin for BumperPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             GgrsSchedule,
-            bumper_push_player
-                .after(PhysicsSet::Gravity)
-                .before(PhysicsSet::Movement),
+            bumper_push_player.in_set(SatelliteSet::Bumper),
         );
     }
 }
 
-pub fn bumper_push_player(
+fn bumper_push_player(
     bumper_query: Query<&Transform, (With<Satellite>, With<Bumper>)>,
     mut player_query: Query<(&Position, &mut Velocity), With<Player>>,
     config_handle: Res<SatelliteConfigHandle>,

@@ -26,6 +26,8 @@ pub enum PhysicsSet {
     Player,
     /// Where Velocity gets updated
     Gravity,
+    /// Where entities interact with each other
+    Interaction,
     /// Where Position gets updated
     Movement,
     /// Where collision detection systems are run
@@ -43,6 +45,7 @@ impl Plugin for PhysicsPlugin {
                 (
                     PhysicsSet::Player,
                     PhysicsSet::Gravity,
+                    PhysicsSet::Interaction,
                     PhysicsSet::Movement,
                     PhysicsSet::Collision,
                 )
@@ -50,17 +53,22 @@ impl Plugin for PhysicsPlugin {
                     .run_if(in_state(GameState::InGame)),
             )
             .add_systems(GgrsSchedule, update_position.in_set(PhysicsSet::Movement))
-            .add_systems(Update, update_spatial_bundles);
+            .add_systems(
+                Update,
+                update_spatial_bundles
+                    .in_set(PhysicsSet::Movement)
+                    .after(update_position),
+            );
     }
 }
 
-pub fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
+fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
     for (mut position, velocity) in query.iter_mut() {
         position.0 += velocity.0 * time.delta_secs()
     }
 }
 
-pub fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
+fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
     for (mut transform, position, rotation) in query.iter_mut() {
         transform.translation.x = position.x;
         transform.translation.y = position.y;

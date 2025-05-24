@@ -1,4 +1,4 @@
-use crate::core::physics::Position;
+use crate::core::physics::{PhysicsSet, Position};
 use bevy::math::Vec2;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
@@ -10,6 +10,7 @@ pub mod grabber;
 pub mod graviton;
 pub mod orbit_material;
 
+use bevy_ggrs::GgrsSchedule;
 use bumper::Bumper;
 use grabber::Grabber;
 use graviton::{GravitonMarker, GravitonVisual};
@@ -50,12 +51,29 @@ pub struct SatelliteConfigHandle(pub Handle<SatelliteConfig>);
 #[derive(Resource, Default, Clone, Copy)]
 struct OrbitTime(f32);
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+enum SatelliteSet {
+    Graviton,
+    Bumper,
+    Grabber,
+}
+
 pub struct SatellitePlugin;
 impl Plugin for SatellitePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<graviton::Orbited>()
             .add_plugins(RonAssetPlugin::<SatelliteConfig>::new(&[]))
             .add_plugins(Material2dPlugin::<OrbitMaterial>::default())
+            .configure_sets(
+                GgrsSchedule,
+                (
+                    SatelliteSet::Graviton,
+                    SatelliteSet::Bumper,
+                    SatelliteSet::Grabber,
+                )
+                    .chain()
+                    .in_set(PhysicsSet::Interaction),
+            )
             .insert_resource(OrbitTime::default())
             .add_event::<SpawnSatelliteEvent>()
             .add_systems(Startup, load_satellite_config)
@@ -73,7 +91,7 @@ impl Plugin for SatellitePlugin {
     }
 }
 
-pub fn load_satellite_config(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn load_satellite_config(mut commands: Commands, asset_server: Res<AssetServer>) {
     let handle = asset_server.load("config/satellites.ron");
     commands.insert_resource(SatelliteConfigHandle(handle));
 }
@@ -210,7 +228,7 @@ fn handle_spawn_satellite(
     }
 }
 
-pub fn generate_ring(inner_radius: f32, outer_radius: f32, resolution: usize) -> Mesh {
+fn generate_ring(inner_radius: f32, outer_radius: f32, resolution: usize) -> Mesh {
     let mut positions = Vec::with_capacity(resolution * 2);
     let mut uvs: Vec<Vec2> = Vec::with_capacity(resolution * 2);
     let mut indices = Vec::with_capacity(resolution * 6);

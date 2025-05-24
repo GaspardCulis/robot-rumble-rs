@@ -1,13 +1,12 @@
 use bevy::prelude::*;
 
-use crate::core::physics::{PhysicsSet, Position, Velocity, update_spatial_bundles};
-use crate::entities::player::{self, Player};
+use crate::core::physics::{Position, Velocity};
+use crate::entities::player::Player;
 use crate::entities::satellite::Satellite;
 
-use crate::core::gravity::apply_forces;
 use bevy_ggrs::GgrsSchedule;
 
-use super::{SatelliteConfig, SatelliteConfigHandle};
+use super::{SatelliteConfig, SatelliteConfigHandle, SatelliteSet};
 
 #[derive(Component, Debug, Reflect, Clone)]
 #[reflect(Component)]
@@ -36,33 +35,20 @@ pub struct GravitonVisual {
 pub struct GravitonPlugin;
 impl Plugin for GravitonPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Orbited>();
-        app.add_systems(
+        app.register_type::<Orbited>().add_systems(
             GgrsSchedule,
-            detect_player_orbit_entry
-                .before(apply_forces)
-                .before(PhysicsSet::Gravity)
-                .before(PhysicsSet::Movement),
-        );
-        app.add_systems(
-            GgrsSchedule,
-            (update_orbiting_players
-                .after(detect_player_orbit_entry)
-                .after(apply_forces)
-                .before(PhysicsSet::Movement),),
-        );
-        app.add_systems(
-            GgrsSchedule,
-            update_spatial_bundles.after(update_orbiting_players),
-        );
-        app.add_systems(
-            GgrsSchedule,
-            update_orbit_cooldowns.after(update_orbiting_players),
+            (
+                detect_player_orbit_entry,
+                update_orbiting_players,
+                update_orbit_cooldowns,
+            )
+                .chain()
+                .in_set(SatelliteSet::Graviton),
         );
     }
 }
 
-pub fn detect_player_orbit_entry(
+fn detect_player_orbit_entry(
     mut commands: Commands,
     graviton_query: Query<
         (&Transform, Option<&OrbitCooldown>),
@@ -111,7 +97,7 @@ pub fn detect_player_orbit_entry(
     }
 }
 
-pub fn update_orbiting_players(
+fn update_orbiting_players(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Position, &mut Velocity, &mut Orbited)>,
     graviton_query: Query<(Entity, &Transform), (With<Satellite>, With<GravitonMarker>)>,
@@ -175,7 +161,7 @@ pub fn update_orbiting_players(
     }
 }
 
-pub fn update_orbit_cooldowns(
+fn update_orbit_cooldowns(
     mut cooldown_query: Query<(Entity, &mut OrbitCooldown, &Children), With<GravitonMarker>>,
     mut sprite_query: Query<&mut Sprite>,
     visual_query: Query<&GravitonVisual>,

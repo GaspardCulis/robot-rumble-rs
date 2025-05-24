@@ -20,14 +20,12 @@ impl Plugin for GravityPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Mass>().add_systems(
             GgrsSchedule,
-            apply_forces
-                .in_set(physics::PhysicsSet::Gravity)
-                .before(physics::update_position),
+            apply_forces.in_set(physics::PhysicsSet::Gravity),
         );
     }
 }
 
-pub fn apply_forces(
+fn apply_forces(
     mut on: Query<(&Mass, &Position, &mut Velocity), Without<Static>>,
     from: Query<(&Mass, &Position), Without<Passive>>,
     time: Res<Time>,

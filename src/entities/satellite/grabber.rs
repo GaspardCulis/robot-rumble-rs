@@ -5,10 +5,9 @@ use bevy::text::{JustifyText, Text2d, TextColor, TextFont, TextLayout};
 use bevy_ggrs::{GgrsSchedule, LocalPlayers};
 use leafwing_input_manager::prelude::ActionState;
 
-use super::Satellite;
+use super::{Satellite, SatelliteSet};
 use super::{SatelliteConfig, SatelliteConfigHandle};
-use crate::GameState;
-use crate::core::physics::{PhysicsSet, Position, Velocity};
+use crate::core::physics::{Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
 
 const ROPE_MIN_LENGTH: f32 = 50.0;
@@ -53,50 +52,24 @@ impl Plugin for GrabberPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             GgrsSchedule,
-            detect_player_entry
-                .before(handle_grabber_interaction)
-                .before(crate::entities::satellite::graviton::update_orbiting_players),
-        );
-        app.add_systems(
-            GgrsSchedule,
-            handle_grabber_interaction
-                .after(detect_player_entry)
-                .after(PhysicsSet::Gravity)
-                .before(crate::entities::satellite::bumper::bumper_push_player)
-                .before(crate::entities::satellite::graviton::update_orbiting_players),
-        );
-        app.add_systems(
-            GgrsSchedule,
-            adjust_rope_length
-                .after(handle_grabber_interaction)
-                .before(update_grabbed_players),
-        );
-        app.add_systems(
-            GgrsSchedule,
-            update_grabbed_players
-                .after(adjust_rope_length)
-                .after(crate::entities::satellite::bumper::bumper_push_player)
-                .before(crate::entities::satellite::graviton::update_orbiting_players)
-                .before(PhysicsSet::Movement),
-        );
-        app.add_systems(
-            GgrsSchedule,
             (
+                detect_player_entry,
+                handle_grabber_interaction,
+                adjust_rope_length,
+                update_grabbed_players,
                 cleanup_grabbed_orbits,
-                cleanup_grabber_ropes.after(cleanup_grabbed_orbits),
+                cleanup_grabber_ropes,
             )
-                .after(update_grabbed_players),
+                .chain()
+                .in_set(SatelliteSet::Grabber),
         );
         app.add_systems(
             Update,
-            update_grabber_ropes
-                .after(update_grabbed_players)
-                .after(crate::core::physics::update_spatial_bundles)
-                .after(crate::core::camera::camera_movement),
-        );
-        app.add_systems(
-            Update,
-            (display_interact_prompt, remove_interact_prompt).run_if(in_state(GameState::InGame)),
+            (
+                update_grabber_ropes,
+                display_interact_prompt,
+                remove_interact_prompt,
+            ),
         );
     }
 }
@@ -194,7 +167,7 @@ fn remove_interact_prompt(
     }
 }
 
-pub fn handle_grabber_interaction(
+fn handle_grabber_interaction(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -277,7 +250,7 @@ pub fn handle_grabber_interaction(
     }
 }
 
-pub fn update_grabbed_players(
+fn update_grabbed_players(
     mut commands: Commands,
     mut query: Query<(
         Entity,
@@ -310,7 +283,7 @@ pub fn update_grabbed_players(
     }
 }
 
-pub fn update_grabber_ropes(
+fn update_grabber_ropes(
     mut commands: Commands,
     rope_query: Query<(Entity, &GrabberRope)>,
     player_query: Query<&Transform, With<Player>>,
@@ -340,7 +313,7 @@ pub fn update_grabber_ropes(
     }
 }
 
-pub fn adjust_rope_length(
+fn adjust_rope_length(
     mut query: Query<
         (&ActionState<PlayerAction>, &mut GrabbedOrbit),
         (With<Player>, With<GrabbedBy>),
@@ -370,7 +343,7 @@ pub fn adjust_rope_length(
     }
 }
 
-pub fn cleanup_grabbed_orbits(
+fn cleanup_grabbed_orbits(
     mut commands: Commands,
     query: Query<Entity, (With<GrabbedOrbit>, Without<GrabbedBy>)>,
 ) {
@@ -379,7 +352,7 @@ pub fn cleanup_grabbed_orbits(
     }
 }
 
-pub fn cleanup_grabber_ropes(
+fn cleanup_grabber_ropes(
     mut commands: Commands,
     rope_query: Query<(Entity, &GrabberRope)>,
     player_query: Query<Option<&GrabbedBy>, With<Player>>,
