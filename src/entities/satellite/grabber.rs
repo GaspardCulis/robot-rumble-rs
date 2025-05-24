@@ -62,18 +62,12 @@ impl Plugin for GrabberPlugin {
                 update_grabbed_players,
                 cleanup_grabbed_orbits,
                 cleanup_grabber_ropes,
+                update_grabber_ropes,
             )
                 .chain()
                 .in_set(SatelliteSet::Grabber),
         );
-        app.add_systems(
-            Update,
-            (
-                update_grabber_ropes,
-                display_interact_prompt,
-                remove_interact_prompt,
-            ),
-        );
+        app.add_systems(Update, (display_interact_prompt, remove_interact_prompt));
     }
 }
 
