@@ -16,6 +16,9 @@ let
   };
 in
   pkgs.mkShell rec {
+    packages = with pkgs; [
+      just
+    ];
     nativeBuildInputs = with pkgs; [
       rust
       pkg-config
