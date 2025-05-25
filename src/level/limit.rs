@@ -7,7 +7,7 @@ use crate::{
         physics::{PhysicsSet, Position},
         worldgen,
     },
-    entities::player::Player,
+    entities::player::{Player, weapon::WeaponType},
 };
 
 #[derive(Resource, Reflect)]
@@ -56,15 +56,18 @@ fn setup(
     });
 }
 
+// FIX: Ugly AF
 fn check_outsiders(
     mut commands: Commands,
     mut death_events: EventWriter<DeathEvent>,
-    query: Query<(Entity, &Position, Has<Player>)>,
+    query: Query<(Entity, &Position, Has<Player>, Has<WeaponType>)>,
     limit: Res<MapLimit>,
 ) {
-    for (entity, position, is_player) in query.iter() {
+    for (entity, position, is_player, is_weapon) in query.iter() {
         if position.length_squared() > limit.radius_squared {
-            if is_player {
+            if is_weapon {
+                continue;
+            } else if is_player {
                 death_events.send(DeathEvent(entity));
 
                 // FIX: Temporary way to handle death
