@@ -157,8 +157,10 @@ fn check_player_collisions(
             if let Some(closest_player) = player_collision.closest {
                 if let Some((mut player_velocity, player_mass)) =
                     player_query.get_mut(closest_player).ok()
-                let knockback_force = projectile_velocity.0 * projectile_mass.0 as f32;
-                player_velocity.0 += knockback_force / player_mass.0 as f32;
+                {
+                    let knockback_force = projectile_velocity.0 * projectile_mass.0 as f32;
+                    player_velocity.0 += knockback_force / player_mass.0 as f32;
+                }
             }
 
             commands.entity(projectile).despawn_recursive();
