@@ -138,7 +138,7 @@ fn player_movement(
     }
 }
 
-pub fn update_weapon(
+fn update_weapon(
     player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
     mut weapon_query: Query<
         (
@@ -170,7 +170,7 @@ pub fn update_weapon(
     }
 }
 
-pub fn player_physics(
+fn player_physics(
     mut player_query: Query<
         (
             &mut Position,
