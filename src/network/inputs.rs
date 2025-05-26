@@ -3,7 +3,7 @@ use crate::{
     entities::player::{Player, PlayerAction},
     network::SessionConfig,
 };
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_ggrs::{GgrsSchedule, LocalInputs, LocalPlayers, PlayerInputs, ReadInputs};
 use leafwing_input_manager::prelude::ActionState;
 use serde::{Deserialize, Serialize};

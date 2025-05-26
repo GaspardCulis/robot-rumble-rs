@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{platform::collections::HashMap, prelude::*};
 
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct WeaponsConfig(pub HashMap<WeaponType, WeaponConfig>);

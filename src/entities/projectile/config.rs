@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{platform::collections::HashMap, prelude::*};
 
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
