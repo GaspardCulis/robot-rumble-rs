@@ -68,7 +68,7 @@ fn check_outsiders(
             if is_weapon {
                 continue;
             } else if is_player {
-                death_events.send(DeathEvent(entity));
+                death_events.write(DeathEvent(entity));
 
                 // FIX: Temporary way to handle death
                 commands.entity(entity).remove::<Position>();
