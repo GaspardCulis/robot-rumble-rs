@@ -1,7 +1,7 @@
 ProjectilesConfig({
     Bullet: (
         stats: (
-            mass: 1000,
+            mass: 100,
             damage: 1.0,
         ),
         skin: (
