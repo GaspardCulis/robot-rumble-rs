@@ -7,7 +7,7 @@ use crate::{
         physics::{PhysicsSet, Position},
         worldgen,
     },
-    entities::player::{Player, weapon::WeaponType},
+    entities::player::Player,
 };
 
 #[derive(Resource, Reflect)]
@@ -34,7 +34,7 @@ impl Plugin for MapLimitPlugin {
             .add_systems(
                 GgrsSchedule,
                 check_outsiders
-                    .in_set(PhysicsSet::Collision)
+                    .after(PhysicsSet::Movement)
                     .run_if(in_state(GameState::InGame)),
             );
     }
@@ -56,18 +56,15 @@ fn setup(
     });
 }
 
-// FIX: Ugly AF
 fn check_outsiders(
     mut commands: Commands,
     mut death_events: EventWriter<DeathEvent>,
-    query: Query<(Entity, &Position, Has<Player>, Has<WeaponType>)>,
+    query: Query<(Entity, &Position, Has<Player>)>,
     limit: Res<MapLimit>,
 ) {
-    for (entity, position, is_player, is_weapon) in query.iter() {
+    for (entity, position, is_player) in query.iter() {
         if position.length_squared() > limit.radius_squared {
-            if is_weapon {
-                continue;
-            } else if is_player {
+            if is_player {
                 death_events.send(DeathEvent(entity));
 
                 // FIX: Temporary way to handle death

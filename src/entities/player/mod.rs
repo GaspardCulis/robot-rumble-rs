@@ -10,6 +10,7 @@ use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
 use super::planet;
+use crate::entities::satellite::graviton::Orbited;
 
 mod animation;
 mod inventory;
@@ -20,11 +21,10 @@ pub mod weapon;
 pub const PLAYER_MASS: u32 = 800;
 pub const PLAYER_VELOCITY: f32 = 600.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
-const PLAYER_GROUND_FRICTION_COEFF: f32 = 0.95;
 
 type PlanetCollision = CollisionState<Player, planet::Planet>;
 
-#[derive(Component, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Reflect)]
+#[derive(Component, Clone, Debug, PartialEq, Reflect)]
 #[require(
     // Position, Velocity and Rotation not required because handled by level::spawn.
     // Might change in the future
@@ -56,6 +56,9 @@ pub enum PlayerAction {
     Slot3,
     #[actionlike(DualAxis)]
     PointerDirection,
+    Interact,
+    RopeExtend,
+    RopeRetract,
 }
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
@@ -96,7 +99,7 @@ fn player_movement(
             &Rotation,
             &PlanetCollision,
         ),
-        With<Player>,
+        (With<Player>, Without<Orbited>),
     >,
     time: Res<Time>,
 ) {
@@ -134,7 +137,7 @@ fn player_movement(
     }
 }
 
-fn update_weapon(
+pub fn update_weapon(
     player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
     mut weapon_query: Query<
         (
@@ -175,7 +178,7 @@ pub fn player_physics(
             &PlanetCollision,
             &PlayerInputVelocity,
         ),
-        (With<Player>, Without<planet::Planet>),
+        (With<Player>, Without<planet::Planet>, Without<Orbited>),
     >,
     planet_query: Query<(&Position, &CollisionShape), With<planet::Planet>>,
     time: Res<Time>,
@@ -222,11 +225,8 @@ pub fn player_physics(
                 let reflexion_vector = velocity.0 - 2. * velocity_along_normal * collision_normal;
                 velocity.0 = reflexion_vector * 0.5;
             } else {
-                // Reset velocity along collision normal
-                let dot_product = velocity.dot(collision_normal);
-                velocity.0 -= dot_product * collision_normal;
-                // Apply ground friction
-                velocity.0 *= PLAYER_GROUND_FRICTION_COEFF * time.delta_secs();
+                // Reset velocity
+                velocity.0 = Vec2::ZERO;
             }
         }
     }
