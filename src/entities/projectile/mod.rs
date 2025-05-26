@@ -25,16 +25,6 @@ pub struct Damage(pub f32);
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Knockback(pub f32);
 
-// TODO move this tob projectiles config
-pub const BLAST_RADIUS: f32 = 20.;
-
-#[derive(Event)]
-struct CollisionEvent {
-    position: Vec2,
-    radius: f32,
-    damage: f32,
-    knockback: f32,
-}
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
@@ -63,6 +53,7 @@ impl Plugin for ProjectilePlugin {
             .add_systems(
                 GgrsSchedule,
                 (
+                    tick_projectile_timer,
                     add_physical_properties
                         .before(PhysicsSet::Gravity)
                         .after(PhysicsSet::Player),
@@ -135,6 +126,7 @@ fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Projectile>,
         rotation.0 = -velocity.angle_to(Vec2::X);
     }
 }
+
 
 fn tick_projectile_timer(
     mut commands: Commands,
