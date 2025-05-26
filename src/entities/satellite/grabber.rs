@@ -181,9 +181,7 @@ fn handle_grabber_interaction(
     >,
     grabber_query: Query<&Transform, With<Grabber>>,
 ) {
-    for (player_entity, actions, position, nearby, grabbed_by, vel) in
-        player_query.iter_mut()
-    {
+    for (player_entity, actions, position, nearby, grabbed_by, vel) in player_query.iter_mut() {
         let is_pressed = actions.pressed(&PlayerAction::Interact);
 
         if is_pressed && grabbed_by.is_none() {
