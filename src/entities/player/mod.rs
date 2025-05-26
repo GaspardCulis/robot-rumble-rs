@@ -11,6 +11,7 @@ use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
 use super::planet;
+use crate::entities::satellite::graviton::Orbited;
 
 mod animation;
 mod inventory;
@@ -58,6 +59,9 @@ pub enum PlayerAction {
     #[actionlike(DualAxis)]
     PointerDirection,
     Reload,
+    Interact,
+    RopeExtend,
+    RopeRetract,
 }
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
@@ -98,7 +102,7 @@ fn player_movement(
             &Rotation,
             &PlanetCollision,
         ),
-        With<Player>,
+        (With<Player>, Without<Orbited>),
     >,
     time: Res<Time>,
 ) {
@@ -136,7 +140,7 @@ fn player_movement(
     }
 }
 
-fn update_weapon(
+pub fn update_weapon(
     player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
     mut weapon_query: Query<
         (
@@ -185,7 +189,7 @@ pub fn player_physics(
             &PlanetCollision,
             &PlayerInputVelocity,
         ),
-        (With<Player>, Without<planet::Planet>),
+        (With<Player>, Without<planet::Planet>, Without<Orbited>),
     >,
     planet_query: Query<(&Position, &CollisionShape), With<planet::Planet>>,
     time: Res<Time>,

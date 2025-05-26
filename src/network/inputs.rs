@@ -22,7 +22,10 @@ const INPUT_SHOOT: u32 = 1 << 4;
 const INPUT_SLOT1: u32 = 1 << 5;
 const INPUT_SLOT2: u32 = 1 << 6;
 const INPUT_SLOT3: u32 = 1 << 7;
-const INPUT_RELOAD: u32 = 1 << 8;
+const INPUT_INTERACT: u32 = 1 << 8;
+const INPUT_ROPE_EXTEND: u32 = 1 << 9;
+const INPUT_ROPE_RETRACT: u32 = 1 << 10;
+const INPUT_RELOAD: u32 = 1 << 11;
 
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
@@ -92,6 +95,9 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
                 PlayerAction::Slot3 => INPUT_SLOT3,
                 PlayerAction::Reload => INPUT_RELOAD,
                 PlayerAction::PointerDirection => unimplemented!("Should not get called"),
+                PlayerAction::Interact => INPUT_INTERACT,
+                PlayerAction::RopeExtend => INPUT_ROPE_EXTEND,
+                PlayerAction::RopeRetract => INPUT_ROPE_RETRACT,
             };
         }
 
@@ -137,6 +143,15 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
         }
         if keys & INPUT_RELOAD != 0 {
             action_state.press(&PlayerAction::Reload);
+        }
+        if keys & INPUT_INTERACT != 0 {
+            action_state.press(&PlayerAction::Interact);
+        }
+        if keys & INPUT_ROPE_EXTEND != 0 {
+            action_state.press(&PlayerAction::RopeExtend);
+        }
+        if keys & INPUT_ROPE_RETRACT != 0 {
+            action_state.press(&PlayerAction::RopeRetract);
         }
 
         action_state.set_axis_pair(&PlayerAction::PointerDirection, input.pointer_direction);

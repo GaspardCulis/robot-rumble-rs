@@ -12,6 +12,7 @@ use crate::{
         planet,
         player::{self, Player, PlayerAction, weapon},
         projectile,
+        satellite::{grabber, graviton},
     },
 };
 use synctest::{
@@ -43,6 +44,10 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
+            .rollback_component_with_clone::<grabber::GrabbedOrbit>()
+            .rollback_component_with_clone::<grabber::GrabbedBy>()
+            .rollback_component_with_clone::<grabber::NearbyGrabber>()
+            .rollback_component_with_clone::<graviton::Orbited>()
             // Collisions
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
@@ -213,9 +218,13 @@ fn add_local_player_components(
         (PlayerAction::Slot3, KeyCode::Digit3),
         // Reload
         (PlayerAction::Reload, KeyCode::KeyR),
+        // Interaction
+        (PlayerAction::Interact, KeyCode::KeyE),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
+    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
+    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
 
     let local_players_query = query
         .iter()

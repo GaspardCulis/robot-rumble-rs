@@ -6,7 +6,8 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
-use crate::entities::planet::*;
+use crate::entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent};
+use crate::entities::satellite::{Satellite, SatelliteKind, SpawnSatelliteEvent};
 
 use super::physics::Position;
 
@@ -46,6 +47,16 @@ pub struct WorldgenConfig {
 
     pub edge_radius: u32,
     pub edge_margin: u32,
+
+    // Satellite generation
+    min_satellites: u32,
+    max_satellites: u32,
+
+    satellite_min_distance: f32,
+    satellite_max_distance: f32,
+
+    satellite_planet_min_distance: f32,
+    satellite_satellite_min_distance: f32,
 }
 
 #[derive(Resource)]
@@ -62,6 +73,7 @@ pub struct GenerateWorldEvent {
 fn handle_genworld_event(
     mut events: EventReader<GenerateWorldEvent>,
     mut planet_spawn_events: EventWriter<SpawnPlanetEvent>,
+    mut satellite_spawn_events: EventWriter<SpawnSatelliteEvent>,
     config_handle: Res<WorldgenConfigHandle>,
     configs: Res<Assets<WorldgenConfig>>,
 ) {
@@ -108,14 +120,63 @@ fn handle_genworld_event(
                         r#type: PlanetType::Planet,
                         seed: rng.random(),
                     });
+
                     break;
                 }
             }
         }
 
-        planets.into_iter().for_each(|spawn_event| {
+        // Générer un certain nombre de satellites
+        let mut satellite_positions: Vec<Position> = Vec::new();
+        let num_satellites = rng.random_range(config.min_satellites..config.max_satellites);
+
+        for _ in 0..num_satellites {
+            let mut attempts = 0;
+            loop {
+                attempts += 1;
+                if attempts > 10 {
+                    warn!("Could not place satellite after 10 attempts, skipping...");
+                    break;
+                }
+
+                let angle = rng.random_range(0.0..std::f32::consts::TAU);
+                let distance =
+                    rng.random_range(config.satellite_min_distance..config.satellite_max_distance);
+                let position = Position(Vec2::from_angle(angle) * distance);
+
+                let safe_distance_planet = config.satellite_planet_min_distance;
+                let safe_distance_satellite = config.satellite_satellite_min_distance;
+
+                let far_from_planets = planets.iter().all(|planet| {
+                    position.0.distance(planet.position.0)
+                        > (planet.radius.0 as f32 + safe_distance_planet)
+                });
+
+                let far_from_satellites = satellite_positions
+                    .iter()
+                    .all(|existing| position.0.distance(existing.0) > safe_distance_satellite);
+
+                let kind = match rng.random_range(0..3) {
+                    0 => SatelliteKind::Graviton,
+                    1 => SatelliteKind::Bumper,
+                    _ => SatelliteKind::Grabber,
+                };
+
+                if far_from_planets && far_from_satellites {
+                    satellite_spawn_events.send(SpawnSatelliteEvent {
+                        position: position.clone(),
+                        scale: 0.7,
+                        kind,
+                    });
+                    satellite_positions.push(position);
+                    break;
+                }
+            }
+        }
+
+        for spawn_event in planets {
             planet_spawn_events.send(spawn_event);
-        });
+        }
     }
 }
 
@@ -125,14 +186,14 @@ fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<WorldgenConfig>>,
     mut worldgen_events: EventWriter<GenerateWorldEvent>,
-    planets: Query<Entity, With<Planet>>,
+    entities: Query<Entity, Or<(With<Planet>, With<Satellite>)>>,
     seed: Res<crate::network::SessionSeed>,
 ) {
     for event in events.read() {
         match event {
             AssetEvent::Modified { id: _ } => {
-                for planet in planets.iter() {
-                    commands.entity(planet).despawn_recursive();
+                for entity in entities.iter() {
+                    commands.entity(entity).despawn_recursive();
                 }
 
                 worldgen_events.send(GenerateWorldEvent { seed: seed.0 });
