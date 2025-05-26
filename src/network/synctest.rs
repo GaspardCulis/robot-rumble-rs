@@ -2,7 +2,7 @@ use std::hash::{BuildHasher as _, Hash, Hasher as _};
 
 use bevy::{prelude::*, utils::FixedState};
 use bevy_ggrs::{ggrs::GgrsEvent, *};
-use leafwing_input_manager::prelude::{GamepadStick, InputMap, MouseScrollDirection};
+use leafwing_input_manager::prelude::{GamepadStick, InputMap};
 use rand::Rng;
 
 use crate::{
@@ -72,13 +72,9 @@ pub fn spawn_synctest_players(
         (PlayerAction::Slot1, KeyCode::Digit1),
         (PlayerAction::Slot2, KeyCode::Digit2),
         (PlayerAction::Slot3, KeyCode::Digit3),
-        // Interaction
-        (PlayerAction::Interact, KeyCode::KeyE),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
-    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
-    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
 
     let input_map_b = InputMap::new([
         // Jump
