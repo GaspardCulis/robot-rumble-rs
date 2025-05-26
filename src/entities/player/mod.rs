@@ -52,6 +52,7 @@ pub enum PlayerAction {
     Slot3,
     #[actionlike(DualAxis)]
     PointerDirection,
+    Reload,
 }
 
 #[derive(Component, Clone, Debug, Default, PartialEq, Reflect)]
