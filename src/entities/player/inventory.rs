@@ -30,12 +30,8 @@ impl Plugin for InventoryPlugin {
     }
 }
 
-fn spawn_arsenal(mut commands: Commands, query: Query<(Entity, &Player), Without<Arsenal>>) {
-    for (player_entity, _) in query
-        .iter()
-        //Sort by handle for determinism
-        .sort::<&Player>()
-    {
+fn spawn_arsenal(mut commands: Commands, query: Query<Entity, (With<Player>, Without<Arsenal>)>) {
+    for player_entity in query.iter() {
         let arsenal = Arsenal(
             DEFAULT_ARSENAL
                 .iter()

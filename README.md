@@ -37,15 +37,13 @@ rustup component add llvm-tools-preview
 rustup component add rustc-codegen-cranelift-preview --toolchain nightly
 ```
 
-## Exporting
+### WASM
 
-This section covers exporting the game to specific platforms using the
-[just](https://github.com/casey/just) command runner.
+This section covers exporting the release version to WASM on a NixOS machine.
 
 ```sh
-just --list
-# Run some recipe
-just release-build
+cargo build --profile wasm-release --target wasm32-unknown-unknown --no-default-features --features embedded_assets
+wasm-bindgen --no-typescript --target web --out-dir <OUT_DIR> --out-name "robot-rumble" target/wasm32-unknown-unknown/wasm-release/robot-rumble-client.wasm
 ```
 
 ## TODOS
