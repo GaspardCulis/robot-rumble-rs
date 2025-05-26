@@ -52,9 +52,12 @@ impl Plugin for ProjectilePlugin {
             .add_systems(
                 GgrsSchedule,
                 (
-                    (add_physical_properties, check_player_collisions)
+                    add_physical_properties
                         .before(PhysicsSet::Gravity)
                         .after(PhysicsSet::Player),
+                    check_player_collisions
+                        .before(PhysicsSet::Movement)
+                        .after(PhysicsSet::Gravity),
                     check_planet_collisions.after(PhysicsSet::Collision),
                 ),
             );
