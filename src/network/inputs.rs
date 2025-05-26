@@ -160,9 +160,9 @@ fn update_local_pointer_direction(
     windows: Query<&Window>,
     query_view: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     local_players: Res<LocalPlayers>,
-) {
-    let window = windows.single();
-    let (camera, view) = query_view.single();
+) -> Result {
+    let window = windows.single()?;
+    let (camera, view) = query_view.single()?;
     if let Some(world_position) = window
         .cursor_position()
         .map(|cursor| camera.viewport_to_world_2d(view, cursor).unwrap())
@@ -176,5 +176,9 @@ fn update_local_pointer_direction(
 
             action_state.set_axis_pair(&PlayerAction::PointerDirection, pointer_direction);
         }
+    } else {
+        // Not an error pointer could be out of window
     }
+
+    Ok(())
 }
