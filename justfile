@@ -11,6 +11,16 @@ release-build:
 wasm-build:
     @echo "Building WASM release target"
     cargo build --profile wasm-release --target wasm32-unknown-unknown --no-default-features --features embedded_assets
-    @echo "Generating website"
+    @echo "Generating website template to `./web`"
     wasm-bindgen --no-typescript --target web --out-dir ./web --out-name "robot-rumble" target/wasm32-unknown-unknown/wasm-release/robot-rumble-client.wasm
+    
+check:
+    @echo "Checking code formatting"
+    cargo fmt --all --check
+    @echo "Running tests"
+    cargo test
+
+format:
+    @echo "Formatting code"
+    cargo fmt
     
