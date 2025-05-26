@@ -77,7 +77,8 @@ mod tests {
 
         let image = gradient(&offsets, &colors);
 
-        let data = image.data.as_slice();
+        let data = image.data.expect("Should not be empty");
+
         for i in (0..data.len()).step_by(4) {
             assert_eq!(data[i], 255); // Red
             assert_eq!(data[i + 1], 0); // Green
@@ -95,7 +96,7 @@ mod tests {
         ];
         let image = gradient(&offsets, &colors);
 
-        let data = image.data.as_slice();
+        let data = image.data.expect("Should not be empty");
         for x in 0..64 {
             let u = x as f32 / 63.0;
             let color = interpolate_colors(&offsets, &colors, u);
@@ -118,7 +119,7 @@ mod tests {
         ];
         let image = gradient(&offsets, &colors);
 
-        let data = image.data.as_slice();
+        let data = image.data.expect("Should not be empty");
         for x in 0..64 {
             let u = x as f32 / 63.0;
             let color = interpolate_colors(&offsets, &colors, u);
