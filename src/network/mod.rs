@@ -46,6 +46,7 @@ impl Plugin for NetworkPlugin {
             // Collisions
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
+            .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
