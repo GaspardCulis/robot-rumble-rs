@@ -189,7 +189,7 @@ fn generate_world(
     mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>,
     seed: Res<SessionSeed>,
 ) {
-    worldgen_events.send(worldgen::GenerateWorldEvent { seed: seed.0 });
+    worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
 }
 
 fn add_local_player_components(

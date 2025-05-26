@@ -163,7 +163,7 @@ fn handle_genworld_event(
                 };
 
                 if far_from_planets && far_from_satellites {
-                    satellite_spawn_events.send(SpawnSatelliteEvent {
+                    satellite_spawn_events.write(SpawnSatelliteEvent {
                         position: position.clone(),
                         scale: 0.7,
                         kind,
@@ -175,7 +175,7 @@ fn handle_genworld_event(
         }
 
         for spawn_event in planets {
-            planet_spawn_events.send(spawn_event);
+            planet_spawn_events.write(spawn_event);
         }
     }
 }
@@ -196,7 +196,7 @@ fn handle_config_reload(
                     commands.entity(entity).despawn();
                 }
 
-                worldgen_events.send(GenerateWorldEvent { seed: seed.0 });
+                worldgen_events.write(GenerateWorldEvent { seed: seed.0 });
             }
             _ => {}
         };
