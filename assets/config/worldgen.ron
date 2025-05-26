@@ -11,13 +11,4 @@
 
     edge_radius: 3000,
     edge_margin: 800,
-
-    min_satellites: 5,
-    max_satellites: 10,
-
-    satellite_min_distance: 200.0,
-    satellite_max_distance: 2000.0,
-
-    satellite_planet_min_distance: 250.0,
-    satellite_satellite_min_distance: 350.0,
 )

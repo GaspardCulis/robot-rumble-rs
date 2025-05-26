@@ -12,7 +12,6 @@ use crate::{
         planet,
         player::{self, Player, PlayerAction, weapon},
         projectile,
-        satellite::{grabber, graviton},
     },
 };
 use synctest::{
@@ -44,13 +43,10 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<weapon::Triggered>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
-            .rollback_component_with_clone::<grabber::GrabbedOrbit>()
-            .rollback_component_with_clone::<grabber::GrabbedBy>()
-            .rollback_component_with_clone::<grabber::NearbyGrabber>()
-            .rollback_component_with_clone::<graviton::Orbited>()
             // Collisions
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
+            .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
@@ -215,13 +211,9 @@ fn add_local_player_components(
         (PlayerAction::Slot1, KeyCode::Digit1),
         (PlayerAction::Slot2, KeyCode::Digit2),
         (PlayerAction::Slot3, KeyCode::Digit3),
-        // Interaction
-        (PlayerAction::Interact, KeyCode::KeyE),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
-    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
-    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
 
     let local_players_query = query
         .iter()
