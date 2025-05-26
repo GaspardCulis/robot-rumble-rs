@@ -24,7 +24,7 @@ pub struct OrbitCooldown {
 }
 
 #[derive(Component)]
-#[require(Name(|| Name::new("Graviton")))]
+#[require(Name::new("Graviton"))]
 pub struct Graviton;
 
 #[derive(Component)]

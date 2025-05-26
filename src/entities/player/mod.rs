@@ -33,10 +33,10 @@ type PlanetCollision = CollisionState<Player, planet::Planet>;
     PlayerInputVelocity,
     Passive,
     ActionState<PlayerAction>,
-    Mass(|| Mass(PLAYER_MASS)),
-    CollisionShape(|| CollisionShape::Circle(PLAYER_RADIUS)),
-    PlayerSkin(|| PlayerSkin("laika".into())),
-    Name(|| Name::new("Player")),
+    Mass(PLAYER_MASS),
+    CollisionShape::Circle(PLAYER_RADIUS),
+    PlayerSkin("laika".into()),
+    Name::new("Player"),
 )]
 pub struct Player {
     pub handle: usize,

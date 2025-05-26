@@ -15,7 +15,7 @@ const ROPE_MAX_LENGTH: f32 = 275.0;
 const ROPE_ADJUST_SPEED: f32 = 50.0;
 
 #[derive(Component)]
-#[require(Name(|| Name::new("Grabber")))]
+#[require(Name::new("Grabber"))]
 pub struct Grabber;
 
 #[derive(Component)]
@@ -38,13 +38,13 @@ pub struct GrabbedOrbit {
 }
 
 #[derive(Component)]
-#[require(Name(|| Name::new("PlayerPrompt")))]
+#[require(Name::new("PlayerPrompt"))]
 pub struct PlayerPrompt {
     pub player: Entity,
 }
 
 #[derive(Component)]
-#[require(Name(|| Name::new("GrabberRope")))]
+#[require(Name::new("GrabberRope"))]
 pub struct GrabberRope {
     pub player: Entity,
     pub grabber: Entity,
