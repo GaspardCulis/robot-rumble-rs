@@ -21,6 +21,10 @@ pub struct WeaponState {
     reload_timer: Timer,
 }
 
+#[derive(Component, Reflect)]
+#[relationship_target(relationship = super::Weapon)]
+pub struct Owner(Entity);
+
 #[derive(Resource)]
 struct WeaponsConfigHandle(Handle<config::WeaponsConfig>);
 
@@ -139,14 +143,14 @@ fn fire_weapon_system(
             &Velocity,
             &Rotation,
             &WeaponStats,
-            Entity,
+            &Owner,
         ),
         With<WeaponType>,
     >,
-    mut owner_query: Query<(&mut Velocity, &super::Weapon), Without<WeaponType>>,
+    mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    for (mut state, triggered, position, velocity, rotation, stats, entity) in
+    for (mut state, triggered, position, velocity, rotation, stats, owner) in
         weapon_query.iter_mut()
     {
         if triggered.0 && state.cooldown_timer.finished() && state.current_ammo > 0 {
@@ -177,12 +181,8 @@ fn fire_weapon_system(
             }
 
             // Recoil
-            if let Some((mut velocity, _)) = owner_query
-                .iter_mut()
-                // FIX: Use bevy 0.16 relationships for better performance
-                .find(|(_, weapon)| weapon.0 == entity)
-            {
-                velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
+            if let Some(mut owner_velocity) = owner_query.get_mut(owner.0).ok() {
+                owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
             }
         }
     }

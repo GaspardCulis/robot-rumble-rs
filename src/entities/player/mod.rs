@@ -66,7 +66,7 @@ pub enum PlayerAction {
 pub struct PlayerSkin(pub String);
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
-// TODO: Use bevy 0.16 relationships
+#[relationship(relationship_target = weapon::Owner)]
 pub struct Weapon(pub Entity);
 
 pub struct PlayerPlugin;
