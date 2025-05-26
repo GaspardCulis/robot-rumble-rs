@@ -145,7 +145,7 @@ fn check_planet_collisions(
 ) {
     for (projectile, planet_collision) in query.iter() {
         if planet_collision.collides {
-            commands.entity(projectile).despawn_recursive();
+            commands.entity(projectile).despawn();
         }
     }
 }
@@ -166,7 +166,7 @@ fn check_player_collisions(
                 }
             }
 
-            commands.entity(projectile).despawn_recursive();
+            commands.entity(projectile).despawn();
         }
     }
 }

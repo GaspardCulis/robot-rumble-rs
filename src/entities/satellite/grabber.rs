@@ -297,7 +297,7 @@ fn update_grabber_ropes(
                     ..Default::default()
                 });
             }
-            _ => commands.entity(entity).despawn_recursive(),
+            _ => commands.entity(entity).despawn(),
         }
     }
 }
@@ -348,7 +348,7 @@ fn cleanup_grabber_ropes(
 ) {
     for (entity, rope) in rope_query.iter() {
         if let Ok(None) = player_query.get(rope.player) {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

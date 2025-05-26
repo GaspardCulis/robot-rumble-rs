@@ -73,7 +73,7 @@ fn check_outsiders(
                 // FIX: Temporary way to handle death
                 commands.entity(entity).remove::<Position>();
             } else {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
             }
         }
     }

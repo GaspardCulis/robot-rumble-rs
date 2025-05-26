@@ -193,7 +193,7 @@ fn handle_config_reload(
         match event {
             AssetEvent::Modified { id: _ } => {
                 for entity in entities.iter() {
-                    commands.entity(entity).despawn_recursive();
+                    commands.entity(entity).despawn();
                 }
 
                 worldgen_events.send(GenerateWorldEvent { seed: seed.0 });
