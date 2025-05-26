@@ -20,7 +20,7 @@ pub enum WeaponMode {
 
 #[derive(Component, Clone, Debug, Reflect)]
 pub struct WeaponState {
-    current_ammo: usize,
+    pub current_ammo: usize,
     cooldown_timer: Timer,
     reload_timer: Timer,
 }
