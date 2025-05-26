@@ -1,11 +1,6 @@
 use crate::{
-    core::{
-        gravity::Mass,
-        physics::{PhysicsSet, Position, Rotation, Velocity},
-    },
-    entities::projectile::{
-        self, Damage, Knockback, Projectile, ProjectilesConfigHandle, config::ProjectilesConfig,
-    },
+    core::physics::{PhysicsSet, Position, Rotation, Velocity},
+    entities::projectile::{Damage, Knockback, ProjectilesConfigHandle, config::ProjectilesConfig},
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -15,8 +10,14 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 mod config;
 pub use config::{WeaponStats, WeaponType};
 
-#[derive(Component, Clone, Default, Reflect)]
-pub struct Triggered(pub bool);
+#[derive(Component, Clone, PartialEq, Default, Reflect)]
+pub enum WeaponMode {
+    #[default]
+    Idle,
+    Triggered,
+    Reloading,
+}
+
 #[derive(Component, Clone, Debug, Reflect)]
 pub struct WeaponState {
     current_ammo: usize,
@@ -33,9 +34,9 @@ impl Plugin for WeaponPlugin {
         app.register_type::<WeaponType>()
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
-            .register_type::<Triggered>()
+            .register_type::<WeaponMode>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
-            .register_required_components::<WeaponType, Triggered>()
+            .register_required_components::<WeaponType, WeaponMode>()
             .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
             .add_systems(Startup, load_weapons_config)
             .add_systems(
@@ -123,8 +124,11 @@ fn add_sprite(
 }
 
 /// Also handles ammo reloads for convenience
-fn tick_weapon_timers(mut query: Query<(&mut WeaponState, &WeaponStats)>, time: Res<Time>) {
-    for (mut state, stats) in query.iter_mut() {
+fn tick_weapon_timers(
+    mut query: Query<(&mut WeaponState, &WeaponStats, &mut WeaponMode), With<Position>>,
+    time: Res<Time>,
+) {
+    for (mut state, stats, mut mode) in query.iter_mut() {
         state.cooldown_timer.tick(time.delta());
         state.reload_timer.tick(time.delta());
 
@@ -140,7 +144,7 @@ fn fire_weapon_system(
     mut weapon_query: Query<
         (
             &mut WeaponState,
-            &Triggered,
+            &WeaponMode,
             &Position,
             &Velocity,
             &Rotation,
@@ -162,10 +166,11 @@ fn fire_weapon_system(
             return;
         };
 
-    for (mut state, triggered, position, velocity, rotation, stats, entity) in
-        weapon_query.iter_mut()
-    {
-        if triggered.0 && state.cooldown_timer.finished() && state.current_ammo > 0 {
+    for (mut state, mode, position, velocity, rotation, stats, entity) in weapon_query.iter_mut() {
+        if (*mode == WeaponMode::Triggered)
+            && state.cooldown_timer.finished()
+            && state.current_ammo > 0
+        {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
