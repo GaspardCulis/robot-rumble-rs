@@ -57,7 +57,7 @@ impl Plugin for ProjectilePlugin {
                         .after(PhysicsSet::Player),
                     check_player_collisions
                         .before(PhysicsSet::Movement)
-                        .after(PhysicsSet::Gravity),
+                        .after(PhysicsSet::Interaction),
                     check_planet_collisions.after(PhysicsSet::Collision),
                 ),
             );
