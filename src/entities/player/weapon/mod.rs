@@ -130,11 +130,13 @@ fn tick_weapon_timers(
 ) {
     for (mut state, stats, mut mode) in query.iter_mut() {
         state.cooldown_timer.tick(time.delta());
-        state.reload_timer.tick(time.delta());
-
+        if *mode == WeaponMode::Reloading {
+            state.reload_timer.tick(time.delta());
+        }
         // Verify current_ammo is 0 to avoid a subtle bug where we fire when WeaponState is instantiated
-        if state.reload_timer.just_finished() && state.current_ammo == 0 {
+        if state.reload_timer.finished() && state.current_ammo < stats.magazine_size {
             state.current_ammo = stats.magazine_size;
+            *mode = WeaponMode::Idle;
         }
     }
 }
@@ -196,12 +198,10 @@ fn fire_weapon_system(
             }
 
             state.current_ammo -= 1;
+
             // Reset timers if shooting
             state.cooldown_timer.reset();
-
-            if state.current_ammo == 0 {
-                state.reload_timer.reset();
-            }
+            state.reload_timer.reset();
 
             // Recoil
             if let Some((mut velocity, _)) = owner_query
