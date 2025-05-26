@@ -1,4 +1,5 @@
 use crate::core::{
+    collision::CollisionShape,
     gravity::Mass,
     physics::Position,
     worldgen::{self, GenerationSeed},
@@ -41,6 +42,7 @@ struct PlanetBundle {
     marker: Planet,
     position: Position,
     radius: Radius,
+    collision_shape: CollisionShape,
     r#type: PlanetType,
     mass: Mass,
 }
@@ -54,6 +56,7 @@ impl PlanetBundle {
             name: Name::new("Planet"),
             marker: Planet,
             mass: Mass(radius_to_mass(radius)),
+            collision_shape: CollisionShape::Circle(radius.0 as f32),
         }
     }
 }
@@ -72,7 +75,7 @@ impl Plugin for PlanetPlugin {
                 (
                     handle_spawn_planet_event,
                     spawn_config_layers,
-                    #[cfg(debug_assertions)]
+                    #[cfg(feature = "dev_tools")]
                     handle_config_reload,
                 ),
             );
@@ -211,7 +214,7 @@ fn spawn_config_layers(
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "dev_tools")]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<PlanetsConfig>>,

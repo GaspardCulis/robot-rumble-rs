@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 #[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
-#[cfg(debug_assertions)]
+#[cfg(feature = "dev_tools")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use clap::Parser;
 
@@ -59,7 +59,7 @@ fn main() {
     .init_state::<GameState>()
     .insert_resource(args);
 
-    #[cfg(debug_assertions)]
+    #[cfg(feature = "dev_tools")]
     app.add_plugins(WorldInspectorPlugin::new());
 
     app.run();

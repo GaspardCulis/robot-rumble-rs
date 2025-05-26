@@ -42,7 +42,7 @@ impl Plugin for WeaponPlugin {
             .add_systems(
                 Update,
                 (
-                    #[cfg(debug_assertions)]
+                    #[cfg(feature = "dev_tools")]
                     handle_config_reload,
                     (add_stats_component, add_sprite)
                         .before(PhysicsSet::Player)
@@ -182,7 +182,8 @@ fn fire_weapon_system(
 
                     let new_projectile = (
                         stats.projectile,
-                        Position(position.0),
+                        // Avoid bullet hitting player firing
+                        Position(position.0 + Vec2::from_angle(rotation.0) * super::PLAYER_RADIUS),
                         Velocity(
                             Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
                                 + velocity.0,
@@ -215,7 +216,7 @@ fn fire_weapon_system(
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "dev_tools")]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<config::WeaponsConfig>>,

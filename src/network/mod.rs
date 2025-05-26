@@ -7,8 +7,9 @@ use rand::Rng as _;
 
 use crate::{
     GameState,
-    core::{camera::CameraFollowTarget, physics, worldgen},
+    core::{camera::CameraFollowTarget, collision, physics, worldgen},
     entities::{
+        planet,
         player::{self, Player, PlayerAction, weapon},
         projectile,
     },
@@ -37,12 +38,15 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Position>()
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
-            .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .rollback_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
+            // Collisions
+            .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
+            .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
+            .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
@@ -137,8 +141,12 @@ fn wait_start_match(
 
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(args.players)
-        .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 })
         .with_input_delay(2);
+
+    if cfg!(feature = "dev_tools") {
+        session_builder =
+            session_builder.with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 });
+    }
 
     for (i, player) in players.into_iter().enumerate() {
         session_builder = session_builder
