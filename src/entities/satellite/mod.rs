@@ -105,11 +105,8 @@ fn handle_spawn_satellite(
 
     for event in events.read() {
         let mut entity = commands.spawn((
-            Transform {
-                translation: event.position.0.extend(0.0),
-                scale: Vec3::splat(event.scale),
-                ..default()
-            },
+            event.position.clone(),
+            Transform::from_scale(Vec3::splat(event.scale)),
             GlobalTransform::default(),
             Visibility::Visible,
             Satellite,

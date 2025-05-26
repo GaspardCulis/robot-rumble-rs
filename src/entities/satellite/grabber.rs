@@ -171,7 +171,6 @@ fn handle_grabber_interaction(
     mut player_query: Query<
         (
             Entity,
-            &Player,
             &ActionState<PlayerAction>,
             &Position,
             Option<&NearbyGrabber>,
@@ -181,14 +180,11 @@ fn handle_grabber_interaction(
         With<Player>,
     >,
     grabber_query: Query<&Transform, With<Grabber>>,
-    local_players: Res<LocalPlayers>,
 ) {
-    for (player_entity, player, actions, position, nearby, grabbed_by, vel) in
+    for (player_entity, actions, position, nearby, grabbed_by, vel) in
         player_query.iter_mut()
     {
-        if !local_players.0.contains(&player.handle) {
-            continue;
-        }
+        
 
         let is_pressed = actions.pressed(&PlayerAction::Interact);
 
