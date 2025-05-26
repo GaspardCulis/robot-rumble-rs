@@ -169,7 +169,7 @@ fn update_orbit_cooldowns(
         cooldown.timer.tick(time.delta());
 
         if let Ok(visual) = visual_query.get(entity) {
-            for &child in children.iter() {
+            for child in children.iter() {
                 if let Ok(mut sprite) = sprite_query.get_mut(child) {
                     sprite.image = if cooldown.timer.finished() {
                         visual.active.clone()
