@@ -107,7 +107,7 @@ WeaponsConfig({
             magazine_size: 2,
             reload_time: 1.5,
             damage_multiplier: 0.0,
-            projectile_speed: 1000,
+            projectile_speed: 1500,
             shot_bullet_count: 1,
             recoil: 100,
             spread: 0.0001,

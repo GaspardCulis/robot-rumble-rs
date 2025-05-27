@@ -12,7 +12,7 @@ ProjectilesConfig({
     ),
     Blackhole: (
         stats: (
-            mass: 20,
+            mass: 1,
             damage: 0.0,
             radius: 1.0,
             knockback: 10.0,
