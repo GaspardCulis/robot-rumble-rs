@@ -123,30 +123,30 @@ fn display_interact_prompt(
             continue;
         }
 
-        if prompt_query.iter().all(|p| p.player != player_entity) {
-            if let Ok(grabber_transform) = grabber_query.get(nearby_grabber.0) {
-                let font = asset_server.load("fonts/FiraSans-Bold.ttf");
-                commands.spawn((
-                    Text2d::new(prompt.message.clone()),
-                    TextFont {
-                        font,
-                        font_size: 30.0,
-                        ..Default::default()
-                    },
-                    TextColor(Color::WHITE),
-                    TextLayout {
-                        justify: JustifyText::Center,
-                        ..Default::default()
-                    },
-                    Transform::from_translation(
-                        grabber_transform.translation + Vec3::new(0.0, -100.0, 2.0),
-                    ),
-                    GlobalTransform::default(),
-                    PlayerPrompt {
-                        player: player_entity,
-                    },
-                ));
-            }
+        if prompt_query.iter().all(|p| p.player != player_entity)
+            && let Ok(grabber_transform) = grabber_query.get(nearby_grabber.0)
+        {
+            let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+            commands.spawn((
+                Text2d::new(prompt.message.clone()),
+                TextFont {
+                    font,
+                    font_size: 30.0,
+                    ..Default::default()
+                },
+                TextColor(Color::WHITE),
+                TextLayout {
+                    justify: JustifyText::Center,
+                    ..Default::default()
+                },
+                Transform::from_translation(
+                    grabber_transform.translation + Vec3::new(0.0, -100.0, 2.0),
+                ),
+                GlobalTransform::default(),
+                PlayerPrompt {
+                    player: player_entity,
+                },
+            ));
         }
     }
 }
@@ -184,50 +184,50 @@ fn handle_grabber_interaction(
         let is_pressed = actions.pressed(&PlayerAction::Interact);
 
         if is_pressed && grabbed_by.is_none() {
-            if let Some(nearby) = nearby {
-                if let Ok(grabber_tf) = grabber_query.get(nearby.0) {
-                    let center = grabber_tf.translation.truncate();
-                    let pos = position.0;
-                    let offset = pos - center;
-                    let distance = offset.length();
-                    let angle = atan2(offset.y, offset.x);
+            if let Some(nearby) = nearby
+                && let Ok(grabber_tf) = grabber_query.get(nearby.0)
+            {
+                let center = grabber_tf.translation.truncate();
+                let pos = position.0;
+                let offset = pos - center;
+                let distance = offset.length();
+                let angle = atan2(offset.y, offset.x);
 
-                    let tangent = if offset.length_squared() > f32::EPSILON {
-                        Vec2::new(-offset.y, offset.x).normalize()
-                    } else {
-                        Vec2::ZERO
-                    };
+                let tangent = if offset.length_squared() > f32::EPSILON {
+                    Vec2::new(-offset.y, offset.x).normalize()
+                } else {
+                    Vec2::ZERO
+                };
 
-                    let sign = if vel.0.dot(tangent) >= 0.0 { 1.0 } else { -1.0 };
-                    let mut speed = vel.0.dot(tangent);
-                    if speed.abs() < 600.0 {
-                        speed = 600.0 * sign;
-                    }
-
-                    commands
-                        .entity(player_entity)
-                        .insert(GrabbedBy(nearby.0))
-                        .insert(GrabbedOrbit {
-                            center,
-                            distance,
-                            angle,
-                            initial_speed: speed,
-                        });
-                    let mesh = meshes.add(Rectangle::new(4.0, 1.0));
-                    let material = materials.add(Color::srgb(0.0, 0.0, 1.0));
-
-                    commands.spawn((
-                        Mesh2d(mesh),
-                        MeshMaterial2d(material),
-                        Transform::from_translation(((center + pos) / 2.0).extend(1.0))
-                            .looking_at((pos - center).extend(0.0), Vec3::Y),
-                        GlobalTransform::default(),
-                        GrabberRope {
-                            player: player_entity,
-                            grabber: nearby.0,
-                        },
-                    ));
+                let sign = if vel.0.dot(tangent) >= 0.0 { 1.0 } else { -1.0 };
+                let mut speed = vel.0.dot(tangent);
+                if speed.abs() < 600.0 {
+                    speed = 600.0 * sign;
                 }
+
+                commands
+                    .entity(player_entity)
+                    .insert(GrabbedBy(nearby.0))
+                    .insert(GrabbedOrbit {
+                        center,
+                        distance,
+                        angle,
+                        initial_speed: speed,
+                    });
+                let mesh = meshes.add(Rectangle::new(4.0, 1.0));
+                let material = materials.add(Color::srgb(0.0, 0.0, 1.0));
+
+                commands.spawn((
+                    Mesh2d(mesh),
+                    MeshMaterial2d(material),
+                    Transform::from_translation(((center + pos) / 2.0).extend(1.0))
+                        .looking_at((pos - center).extend(0.0), Vec3::Y),
+                    GlobalTransform::default(),
+                    GrabberRope {
+                        player: player_entity,
+                        grabber: nearby.0,
+                    },
+                ));
             }
         } else if !is_pressed && grabbed_by.is_some() {
             commands

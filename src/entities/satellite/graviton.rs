@@ -68,10 +68,10 @@ fn detect_player_orbit_entry(
 
     for (player_entity, player_position, velocity) in player_query.iter_mut() {
         for (graviton_transform, maybe_cooldown) in graviton_query.iter() {
-            if let Some(cooldown) = maybe_cooldown {
-                if !cooldown.timer.finished() {
-                    continue; // graviton encore en cooldown
-                }
+            if let Some(cooldown) = maybe_cooldown
+                && !cooldown.timer.finished()
+            {
+                continue; // graviton encore en cooldown
             }
 
             let graviton_pos = graviton_transform.translation.truncate();
