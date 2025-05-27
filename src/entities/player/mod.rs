@@ -168,7 +168,6 @@ fn update_weapon(
                 *mode = WeaponMode::Triggered;
             } else if pressed.contains(&PlayerAction::Reload) {
                 *mode = WeaponMode::Reloading;
-            // a bit garbage code
             } else if *mode != WeaponMode::Reloading {
                 *mode = WeaponMode::Idle;
             }
