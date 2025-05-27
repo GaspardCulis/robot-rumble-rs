@@ -19,6 +19,7 @@ struct MapLimit {
 }
 
 #[derive(Event)]
+#[allow(dead_code)] // Temporarly until entity gets used
 /// Points to a Player entity
 pub struct DeathEvent(pub Entity);
 
@@ -68,12 +69,12 @@ fn check_outsiders(
             if is_weapon {
                 continue;
             } else if is_player {
-                death_events.send(DeathEvent(entity));
+                death_events.write(DeathEvent(entity));
 
                 // FIX: Temporary way to handle death
                 commands.entity(entity).remove::<Position>();
             } else {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
             }
         }
     }

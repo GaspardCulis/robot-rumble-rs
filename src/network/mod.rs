@@ -40,7 +40,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
-            .rollback_component_with_clone::<player::Weapon>()
+            .rollback_immutable_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
@@ -189,7 +189,7 @@ fn generate_world(
     mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>,
     seed: Res<SessionSeed>,
 ) {
-    worldgen_events.send(worldgen::GenerateWorldEvent { seed: seed.0 });
+    worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
 }
 
 fn add_local_player_components(

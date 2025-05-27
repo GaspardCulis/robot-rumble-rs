@@ -2,7 +2,7 @@ use bevy::prelude::*;
 #[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 #[cfg(feature = "dev_tools")]
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use clap::Parser;
 
 mod core;
@@ -60,7 +60,10 @@ fn main() {
     .insert_resource(args);
 
     #[cfg(feature = "dev_tools")]
-    app.add_plugins(WorldInspectorPlugin::new());
+    app.add_plugins(EguiPlugin {
+        enable_multipass_for_primary_context: true,
+    })
+    .add_plugins(WorldInspectorPlugin::new());
 
     app.run();
 }

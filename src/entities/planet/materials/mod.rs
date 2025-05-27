@@ -2,7 +2,7 @@ use crate::network;
 
 use super::Radius;
 use bevy::{
-    asset::load_internal_asset,
+    asset::{load_internal_asset, weak_handle},
     prelude::*,
     reflect::GetTypeRegistration,
     sprite::{Material2d, Material2dPlugin},
@@ -38,8 +38,7 @@ pub use under::UnderMaterial;
 
 pub struct PlanetMaterialsPlugin;
 
-const PLANET_COMMON_HANDLE: Handle<Shader> =
-    Handle::weak_from_u128(0xF750100345124C4BA08A7406DD1CFEC1);
+const PLANET_COMMON_HANDLE: Handle<Shader> = weak_handle!("7c4ab632-3073-479a-936d-dbe7e2d7ece7");
 
 pub trait PlanetMaterial: Material2d + GetTypeRegistration {
     type Config: Component + Clone;

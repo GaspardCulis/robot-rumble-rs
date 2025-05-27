@@ -34,10 +34,10 @@ type PlanetCollision = CollisionState<Player, planet::Planet>;
     PlayerInputVelocity,
     Passive,
     ActionState<PlayerAction>,
-    Mass(|| Mass(PLAYER_MASS)),
-    CollisionShape(|| CollisionShape::Circle(PLAYER_RADIUS)),
-    PlayerSkin(|| PlayerSkin("laika".into())),
-    Name(|| Name::new("Player")),
+    Mass(PLAYER_MASS),
+    CollisionShape::Circle(PLAYER_RADIUS),
+    PlayerSkin("laika".into()),
+    Name::new("Player"),
 )]
 pub struct Player {
     pub handle: usize,
@@ -68,7 +68,7 @@ pub enum PlayerAction {
 pub struct PlayerSkin(pub String);
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
-// TODO: Use bevy 0.16 relationships
+#[relationship(relationship_target = weapon::Owner)]
 pub struct Weapon(pub Entity);
 
 pub struct PlayerPlugin;
@@ -140,7 +140,7 @@ fn player_movement(
     }
 }
 
-pub fn update_weapon(
+fn update_weapon(
     player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
     mut weapon_query: Query<
         (
@@ -180,7 +180,7 @@ pub fn update_weapon(
     }
 }
 
-pub fn player_physics(
+fn player_physics(
     mut player_query: Query<
         (
             &mut Position,
@@ -210,9 +210,10 @@ pub fn player_physics(
             .unwrap_or_default();
 
         // Rotate towards it
-        let target_angle = (nearest_planet_pos.y - player_position.0.y)
-            .atan2(nearest_planet_pos.x - player_position.0.x)
-            + PI / 2.;
+        let target_angle = bevy::math::ops::atan2(
+            nearest_planet_pos.y - player_position.0.y,
+            nearest_planet_pos.x - player_position.0.x,
+        ) + PI / 2.;
         let mut short_angle = (target_angle - player_rotation.0) % math::RAD;
         short_angle = (2. * short_angle) % math::RAD - short_angle;
         player_rotation.0 += short_angle * time.delta_secs() * 6.;

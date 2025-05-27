@@ -84,15 +84,12 @@ fn update_animation_state(
     time: Res<Time>,
 ) {
     for (mut state, anims, inputs, planet_collision) in query.iter_mut() {
-        match state.bypass_change_detection() {
-            PlayerAnimationState::Jump(timer) => {
-                timer.tick(time.delta());
-                if !timer.just_finished() {
-                    // Let animation finish
-                    continue;
-                }
+        if let PlayerAnimationState::Jump(timer) = state.bypass_change_detection() {
+            timer.tick(time.delta());
+            if !timer.just_finished() {
+                // Let animation finish
+                continue;
             }
-            _ => (),
         };
 
         let new_state = if !planet_collision.collides {

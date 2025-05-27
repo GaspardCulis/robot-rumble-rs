@@ -25,6 +25,10 @@ pub struct WeaponState {
     reload_timer: Timer,
 }
 
+#[derive(Component, Reflect)]
+#[relationship_target(relationship = super::Weapon)]
+pub struct Owner(Entity);
+
 #[derive(Resource)]
 struct WeaponsConfigHandle(Handle<config::WeaponsConfig>);
 
@@ -148,11 +152,11 @@ fn fire_weapon_system(
             &Velocity,
             &Rotation,
             &WeaponStats,
-            Entity,
+            &Owner,
         ),
         With<WeaponType>,
     >,
-    mut owner_query: Query<(&mut Velocity, &super::Weapon), Without<WeaponType>>,
+    mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
     projectile_config_handle: Res<ProjectilesConfigHandle>,
     projectile_config_assets: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
@@ -165,7 +169,7 @@ fn fire_weapon_system(
             return;
         };
 
-    for (mut state, mode, position, velocity, rotation, stats, entity) in weapon_query.iter_mut() {
+    for (mut state, mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut() {
         if (*mode == WeaponMode::Triggered)
             && state.cooldown_timer.finished()
             && state.current_ammo > 0
@@ -205,12 +209,8 @@ fn fire_weapon_system(
             state.reload_timer.reset();
 
             // Recoil
-            if let Some((mut velocity, _)) = owner_query
-                .iter_mut()
-                // FIX: Use bevy 0.16 relationships for better performance
-                .find(|(_, weapon)| weapon.0 == entity)
-            {
-                velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
+            if let Ok(mut owner_velocity) = owner_query.get_mut(owner.0) {
+                owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
             }
         }
     }
@@ -223,14 +223,11 @@ fn handle_config_reload(
     weapons: Query<Entity, Or<(With<WeaponStats>, With<Sprite>)>>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for weapon in weapons.iter() {
-                    commands.entity(weapon).remove::<WeaponStats>();
-                    commands.entity(weapon).remove::<Sprite>();
-                }
+        if let AssetEvent::Modified { id: _ } = event {
+            for weapon in weapons.iter() {
+                commands.entity(weapon).remove::<WeaponStats>();
+                commands.entity(weapon).remove::<Sprite>();
             }
-            _ => {}
         };
     }
 }

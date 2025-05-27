@@ -6,8 +6,8 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
-use crate::entities::planet::{Planet, PlanetType, Radius, SpawnPlanetEvent};
-use crate::entities::satellite::{Satellite, SatelliteKind, SpawnSatelliteEvent};
+use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
+use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
 
 use super::physics::Position;
 
@@ -163,7 +163,7 @@ fn handle_genworld_event(
                 };
 
                 if far_from_planets && far_from_satellites {
-                    satellite_spawn_events.send(SpawnSatelliteEvent {
+                    satellite_spawn_events.write(SpawnSatelliteEvent {
                         position: position.clone(),
                         scale: 0.7,
                         kind,
@@ -175,7 +175,7 @@ fn handle_genworld_event(
         }
 
         for spawn_event in planets {
-            planet_spawn_events.send(spawn_event);
+            planet_spawn_events.write(spawn_event);
         }
     }
 }
@@ -186,19 +186,22 @@ fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<WorldgenConfig>>,
     mut worldgen_events: EventWriter<GenerateWorldEvent>,
-    entities: Query<Entity, Or<(With<Planet>, With<Satellite>)>>,
+    entities: Query<
+        Entity,
+        Or<(
+            With<crate::entities::planet::Planet>,
+            With<crate::entities::satellite::Satellite>,
+        )>,
+    >,
     seed: Res<crate::network::SessionSeed>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for entity in entities.iter() {
-                    commands.entity(entity).despawn_recursive();
-                }
-
-                worldgen_events.send(GenerateWorldEvent { seed: seed.0 });
+        if let AssetEvent::Modified { id: _ } = event {
+            for entity in entities.iter() {
+                commands.entity(entity).despawn();
             }
-            _ => {}
+
+            worldgen_events.write(GenerateWorldEvent { seed: seed.0 });
         };
     }
 }

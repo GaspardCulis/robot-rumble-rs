@@ -73,8 +73,8 @@ fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&R
         transform.translation.x = position.x;
         transform.translation.y = position.y;
 
-        if rotation.is_some() {
-            transform.rotation = Quat::from_rotation_z(rotation.unwrap().0);
+        if let Some(rotation) = rotation {
+            transform.rotation = Quat::from_rotation_z(rotation.0);
         }
     }
 }
@@ -126,7 +126,7 @@ impl Eq for &Position {}
 impl PartialOrd for &Position {
     /// Compares distance from origin
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.length_squared().partial_cmp(&other.length_squared())
+        Some(self.cmp(other))
     }
 }
 
