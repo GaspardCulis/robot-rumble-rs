@@ -4,7 +4,7 @@ use bevy::{prelude::*, utils::HashMap};
 pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
 
 // TODO: add a config file
-pub static SPAWNED_BLACKHOLE_RADIUS: u32 = 10;
+pub static BLACKHOLE_RADIUS: u32 = 60;
 pub static BH_BULLET_DECAY_TIME: f32 = 0.5;
 pub const BLAST_RADIUS: f32 = 20.;
 
