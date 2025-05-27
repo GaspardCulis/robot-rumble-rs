@@ -7,6 +7,7 @@ use bevy::{
     },
 };
 
+#[allow(clippy::ptr_arg)] // Dunno how to fix
 pub fn gradient(offsets: &Vec<f32>, colors: &Vec<Srgba>) -> Image {
     const TEXTURE_SIZE: usize = 64;
     const TEXTURE_COLOR_CHANNELS: usize = 4;
