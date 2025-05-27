@@ -111,7 +111,11 @@ fn player_movement(
     for (action_state, mut velocity, mut input_velocity, rotation, planet_collision) in
         query.iter_mut()
     {
-        if action_state.pressed(&PlayerAction::Jump) && planet_collision.collides {
+        if !planet_collision.collides {
+            continue;
+        }
+
+        if action_state.pressed(&PlayerAction::Jump) {
             velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
         }
 
@@ -125,11 +129,7 @@ fn player_movement(
         if !(action_state.pressed(&PlayerAction::Right)
             || action_state.pressed(&PlayerAction::Left))
         {
-            let mut slow_down_rate = 6.;
-            if !planet_collision.collides {
-                slow_down_rate = 1.;
-            }
-            input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * slow_down_rate);
+            input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * 6.0);
         }
 
         if action_state.pressed(&PlayerAction::Sneak) {
