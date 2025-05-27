@@ -58,7 +58,7 @@ fn interpolate_colors(offsets: &[f32], colors: &[Srgba], u: f32) -> Srgba {
             let color_b = colors.get(i + 1).unwrap();
 
             let t = (u - offsets[i]) / (offsets[i + 1] - offsets[i]);
-            return Srgba::from_vec4(color_a.to_vec4().lerp(color_b.to_vec4(), t)).into();
+            return Srgba::from_vec4(color_a.to_vec4().lerp(color_b.to_vec4(), t));
         }
     }
 

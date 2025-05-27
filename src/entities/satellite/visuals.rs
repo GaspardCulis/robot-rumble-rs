@@ -37,8 +37,8 @@ pub fn generate_ring(inner_radius: f32, outer_radius: f32, resolution: usize) ->
         positions.push((dir * outer_radius).extend(0.0));
         positions.push((dir * inner_radius).extend(0.0));
 
-        uvs.push((dir * 0.5 + Vec2::splat(0.5)).into());
-        uvs.push((dir * 0.5 + Vec2::splat(0.5)).into());
+        uvs.push(dir * 0.5 + Vec2::splat(0.5));
+        uvs.push(dir * 0.5 + Vec2::splat(0.5));
     }
 
     for i in 0..resolution {
