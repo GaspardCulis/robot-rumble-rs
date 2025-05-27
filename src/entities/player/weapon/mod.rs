@@ -53,7 +53,7 @@ impl Plugin for WeaponPlugin {
                 GgrsSchedule,
                 (
                     tick_weapon_timers,
-                    fire_weapon_system.before(PhysicsSet::Gravity),
+                    fire_weapon_system,
                 )
                     .chain()
                     .in_set(PhysicsSet::Player)
