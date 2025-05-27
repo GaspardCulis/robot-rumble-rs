@@ -294,7 +294,6 @@ fn update_grabber_ropes(
                     translation: mid.extend(3.0),
                     rotation: rot,
                     scale: Vec3::new(1.0, dir.length(), 1.0),
-                    ..Default::default()
                 });
             }
             _ => commands.entity(entity).despawn(),
