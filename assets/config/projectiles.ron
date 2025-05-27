@@ -1,7 +1,7 @@
 ProjectilesConfig({
     Bullet: (
         stats: (
-            mass: 5,
+            mass: 100,
             damage: 10.0,
             radius: 1.0,
             knockback: 1.0,
