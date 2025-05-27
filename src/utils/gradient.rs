@@ -24,7 +24,7 @@ pub fn gradient(offsets: &Vec<f32>, colors: &Vec<Srgba>) -> Image {
         for x in 0..TEXTURE_SIZE {
             let u = x as f32 / (TEXTURE_SIZE - 1) as f32;
 
-            let color = interpolate_colors(&offsets, &colors, u);
+            let color = interpolate_colors(offsets, colors, u);
 
             let index = (y * TEXTURE_SIZE + x) * TEXTURE_COLOR_CHANNELS;
             texture_data[index] = (color.red * 255.0) as u8;
