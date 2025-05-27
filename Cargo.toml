@@ -49,6 +49,9 @@ features = [
   "webgl2",
 
   "asset_processor",
+
+  # Support for deterministic float primitives
+  "libm",
 ]
 
 # Enable a small amount of optimization in debug mode
