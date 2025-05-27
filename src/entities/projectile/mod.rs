@@ -16,6 +16,10 @@ use crate::{core::{
 type PlanetCollision = CollisionState<Projectile, Planet>;
 type PlayerCollision = CollisionState<Projectile, Player>;
 
+// Autodespawn timer
+#[derive(Component)]
+pub struct DecayTimer(pub Timer);
+
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
 
