@@ -178,13 +178,10 @@ fn handle_config_reload(
     projectiles: Query<Entity, With<Sprite>>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for projectile in projectiles.iter() {
-                    commands.entity(projectile).remove::<Sprite>();
-                }
+        if let AssetEvent::Modified { id: _ } = event {
+            for projectile in projectiles.iter() {
+                commands.entity(projectile).remove::<Sprite>();
             }
-            _ => {}
         };
     }
 }

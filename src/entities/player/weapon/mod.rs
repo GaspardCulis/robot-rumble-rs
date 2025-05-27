@@ -195,14 +195,11 @@ fn handle_config_reload(
     weapons: Query<Entity, Or<(With<WeaponStats>, With<Sprite>)>>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for weapon in weapons.iter() {
-                    commands.entity(weapon).remove::<WeaponStats>();
-                    commands.entity(weapon).remove::<Sprite>();
-                }
+        if let AssetEvent::Modified { id: _ } = event {
+            for weapon in weapons.iter() {
+                commands.entity(weapon).remove::<WeaponStats>();
+                commands.entity(weapon).remove::<Sprite>();
             }
-            _ => {}
         };
     }
 }

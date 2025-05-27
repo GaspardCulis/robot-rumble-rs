@@ -221,15 +221,12 @@ fn handle_config_reload(
     planets: Query<&Children, With<Planet>>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for material_layers in planets.iter() {
-                    for layer in material_layers {
-                        commands.entity(*layer).despawn();
-                    }
+        if let AssetEvent::Modified { id: _ } = event {
+            for material_layers in planets.iter() {
+                for layer in material_layers {
+                    commands.entity(*layer).despawn();
                 }
             }
-            _ => {}
         };
     }
 }

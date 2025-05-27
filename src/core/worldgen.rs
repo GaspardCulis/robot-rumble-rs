@@ -190,15 +190,12 @@ fn handle_config_reload(
     seed: Res<crate::network::SessionSeed>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for entity in entities.iter() {
-                    commands.entity(entity).despawn();
-                }
-
-                worldgen_events.write(GenerateWorldEvent { seed: seed.0 });
+        if let AssetEvent::Modified { id: _ } = event {
+            for entity in entities.iter() {
+                commands.entity(entity).despawn();
             }
-            _ => {}
+
+            worldgen_events.write(GenerateWorldEvent { seed: seed.0 });
         };
     }
 }

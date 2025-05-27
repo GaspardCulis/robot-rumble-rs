@@ -131,13 +131,10 @@ fn handle_config_reload(
     players: Query<Entity, (With<Player>, With<PlayerSkin>, With<Sprite>)>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for player in players.iter() {
-                    commands.entity(player).remove::<Sprite>();
-                }
+        if let AssetEvent::Modified { id: _ } = event {
+            for player in players.iter() {
+                commands.entity(player).remove::<Sprite>();
             }
-            _ => {}
         };
     }
 }
