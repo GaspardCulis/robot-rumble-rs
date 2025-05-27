@@ -147,7 +147,7 @@ fn fire_weapon_system(
     mut weapon_query: Query<
         (
             &mut WeaponState,
-            &WeaponMode,
+            &mut WeaponMode,
             &Position,
             &Velocity,
             &Rotation,
@@ -169,7 +169,8 @@ fn fire_weapon_system(
             return;
         };
 
-    for (mut state, mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut() {
+    for (mut state, mut mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut()
+    {
         if (*mode == WeaponMode::Triggered)
             && state.cooldown_timer.finished()
             && state.current_ammo > 0
@@ -199,11 +200,13 @@ fn fire_weapon_system(
             }
 
             state.current_ammo -= 1;
-
             // Reset timers if shooting
             state.cooldown_timer.reset();
             state.reload_timer.reset();
-
+            // Auto-reload if empty mag
+            if state.current_ammo == 0 {
+                *mode = WeaponMode::Reloading;
+            }
             // Recoil
             if let Ok(mut owner_velocity) = owner_query.get_mut(owner.0) {
                 owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
