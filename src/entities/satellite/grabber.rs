@@ -1,5 +1,3 @@
-use std::f32::EPSILON;
-
 use bevy::math::ops::atan2;
 use bevy::prelude::*;
 use bevy::text::{JustifyText, Text2d, TextColor, TextFont, TextLayout};
@@ -194,7 +192,7 @@ fn handle_grabber_interaction(
                     let distance = offset.length();
                     let angle = atan2(offset.y, offset.x);
 
-                    let tangent = if offset.length_squared() > EPSILON {
+                    let tangent = if offset.length_squared() > f32::EPSILON {
                         Vec2::new(-offset.y, offset.x).normalize()
                     } else {
                         Vec2::ZERO
