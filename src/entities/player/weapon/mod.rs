@@ -1,6 +1,9 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::{config::ProjectilesConfig, Damage, DecayTimer, Projectile, ProjectilesConfigHandle, config::BH_BULLET_DECAY_TIME},
+    entities::projectile::{
+        Damage, DecayTimer, Projectile, ProjectilesConfigHandle, config::BH_BULLET_DECAY_TIME,
+        config::ProjectilesConfig,
+    },
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -195,7 +198,10 @@ fn fire_weapon_system(
                     let mut projectile_entity = commands.spawn(new_projectile);
                     // Add decay for black hole bullets
                     if stats.projectile == Projectile::Blackhole {
-                        projectile_entity.insert(DecayTimer(Timer::from_seconds(BH_BULLET_DECAY_TIME, TimerMode::Once)));
+                        projectile_entity.insert(DecayTimer(Timer::from_seconds(
+                            BH_BULLET_DECAY_TIME,
+                            TimerMode::Once,
+                        )));
                     }
                     projectile_entity.add_rollback();
                 } else {
