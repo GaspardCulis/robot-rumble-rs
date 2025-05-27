@@ -1,3 +1,4 @@
+use bevy::math::ops::atan2;
 use bevy::prelude::*;
 
 use crate::core::physics::{Position, Velocity};
@@ -79,7 +80,7 @@ fn detect_player_orbit_entry(
             let initial_speed = velocity.length();
 
             let dir = player_position.0 - graviton_pos;
-            let angle = dir.y.atan2(dir.x);
+            let angle = atan2(dir.y, dir.x);
 
             if distance < orbit_radius {
                 commands.entity(player_entity).insert(Orbited {

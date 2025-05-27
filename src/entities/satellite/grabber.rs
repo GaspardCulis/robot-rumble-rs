@@ -1,5 +1,6 @@
 use std::f32::EPSILON;
 
+use bevy::math::ops::atan2;
 use bevy::prelude::*;
 use bevy::text::{JustifyText, Text2d, TextColor, TextFont, TextLayout};
 use bevy_ggrs::{GgrsSchedule, LocalPlayers};
@@ -191,7 +192,7 @@ fn handle_grabber_interaction(
                     let pos = position.0;
                     let offset = pos - center;
                     let distance = offset.length();
-                    let angle = offset.y.atan2(offset.x);
+                    let angle = atan2(offset.y, offset.x);
 
                     let tangent = if offset.length_squared() > EPSILON {
                         Vec2::new(-offset.y, offset.x).normalize()
@@ -272,6 +273,7 @@ fn update_grabbed_players(
     }
 }
 
+#[allow(clippy::disallowed_methods)] // Visual doesn't need determinism
 fn update_grabber_ropes(
     mut commands: Commands,
     rope_query: Query<(Entity, &GrabberRope)>,

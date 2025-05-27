@@ -200,9 +200,10 @@ fn player_physics(
             .unwrap_or_default();
 
         // Rotate towards it
-        let target_angle = (nearest_planet_pos.y - player_position.0.y)
-            .atan2(nearest_planet_pos.x - player_position.0.x)
-            + PI / 2.;
+        let target_angle = bevy::math::ops::atan2(
+            nearest_planet_pos.y - player_position.0.y,
+            nearest_planet_pos.x - player_position.0.x,
+        ) + PI / 2.;
         let mut short_angle = (target_angle - player_rotation.0) % math::RAD;
         short_angle = (2. * short_angle) % math::RAD - short_angle;
         player_rotation.0 += short_angle * time.delta_secs() * 6.;
