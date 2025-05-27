@@ -51,10 +51,7 @@ impl Plugin for WeaponPlugin {
             )
             .add_systems(
                 GgrsSchedule,
-                (
-                    tick_weapon_timers,
-                    fire_weapon_system,
-                )
+                (tick_weapon_timers, fire_weapon_system)
                     .chain()
                     .in_set(PhysicsSet::Player)
                     .after(super::update_weapon),
