@@ -22,19 +22,7 @@ pub struct DecayTimer(pub Timer);
 
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
-#[derive(Component, Reflect, Clone, Copy)]
-pub struct Knockback(pub f32);
 
-// TODO move this tob projectiles config
-pub const BLAST_RADIUS: f32 = 20.;
-
-#[derive(Event)]
-struct CollisionEvent {
-    position: Vec2,
-    radius: f32,
-    damage: f32,
-    knockback: f32,
-}
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
@@ -194,7 +182,6 @@ fn handle_config_reload(
                     commands.entity(projectile).remove::<Sprite>();
                     commands.entity(projectile).remove::<Mass>();
                     commands.entity(projectile).remove::<Damage>();
-                    commands.entity(projectile).remove::<Knockback>();
                 }
             }
             _ => {}

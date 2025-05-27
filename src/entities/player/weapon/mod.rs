@@ -1,6 +1,6 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::{Damage, Knockback, ProjectilesConfigHandle, config::ProjectilesConfig},
+    entities::projectile::{Damage, ProjectilesConfigHandle, config::ProjectilesConfig},
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -189,7 +189,6 @@ fn fire_weapon_system(
                                 + velocity.0,
                         ),
                         Damage(stats.damage_multiplier * projectile_stats.damage),
-                        Knockback(projectile_stats.knockback),
                     );
 
                     commands.spawn(new_projectile).add_rollback();

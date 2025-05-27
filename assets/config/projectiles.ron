@@ -4,7 +4,6 @@ ProjectilesConfig({
             mass: 100,
             damage: 10.0,
             radius: 1.0,
-            knockback: 1.0,
         ),
         skin: (
             sprite: "projectiles/bullet.png",
@@ -16,7 +15,6 @@ ProjectilesConfig({
             mass: 100,
             damage: 1000.0,
             radius: 10.0,
-            knockback: 1.0,
         ),
         skin: (
             sprite: "projectiles/explosive.png",
@@ -28,7 +26,6 @@ ProjectilesConfig({
             mass: 50,
             damage: 100.0,
             radius: 5.0,
-            knockback: 10.0,
         ),
         skin: (
             sprite: "projectiles/laser.png",
