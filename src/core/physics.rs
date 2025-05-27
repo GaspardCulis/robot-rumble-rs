@@ -73,8 +73,8 @@ fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&R
         transform.translation.x = position.x;
         transform.translation.y = position.y;
 
-        if rotation.is_some() {
-            transform.rotation = Quat::from_rotation_z(rotation.unwrap().0);
+        if let Some(rotation) = rotation {
+            transform.rotation = Quat::from_rotation_z(rotation.0);
         }
     }
 }
