@@ -1,6 +1,6 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::{config::ProjectilesConfig, Damage, DecayTimer, Knockback, Projectile, ProjectilesConfigHandle, config::BH_BULLET_DECAY_TIME},
+    entities::projectile::{config::ProjectilesConfig, Damage, DecayTimer, Projectile, ProjectilesConfigHandle, config::BH_BULLET_DECAY_TIME},
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -51,10 +51,7 @@ impl Plugin for WeaponPlugin {
             )
             .add_systems(
                 GgrsSchedule,
-                (
-                    tick_weapon_timers,
-                    fire_weapon_system.before(PhysicsSet::Gravity),
-                )
+                (tick_weapon_timers, fire_weapon_system)
                     .chain()
                     .in_set(PhysicsSet::Player)
                     .after(super::update_weapon),
@@ -189,7 +186,6 @@ fn fire_weapon_system(
                                 + velocity.0,
                         ),
                         Damage(stats.damage_multiplier * projectile_stats.damage),
-                        Knockback(projectile_stats.knockback),
                     );
                     let mut projectile_entity = commands.spawn(new_projectile);
                     // Add decay for black hole bullets

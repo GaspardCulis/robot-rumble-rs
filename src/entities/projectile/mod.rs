@@ -22,8 +22,6 @@ pub struct DecayTimer(pub Timer);
 
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
-#[derive(Component, Reflect, Clone, Copy)]
-pub struct Knockback(pub f32);
 
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
@@ -195,7 +193,6 @@ fn handle_config_reload(
                     commands.entity(projectile).remove::<Sprite>();
                     commands.entity(projectile).remove::<Mass>();
                     commands.entity(projectile).remove::<Damage>();
-                    commands.entity(projectile).remove::<Knockback>();
                 }
             }
             _ => {}

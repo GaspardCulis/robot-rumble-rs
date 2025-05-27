@@ -31,7 +31,6 @@ pub struct ProjectileConfig {
 pub struct ProjectileStats {
     pub mass: u32,
     pub radius: f32,
-    pub knockback: f32,
     pub damage: f32,
 }
 
