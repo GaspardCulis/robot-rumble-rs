@@ -21,6 +21,7 @@ pub mod weapon;
 // TODO: Move to config file
 pub const PLAYER_MASS: u32 = 800;
 pub const PLAYER_VELOCITY: f32 = 600.;
+pub const PLAYER_JUMP_VELOCITY: f32 = 800.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
 const PLAYER_GROUND_FRICTION_COEFF: f32 = 0.95;
 
@@ -116,7 +117,7 @@ fn player_movement(
         }
 
         if action_state.pressed(&PlayerAction::Jump) {
-            velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
+            velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_JUMP_VELOCITY;
         }
 
         if action_state.pressed(&PlayerAction::Right) {
