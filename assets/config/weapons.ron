@@ -9,6 +9,7 @@ WeaponsConfig({
             shot_bullet_count: 1,
             recoil: 50.0,
             spread: 0.04,
+            projectile: Bullet,
         ),
         skin: (
             sprite: "weapons/pistol.png",
@@ -25,6 +26,7 @@ WeaponsConfig({
             shot_bullet_count: 10,
             recoil: 800.0,
             spread: 0.1,
+            projectile: Bullet,
         ),
         skin: (
             sprite: "weapons/shotgun.png",
@@ -41,6 +43,7 @@ WeaponsConfig({
             shot_bullet_count: 1,
             recoil: 100.0,
             spread: 0.02,
+            projectile: Bullet,
         ),
         skin: (
             sprite: "weapons/assaultrifle.png",
@@ -57,6 +60,7 @@ WeaponsConfig({
             shot_bullet_count: 1,
             recoil: 400.0,
             spread: 0.0001,
+            projectile: Bullet,
         ),
         skin: (
             sprite: "weapons/sniper.png",
@@ -73,6 +77,7 @@ WeaponsConfig({
             shot_bullet_count: 1,
             recoil: 200.0,
             spread: 0.0001,
+            projectile: Bullet,
         ),
         skin: (
             sprite: "weapons/revolver.png",
@@ -89,6 +94,7 @@ WeaponsConfig({
             shot_bullet_count: 0,
             recoil: 2000.0,
             spread: 0.0001,
+            projectile: Bullet,
         ),
         skin: (
             sprite: "weapons/pulse.png",

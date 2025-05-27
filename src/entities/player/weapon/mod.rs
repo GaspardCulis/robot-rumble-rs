@@ -1,6 +1,6 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::Projectile,
+    entities::projectile::{Damage, ProjectilesConfigHandle, config::ProjectilesConfig},
 };
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -8,15 +8,19 @@ use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 mod config;
-
 pub use config::{WeaponStats, WeaponType};
 
-#[derive(Component, Clone, Default, Reflect)]
-pub struct Triggered(pub bool);
+#[derive(Component, Clone, PartialEq, Default, Reflect)]
+pub enum WeaponMode {
+    #[default]
+    Idle,
+    Triggered,
+    Reloading,
+}
 
 #[derive(Component, Clone, Debug, Reflect)]
 pub struct WeaponState {
-    current_ammo: usize,
+    pub current_ammo: usize,
     cooldown_timer: Timer,
     reload_timer: Timer,
 }
@@ -30,9 +34,9 @@ impl Plugin for WeaponPlugin {
         app.register_type::<WeaponType>()
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
-            .register_type::<Triggered>()
+            .register_type::<WeaponMode>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
-            .register_required_components::<WeaponType, Triggered>()
+            .register_required_components::<WeaponType, WeaponMode>()
             .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
             .add_systems(Startup, load_weapons_config)
             .add_systems(
@@ -117,14 +121,19 @@ fn add_sprite(
 }
 
 /// Also handles ammo reloads for convenience
-fn tick_weapon_timers(mut query: Query<(&mut WeaponState, &WeaponStats)>, time: Res<Time>) {
-    for (mut state, stats) in query.iter_mut() {
+fn tick_weapon_timers(
+    mut query: Query<(&mut WeaponState, &WeaponStats, &mut WeaponMode), With<Position>>,
+    time: Res<Time>,
+) {
+    for (mut state, stats, mut mode) in query.iter_mut() {
         state.cooldown_timer.tick(time.delta());
-        state.reload_timer.tick(time.delta());
-
+        if *mode == WeaponMode::Reloading {
+            state.reload_timer.tick(time.delta());
+        }
         // Verify current_ammo is 0 to avoid a subtle bug where we fire when WeaponState is instantiated
-        if state.reload_timer.just_finished() && state.current_ammo == 0 {
+        if state.reload_timer.finished() && state.current_ammo < stats.magazine_size {
             state.current_ammo = stats.magazine_size;
+            *mode = WeaponMode::Idle;
         }
     }
 }
@@ -134,7 +143,7 @@ fn fire_weapon_system(
     mut weapon_query: Query<
         (
             &mut WeaponState,
-            &Triggered,
+            &WeaponMode,
             &Position,
             &Velocity,
             &Rotation,
@@ -144,37 +153,52 @@ fn fire_weapon_system(
         With<WeaponType>,
     >,
     mut owner_query: Query<(&mut Velocity, &super::Weapon), Without<WeaponType>>,
+    projectile_config_handle: Res<ProjectilesConfigHandle>,
+    projectile_config_assets: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    for (mut state, triggered, position, velocity, rotation, stats, entity) in
-        weapon_query.iter_mut()
-    {
-        if triggered.0 && state.cooldown_timer.finished() && state.current_ammo > 0 {
+    let projectile_config =
+        if let Some(c) = projectile_config_assets.get(projectile_config_handle.0.id()) {
+            c
+        } else {
+            warn!("Couldn't load ProjectileConfig");
+            return;
+        };
+
+    for (mut state, mode, position, velocity, rotation, stats, entity) in weapon_query.iter_mut() {
+        if (*mode == WeaponMode::Triggered)
+            && state.cooldown_timer.finished()
+            && state.current_ammo > 0
+        {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
-                let random_angle = rng.random_range(-stats.spread..stats.spread);
+                if let Some(projectile_config) = projectile_config.0.get(&stats.projectile) {
+                    let projectile_stats = &projectile_config.stats;
+                    let random_angle = rng.random_range(-stats.spread..stats.spread);
 
-                let bullet = (
-                    Projectile::Bullet,
-                    // Avoid bullet hitting player firing
-                    Position(position.0 + Vec2::from_angle(rotation.0) * super::PLAYER_RADIUS),
-                    Velocity(
-                        Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
-                            + velocity.0,
-                    ),
-                );
+                    let new_projectile = (
+                        stats.projectile,
+                        // Avoid bullet hitting player firing
+                        Position(position.0 + Vec2::from_angle(rotation.0) * super::PLAYER_RADIUS),
+                        Velocity(
+                            Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
+                                + velocity.0,
+                        ),
+                        Damage(stats.damage_multiplier * projectile_stats.damage),
+                    );
 
-                commands.spawn(bullet).add_rollback();
+                    commands.spawn(new_projectile).add_rollback();
+                } else {
+                    warn!("Empy projectile config!")
+                }
             }
 
             state.current_ammo -= 1;
+
             // Reset timers if shooting
             state.cooldown_timer.reset();
-
-            if state.current_ammo == 0 {
-                state.reload_timer.reset();
-            }
+            state.reload_timer.reset();
 
             // Recoil
             if let Some((mut velocity, _)) = owner_query

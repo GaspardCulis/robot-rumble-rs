@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 use leafwing_input_manager::prelude::*;
+use weapon::{WeaponMode, WeaponState};
 
 use crate::core::collision::{CollisionPlugin, CollisionShape, CollisionState};
 use crate::core::gravity::{Mass, Passive};
@@ -57,6 +58,7 @@ pub enum PlayerAction {
     Slot3,
     #[actionlike(DualAxis)]
     PointerDirection,
+    Reload,
     Interact,
     RopeExtend,
     RopeRetract,
@@ -142,18 +144,18 @@ pub fn update_weapon(
     player_query: Query<(&ActionState<PlayerAction>, &Position, &Velocity, &Weapon), With<Player>>,
     mut weapon_query: Query<
         (
-            &mut weapon::Triggered,
+            &mut weapon::WeaponMode,
             &mut Position,
             &mut Velocity,
             &mut Rotation,
+            &WeaponState,
         ),
         Without<Player>,
     >,
 ) {
     for (action_state, player_position, player_velocity, weapon) in player_query.iter() {
         let axis_pair = action_state.axis_pair(&PlayerAction::PointerDirection);
-        let is_shooting = action_state.pressed(&PlayerAction::Shoot);
-        if let Ok((mut triggered, mut position, mut velocity, mut direction)) =
+        if let Ok((mut mode, mut position, mut velocity, mut direction, weapon_state)) =
             weapon_query.get_mut(weapon.0)
         {
             direction.0 = if axis_pair != Vec2::ZERO {
@@ -161,7 +163,15 @@ pub fn update_weapon(
             } else {
                 0.0
             };
-            triggered.0 = is_shooting;
+            let pressed = action_state.get_pressed();
+            if pressed.contains(&PlayerAction::Shoot) && weapon_state.current_ammo > 0 {
+                *mode = WeaponMode::Triggered;
+            } else if pressed.contains(&PlayerAction::Reload) {
+                *mode = WeaponMode::Reloading;
+            // a bit garbage code
+            } else if *mode != WeaponMode::Reloading {
+                *mode = WeaponMode::Idle;
+            }
             position.0 = player_position.0;
             velocity.0 = player_velocity.0;
         } else {
