@@ -12,6 +12,7 @@ use crate::entities::player::{Player, PlayerAction};
 const ROPE_MIN_LENGTH: f32 = 50.0;
 const ROPE_MAX_LENGTH: f32 = 275.0;
 const ROPE_ADJUST_SPEED: f32 = 50.0;
+const GRABBER_ENTRY_MARGIN: f32 = 10.0;
 
 #[derive(Component)]
 #[require(Name::new("Grabber"))]
@@ -87,7 +88,8 @@ fn detect_player_entry(
             .iter()
             .filter_map(|(entity, transform)| {
                 let distance = player_position.distance(transform.translation.truncate()) + 30.0;
-                (distance < config.grabber_radius).then_some((entity, distance))
+                (distance < config.grabber_radius + GRABBER_ENTRY_MARGIN)
+                    .then_some((entity, distance))
             })
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
