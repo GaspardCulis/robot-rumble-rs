@@ -15,8 +15,10 @@ wasm-build:
     wasm-bindgen --no-typescript --target web --out-dir ./web --out-name "robot-rumble" target/wasm32-unknown-unknown/wasm-release/robot-rumble-client.wasm
     
 check:
-    @echo "Checking code formatting"
+    @echo "Checking code formatting (rustfmt)"
     cargo fmt --all --check
+    @echo "Checking code formatting (rustfmt)"
+    cargo clippy --all-targets --all-features -- -D warnings
     @echo "Running tests"
     cargo test
 
