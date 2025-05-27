@@ -7,11 +7,14 @@ pub use config::{Projectile, ProjectilesConfig};
 pub struct ProjectilesConfigHandle(pub Handle<config::ProjectilesConfig>);
 
 use super::{planet::Planet, player::Player};
-use crate::{core::{
-    collision::{CollisionPlugin, CollisionShape, CollisionState},
-    gravity::{Mass, Passive},
-    physics::{PhysicsSet, Position, Rotation, Velocity},
-}, entities::planet::{Radius, SpawnPlanetEvent}};
+use crate::{
+    core::{
+        collision::{CollisionPlugin, CollisionShape, CollisionState},
+        gravity::{Mass, Passive},
+        physics::{PhysicsSet, Position, Rotation, Velocity},
+    },
+    entities::planet::{Radius, SpawnPlanetEvent},
+};
 
 type PlanetCollision = CollisionState<Projectile, Planet>;
 type PlayerCollision = CollisionState<Projectile, Player>;
@@ -51,7 +54,9 @@ impl Plugin for ProjectilePlugin {
             .add_systems(
                 GgrsSchedule,
                 (
-                    tick_projectile_timer.before(PhysicsSet::Gravity),
+                    tick_projectile_timer
+                        .before(PhysicsSet::Gravity)
+                        .before(PhysicsSet::Player),
                     add_physical_properties
                         .before(PhysicsSet::Gravity)
                         .after(PhysicsSet::Player),
@@ -125,7 +130,6 @@ fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Projectile>,
     }
 }
 
-
 fn tick_projectile_timer(
     mut commands: Commands,
     mut blackhole_spawn_events: EventWriter<SpawnPlanetEvent>,
@@ -137,12 +141,12 @@ fn tick_projectile_timer(
         if despawn_timer.0.just_finished() {
             // for now spawning random planets
             info!("Generating blackhole!");
-            blackhole_spawn_events.send(SpawnPlanetEvent {
-                        position: bh_position.clone(),
-                        radius: Radius(config::BLACKHOLE_RADIUS),
-                        r#type: crate::entities::planet::PlanetType::Planet,
-                        seed: 69420,
-                    });
+            blackhole_spawn_events.write(SpawnPlanetEvent {
+                position: bh_position.clone(),
+                radius: Radius(config::BLACKHOLE_RADIUS),
+                r#type: crate::entities::planet::PlanetType::Planet,
+                seed: 69420,
+            });
             commands.entity(projectile).despawn();
         }
     }
