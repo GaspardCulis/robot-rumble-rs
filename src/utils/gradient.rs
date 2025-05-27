@@ -7,6 +7,7 @@ use bevy::{
     },
 };
 
+#[allow(clippy::ptr_arg)] // Dunno how to fix
 pub fn gradient(offsets: &Vec<f32>, colors: &Vec<Srgba>) -> Image {
     const TEXTURE_SIZE: usize = 64;
     const TEXTURE_COLOR_CHANNELS: usize = 4;
@@ -24,7 +25,7 @@ pub fn gradient(offsets: &Vec<f32>, colors: &Vec<Srgba>) -> Image {
         for x in 0..TEXTURE_SIZE {
             let u = x as f32 / (TEXTURE_SIZE - 1) as f32;
 
-            let color = interpolate_colors(&offsets, &colors, u);
+            let color = interpolate_colors(offsets, colors, u);
 
             let index = (y * TEXTURE_SIZE + x) * TEXTURE_COLOR_CHANNELS;
             texture_data[index] = (color.red * 255.0) as u8;
@@ -58,7 +59,7 @@ fn interpolate_colors(offsets: &[f32], colors: &[Srgba], u: f32) -> Srgba {
             let color_b = colors.get(i + 1).unwrap();
 
             let t = (u - offsets[i]) / (offsets[i + 1] - offsets[i]);
-            return Srgba::from_vec4(color_a.to_vec4().lerp(color_b.to_vec4(), t)).into();
+            return Srgba::from_vec4(color_a.to_vec4().lerp(color_b.to_vec4(), t));
         }
     }
 
@@ -77,7 +78,8 @@ mod tests {
 
         let image = gradient(&offsets, &colors);
 
-        let data = image.data.as_slice();
+        let data = image.data.expect("Should not be empty");
+
         for i in (0..data.len()).step_by(4) {
             assert_eq!(data[i], 255); // Red
             assert_eq!(data[i + 1], 0); // Green
@@ -95,7 +97,7 @@ mod tests {
         ];
         let image = gradient(&offsets, &colors);
 
-        let data = image.data.as_slice();
+        let data = image.data.expect("Should not be empty");
         for x in 0..64 {
             let u = x as f32 / 63.0;
             let color = interpolate_colors(&offsets, &colors, u);
@@ -118,7 +120,7 @@ mod tests {
         ];
         let image = gradient(&offsets, &colors);
 
-        let data = image.data.as_slice();
+        let data = image.data.expect("Should not be empty");
         for x in 0..64 {
             let u = x as f32 / 63.0;
             let color = interpolate_colors(&offsets, &colors, u);

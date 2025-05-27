@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use bevy::prelude::*;
+use bevy::{math::FloatPow as _, prelude::*};
 use bevy_ggrs::GgrsSchedule;
 
 use super::physics::{PhysicsSet, Position};
@@ -57,9 +57,9 @@ fn check_collisions<A, B>(
                 // Find the closest entity using min_by for O(n) complexity
                 .min_by(|(_, x_pos, x_shape), (_, y_pos, y_shape)| {
                     let x_dist =
-                        x_pos.distance_squared(a_position.0) - x_shape.bounding_radius().powi(2);
+                        x_pos.distance_squared(a_position.0) - x_shape.bounding_radius().squared();
                     let y_dist =
-                        y_pos.distance_squared(a_position.0) - y_shape.bounding_radius().powi(2);
+                        y_pos.distance_squared(a_position.0) - y_shape.bounding_radius().squared();
 
                     x_dist.total_cmp(&y_dist)
                 })
@@ -107,7 +107,7 @@ impl CollisionShape {
         other_position: &Position,
     ) -> bool {
         let distance_squared = self_position.distance_squared(other_position.0);
-        let radius_squared = (self.bounding_radius() + other.bounding_radius()).powi(2);
+        let radius_squared = (self.bounding_radius() + other.bounding_radius()).squared();
 
         distance_squared <= radius_squared
     }

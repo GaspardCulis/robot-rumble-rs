@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{platform::collections::HashMap, prelude::*};
 
 use crate::entities::projectile::Projectile;
 

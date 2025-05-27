@@ -218,19 +218,15 @@ fn spawn_config_layers(
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<PlanetsConfig>>,
-    planets: Query<(Entity, &Children), With<Planet>>,
+    planets: Query<&Children, With<Planet>>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for (planet, material_layers) in planets.iter() {
-                    commands.entity(planet).clear_children();
-                    for layer in material_layers {
-                        commands.entity(*layer).despawn();
-                    }
+        if let AssetEvent::Modified { id: _ } = event {
+            for material_layers in planets.iter() {
+                for layer in material_layers {
+                    commands.entity(*layer).despawn();
                 }
             }
-            _ => {}
         };
     }
 }

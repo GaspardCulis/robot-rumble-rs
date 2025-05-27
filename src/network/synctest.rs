@@ -1,6 +1,6 @@
-use std::hash::{BuildHasher as _, Hash, Hasher as _};
+use std::hash::{Hash, Hasher as _};
 
-use bevy::{prelude::*, utils::FixedState};
+use bevy::prelude::*;
 use bevy_ggrs::{ggrs::GgrsEvent, *};
 use leafwing_input_manager::prelude::{GamepadStick, InputMap, MouseScrollDirection};
 use rand::Rng;
@@ -23,7 +23,7 @@ pub fn synctest_mode(args: Res<Args>) -> bool {
 }
 
 pub fn checksum_position(position: &physics::Position) -> u64 {
-    let mut hasher = FixedState.build_hasher();
+    let mut hasher = checksum_hasher();
     position.x.to_bits().hash(&mut hasher);
     position.y.to_bits().hash(&mut hasher);
     hasher.finish()
@@ -108,27 +108,24 @@ pub fn spawn_synctest_players(
 }
 
 pub fn handle_ggrs_events(mut session: ResMut<Session<SessionConfig>>) {
-    match session.as_mut() {
-        Session::P2P(s) => {
-            for event in s.events() {
-                match event {
-                    GgrsEvent::Disconnected { .. } | GgrsEvent::NetworkInterrupted { .. } => {
-                        warn!("GGRS event: {event:?}")
-                    }
-                    GgrsEvent::DesyncDetected {
-                        local_checksum,
-                        remote_checksum,
-                        frame,
-                        ..
-                    } => {
-                        error!(
-                            "Desync on frame {frame}. Local checksum: {local_checksum:X}, remote checksum: {remote_checksum:X}"
-                        );
-                    }
-                    _ => info!("GGRS event: {event:?}"),
+    if let Session::P2P(s) = session.as_mut() {
+        for event in s.events() {
+            match event {
+                GgrsEvent::Disconnected { .. } | GgrsEvent::NetworkInterrupted { .. } => {
+                    warn!("GGRS event: {event:?}")
                 }
+                GgrsEvent::DesyncDetected {
+                    local_checksum,
+                    remote_checksum,
+                    frame,
+                    ..
+                } => {
+                    error!(
+                        "Desync on frame {frame}. Local checksum: {local_checksum:X}, remote checksum: {remote_checksum:X}"
+                    );
+                }
+                _ => info!("GGRS event: {event:?}"),
             }
         }
-        _ => {}
     }
 }

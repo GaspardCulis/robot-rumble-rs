@@ -1,3 +1,4 @@
+use bevy::math::ops::atan2;
 use bevy::prelude::*;
 
 use crate::core::physics::{Position, Velocity};
@@ -24,7 +25,7 @@ pub struct OrbitCooldown {
 }
 
 #[derive(Component)]
-#[require(Name(|| Name::new("Graviton")))]
+#[require(Name::new("Graviton"))]
 pub struct Graviton;
 
 #[derive(Component)]
@@ -67,10 +68,10 @@ fn detect_player_orbit_entry(
 
     for (player_entity, player_position, velocity) in player_query.iter_mut() {
         for (graviton_transform, maybe_cooldown) in graviton_query.iter() {
-            if let Some(cooldown) = maybe_cooldown {
-                if !cooldown.timer.finished() {
-                    continue; // graviton encore en cooldown
-                }
+            if let Some(cooldown) = maybe_cooldown
+                && !cooldown.timer.finished()
+            {
+                continue; // graviton encore en cooldown
             }
 
             let graviton_pos = graviton_transform.translation.truncate();
@@ -79,7 +80,7 @@ fn detect_player_orbit_entry(
             let initial_speed = velocity.length();
 
             let dir = player_position.0 - graviton_pos;
-            let angle = dir.y.atan2(dir.x);
+            let angle = atan2(dir.y, dir.x);
 
             if distance < orbit_radius {
                 commands.entity(player_entity).insert(Orbited {
@@ -169,7 +170,7 @@ fn update_orbit_cooldowns(
         cooldown.timer.tick(time.delta());
 
         if let Ok(visual) = visual_query.get(entity) {
-            for &child in children.iter() {
+            for child in children.iter() {
                 if let Ok(mut sprite) = sprite_query.get_mut(child) {
                     sprite.image = if cooldown.timer.finished() {
                         visual.active.clone()

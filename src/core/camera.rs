@@ -24,15 +24,15 @@ fn camera_movement(
     window: Query<&Window>,
     target: Query<&Transform, With<CameraFollowTarget>>,
     time: Res<Time>,
-) {
-    // TODO: Run system when specific state instead of checking
+) -> Result {
     if target.is_empty() {
-        return;
+        // Not having target is not an error
+        return Ok(());
     };
 
-    let mut camera_transform = camera.single_mut();
-    let window = window.single();
-    let target_transform = target.single();
+    let mut camera_transform = camera.single_mut()?;
+    let window = window.single()?;
+    let target_transform = target.single()?;
 
     let screen_size = window.size();
     let cursor_position = window.cursor_position().unwrap_or(screen_size / 2.);
@@ -46,4 +46,6 @@ fn camera_movement(
         Vec3::new(dest.x, dest.y, 0.),
         time.delta_secs() * 5.,
     );
+
+    Ok(())
 }

@@ -16,10 +16,6 @@ use crate::core::{
 type PlanetCollision = CollisionState<Projectile, Planet>;
 type PlayerCollision = CollisionState<Projectile, Player>;
 
-// Autodespawn timer
-#[derive(Component)]
-pub struct DecayTimer(pub Timer);
-
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
 
@@ -124,26 +120,13 @@ fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Projectile>,
     }
 }
 
-fn tick_projectile_timer(
-    mut commands: Commands,
-    mut projectiles_querry: Query<(Entity, &mut DecayTimer), With<Projectile>>,
-    time: Res<Time>,
-) {
-    for (projectile, mut despawn_timer) in projectiles_querry.iter_mut() {
-        despawn_timer.0.tick(time.delta());
-        if despawn_timer.0.just_finished() {
-            commands.entity(projectile).despawn();
-        }
-    }
-}
-
 fn check_planet_collisions(
     mut commands: Commands,
     query: Query<(Entity, &PlanetCollision), With<Projectile>>,
 ) {
     for (projectile, planet_collision) in query.iter() {
         if planet_collision.collides {
-            commands.entity(projectile).despawn_recursive();
+            commands.entity(projectile).despawn();
         }
     }
 }
@@ -155,16 +138,14 @@ fn check_player_collisions(
 ) {
     for (projectile, projectile_velocity, projectile_mass, player_collision) in query.iter() {
         if player_collision.collides {
-            if let Some(closest_player) = player_collision.closest {
-                if let Some((mut player_velocity, player_mass)) =
-                    player_query.get_mut(closest_player).ok()
-                {
-                    let knockback_force = projectile_velocity.0 * projectile_mass.0 as f32;
-                    player_velocity.0 += knockback_force / player_mass.0 as f32;
-                }
+            if let Some(closest_player) = player_collision.closest
+                && let Ok((mut player_velocity, player_mass)) = player_query.get_mut(closest_player)
+            {
+                let knockback_force = projectile_velocity.0 * projectile_mass.0 as f32;
+                player_velocity.0 += knockback_force / player_mass.0 as f32;
             }
 
-            commands.entity(projectile).despawn_recursive();
+            commands.entity(projectile).despawn();
         }
     }
 }
@@ -176,15 +157,12 @@ fn handle_config_reload(
     projectiles: Query<Entity, With<Sprite>>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for projectile in projectiles.iter() {
-                    commands.entity(projectile).remove::<Sprite>();
-                    commands.entity(projectile).remove::<Mass>();
-                    commands.entity(projectile).remove::<Damage>();
-                }
+        if let AssetEvent::Modified { id: _ } = event {
+            for projectile in projectiles.iter() {
+                commands.entity(projectile).remove::<Sprite>();
+                commands.entity(projectile).remove::<Mass>();
+                commands.entity(projectile).remove::<Damage>();
             }
-            _ => {}
         };
     }
 }

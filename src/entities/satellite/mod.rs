@@ -138,7 +138,7 @@ fn handle_spawn_satellite(
                             image: graviton_active.clone(),
                             ..default()
                         },
-                        child_transform.clone(),
+                        child_transform,
                     ));
                 });
             }
@@ -150,7 +150,7 @@ fn handle_spawn_satellite(
                             image: bumper_texture.clone(),
                             ..default()
                         },
-                        child_transform.clone(),
+                        child_transform,
                     ));
                 });
             }
@@ -162,7 +162,7 @@ fn handle_spawn_satellite(
                             image: grabber_texture.clone(),
                             ..default()
                         },
-                        child_transform.clone(),
+                        child_transform,
                     ));
                 });
             }

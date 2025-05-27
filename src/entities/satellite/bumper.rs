@@ -9,7 +9,7 @@ use super::{SatelliteConfig, SatelliteConfigHandle, SatelliteSet};
 use bevy::asset::Assets;
 
 #[derive(Component)]
-#[require(Name(|| Name::new("Bumper")))]
+#[require(Name::new("Bumper"))]
 pub struct Bumper;
 
 pub struct BumperPlugin;

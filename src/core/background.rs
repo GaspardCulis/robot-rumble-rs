@@ -164,13 +164,9 @@ fn scale_and_center(
     mut query: Query<&mut Transform, (With<Background>, Without<Camera2d>)>,
     window: Query<&Window>,
     camera: Query<&Transform, With<Camera2d>>,
-) {
-    if window.is_empty() || camera.is_empty() {
-        return;
-    }
-
-    let window = window.single();
-    let camera = camera.single();
+) -> Result {
+    let window = window.single()?;
+    let camera = camera.single()?;
     for mut bg_transform in query.iter_mut() {
         let scale = if window.width() > window.height() {
             window.width()
@@ -182,4 +178,6 @@ fn scale_and_center(
         bg_transform.translation.y = camera.translation.y;
         bg_transform.scale = Vec3::splat(scale) * camera.scale;
     }
+
+    Ok(())
 }
