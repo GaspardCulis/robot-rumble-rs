@@ -41,7 +41,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .rollback_immutable_component_with_clone::<player::Weapon>()
-            .rollback_component_with_clone::<weapon::Triggered>()
+            .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
             .rollback_component_with_clone::<grabber::GrabbedOrbit>()
@@ -216,6 +216,8 @@ fn add_local_player_components(
         (PlayerAction::Slot1, KeyCode::Digit1),
         (PlayerAction::Slot2, KeyCode::Digit2),
         (PlayerAction::Slot3, KeyCode::Digit3),
+        // Reload
+        (PlayerAction::Reload, KeyCode::KeyR),
         // Interaction
         (PlayerAction::Interact, KeyCode::KeyE),
     ])

@@ -72,6 +72,8 @@ pub fn spawn_synctest_players(
         (PlayerAction::Slot1, KeyCode::Digit1),
         (PlayerAction::Slot2, KeyCode::Digit2),
         (PlayerAction::Slot3, KeyCode::Digit3),
+        // Reloading
+        (PlayerAction::Reload, KeyCode::KeyR),
         // Interaction
         (PlayerAction::Interact, KeyCode::KeyE),
     ])

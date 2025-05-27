@@ -3,7 +3,9 @@ use bevy::{platform::collections::HashMap, prelude::*};
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
 
-#[derive(Component, Default, Clone, Debug, Hash, PartialEq, Eq, serde::Deserialize)]
+#[derive(
+    Component, Default, Reflect, Clone, Copy, Debug, Hash, PartialEq, Eq, serde::Deserialize,
+)]
 pub enum Projectile {
     #[default]
     Bullet,
@@ -22,6 +24,7 @@ pub struct ProjectileConfig {
 #[derive(serde::Deserialize)]
 pub struct ProjectileStats {
     pub mass: u32,
+    pub radius: f32,
     pub damage: f32,
 }
 

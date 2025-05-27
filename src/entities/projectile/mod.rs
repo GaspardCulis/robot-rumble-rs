@@ -1,11 +1,10 @@
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
-
-mod config;
-pub use config::Projectile;
+pub mod config;
+pub use config::{Projectile, ProjectilesConfig};
 #[derive(Resource)]
-struct ProjectilesConfigHandle(Handle<config::ProjectilesConfig>);
+pub struct ProjectilesConfigHandle(pub Handle<config::ProjectilesConfig>);
 
 use super::{planet::Planet, player::Player};
 use crate::core::{
@@ -67,9 +66,9 @@ fn load_projectiles_config(mut commands: Commands, asset_server: Res<AssetServer
 
 fn add_physical_properties(
     mut commands: Commands,
-    query: Query<(Entity, &Projectile), (Without<Mass>, Without<Damage>)>,
+    query: Query<(Entity, &Projectile), Without<Mass>>,
     config_handle: Res<ProjectilesConfigHandle>,
-    config_assets: Res<Assets<config::ProjectilesConfig>>,
+    config_assets: Res<Assets<ProjectilesConfig>>,
 ) {
     let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
         c
@@ -84,8 +83,7 @@ fn add_physical_properties(
 
             commands
                 .entity(projectile_entity)
-                .insert(Mass(projectile_stats.mass))
-                .insert(Damage(projectile_stats.damage));
+                .insert(Mass(projectile_stats.mass));
         }
     }
 }
@@ -162,6 +160,8 @@ fn handle_config_reload(
         if let AssetEvent::Modified { id: _ } = event {
             for projectile in projectiles.iter() {
                 commands.entity(projectile).remove::<Sprite>();
+                commands.entity(projectile).remove::<Mass>();
+                commands.entity(projectile).remove::<Damage>();
             }
         };
     }

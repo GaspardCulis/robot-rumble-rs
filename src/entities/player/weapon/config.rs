@@ -2,6 +2,8 @@ use std::time::Duration;
 
 use bevy::{platform::collections::HashMap, prelude::*};
 
+use crate::entities::projectile::Projectile;
+
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct WeaponsConfig(pub HashMap<WeaponType, WeaponConfig>);
 
@@ -39,6 +41,7 @@ pub struct WeaponStats {
     pub shot_bullet_count: usize,
     pub recoil: f32,
     pub spread: f32,
+    pub projectile: Projectile,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
