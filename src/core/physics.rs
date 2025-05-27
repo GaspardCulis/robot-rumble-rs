@@ -126,7 +126,7 @@ impl Eq for &Position {}
 impl PartialOrd for &Position {
     /// Compares distance from origin
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.length_squared().partial_cmp(&other.length_squared())
+        Some(self.cmp(other))
     }
 }
 
