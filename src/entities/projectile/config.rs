@@ -24,7 +24,7 @@ pub struct ProjectileConfig {
 #[derive(serde::Deserialize)]
 pub struct ProjectileStats {
     pub mass: u32,
-    pub radius: f32,
+    pub _radius: f32,
     pub damage: f32,
 }
 
