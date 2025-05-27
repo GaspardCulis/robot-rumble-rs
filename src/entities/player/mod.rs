@@ -109,13 +109,10 @@ fn player_movement(
 ) {
     let delta = time.delta_secs();
 
-    for (action_state, mut velocity, mut input_velocity, rotation, planet_collision) in
-        query.iter_mut()
+    for (action_state, mut velocity, mut input_velocity, rotation, _) in query
+        .iter_mut()
+        .filter(|(_, _, _, _, collision)| collision.collides)
     {
-        if !planet_collision.collides {
-            continue;
-        }
-
         if action_state.pressed(&PlayerAction::Jump) {
             velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_JUMP_VELOCITY;
         }
