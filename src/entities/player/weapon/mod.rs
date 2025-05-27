@@ -181,7 +181,7 @@ fn fire_weapon_system(
             }
 
             // Recoil
-            if let Some(mut owner_velocity) = owner_query.get_mut(owner.0).ok() {
+            if let Ok(mut owner_velocity) = owner_query.get_mut(owner.0) {
                 owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
             }
         }

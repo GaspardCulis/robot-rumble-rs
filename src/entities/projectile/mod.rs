@@ -158,8 +158,7 @@ fn check_player_collisions(
     for (projectile, projectile_velocity, projectile_mass, player_collision) in query.iter() {
         if player_collision.collides {
             if let Some(closest_player) = player_collision.closest {
-                if let Some((mut player_velocity, player_mass)) =
-                    player_query.get_mut(closest_player).ok()
+                if let Ok((mut player_velocity, player_mass)) = player_query.get_mut(closest_player)
                 {
                     let knockback_force = projectile_velocity.0 * projectile_mass.0 as f32;
                     player_velocity.0 += knockback_force / player_mass.0 as f32;
