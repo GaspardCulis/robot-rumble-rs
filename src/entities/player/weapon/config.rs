@@ -18,6 +18,7 @@ pub enum WeaponType {
     Sniper,
     Revolver,
     Pulse,
+    BlackholeGun,
 }
 
 #[derive(serde::Deserialize)]
