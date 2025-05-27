@@ -19,6 +19,7 @@ struct MapLimit {
 }
 
 #[derive(Event)]
+#[allow(dead_code)] // Temporarly until entity gets used
 /// Points to a Player entity
 pub struct DeathEvent(pub Entity);
 
