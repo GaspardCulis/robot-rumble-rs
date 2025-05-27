@@ -17,10 +17,6 @@ use crate::core::{
 type PlanetCollision = CollisionState<Projectile, Planet>;
 type PlayerCollision = CollisionState<Projectile, Player>;
 
-// Autodespawn timer
-#[derive(Component)]
-pub struct DecayTimer(pub Timer);
-
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
 
@@ -123,19 +119,6 @@ fn add_sprite(
 fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Projectile>, With<Sprite>)>) {
     for (mut rotation, velocity) in query.iter_mut() {
         rotation.0 = -velocity.angle_to(Vec2::X);
-    }
-}
-
-fn tick_projectile_timer(
-    mut commands: Commands,
-    mut projectiles_querry: Query<(Entity, &mut DecayTimer), With<Projectile>>,
-    time: Res<Time>,
-) {
-    for (projectile, mut despawn_timer) in projectiles_querry.iter_mut() {
-        despawn_timer.0.tick(time.delta());
-        if despawn_timer.0.just_finished() {
-            commands.entity(projectile).despawn();
-        }
     }
 }
 
