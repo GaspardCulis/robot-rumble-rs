@@ -165,10 +165,6 @@ fn scale_and_center(
     window: Query<&Window>,
     camera: Query<&Transform, With<Camera2d>>,
 ) -> Result {
-    if window.is_empty() || camera.is_empty() {
-        return Result::Err("Failed to retreive window/camera".into());
-    }
-
     let window = window.single()?;
     let camera = camera.single()?;
     for mut bg_transform in query.iter_mut() {
