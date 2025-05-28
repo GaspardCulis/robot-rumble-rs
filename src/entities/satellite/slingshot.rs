@@ -27,11 +27,11 @@ pub struct OrbitCooldown {
 }
 
 #[derive(Component)]
-#[require(Name::new("Graviton"))]
-pub struct Graviton;
+#[require(Name::new("Slingshot"))]
+pub struct Slingshot;
 
 #[derive(Component)]
-pub struct GravitonVisual {
+pub struct SlingshotVisual {
     pub active: Handle<Image>,
     pub inactive: Handle<Image>,
 }
@@ -41,8 +41,8 @@ pub struct EjectionArrow {
     pub player: Entity,
 }
 
-pub struct GravitonPlugin;
-impl Plugin for GravitonPlugin {
+pub struct SlingshotPlugin;
+impl Plugin for SlingshotPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Orbited>().add_systems(
             GgrsSchedule,
@@ -53,14 +53,17 @@ impl Plugin for GravitonPlugin {
                 update_ejection_arrows,
             )
                 .chain()
-                .in_set(SatelliteSet::Graviton),
+                .in_set(SatelliteSet::Slingshot),
         );
     }
 }
 
 fn detect_player_orbit_entry(
     mut commands: Commands,
-    graviton_query: Query<(&Transform, Option<&OrbitCooldown>), (With<Satellite>, With<Graviton>)>,
+    slingshot_query: Query<
+        (&Transform, Option<&OrbitCooldown>),
+        (With<Satellite>, With<Slingshot>),
+    >,
     mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -76,32 +79,32 @@ fn detect_player_orbit_entry(
     let orbit_duration = config.orbit_duration;
 
     for (player_entity, player_position, velocity) in player_query.iter_mut() {
-        for (graviton_transform, maybe_cooldown) in graviton_query.iter() {
+        for (slingshot_transform, maybe_cooldown) in slingshot_query.iter() {
             if let Some(cooldown) = maybe_cooldown {
                 if !cooldown.timer.finished() {
-                    continue; // graviton encore en cooldown
+                    continue; // slingshot encore en cooldown
                 }
             }
 
-            let graviton_pos = graviton_transform.translation.truncate();
-            let distance = player_position.0.distance(graviton_pos);
+            let slingshot_pos = slingshot_transform.translation.truncate();
+            let distance = player_position.0.distance(slingshot_pos);
 
             let initial_speed = velocity.length();
 
             let entry_pos = player_position.0;
-            let offset = player_position.0 - graviton_pos;
+            let offset = player_position.0 - slingshot_pos;
             let angle = atan2(offset.y, offset.x);
 
             if distance < orbit_radius {
                 commands.entity(player_entity).insert(Orbited {
-                    center: graviton_pos,
+                    center: slingshot_pos,
                     time_left: orbit_duration,
                     initial_speed,
                     entry_pos,
                     elapsed: 0.0,
                     angle,
                 });
-                let center = graviton_pos;
+                let center = slingshot_pos;
                 let direction = (entry_pos - center).normalize();
                 let arrow_distance = (entry_pos - center).length() + 30.0;
                 let arrow_pos = center + direction * arrow_distance;
@@ -140,7 +143,7 @@ fn update_orbiting_players(
         &mut Orbited,
         &ActionState<PlayerAction>,
     )>,
-    graviton_query: Query<(Entity, &Transform), (With<Satellite>, With<Graviton>)>,
+    slingshot_query: Query<(Entity, &Transform), (With<Satellite>, With<Slingshot>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
     time: Res<Time>,
@@ -190,15 +193,15 @@ fn update_orbiting_players(
             velocity.0 = eject_dir * orbited.initial_speed;
             commands.entity(entity).remove::<Orbited>();
 
-            // Cooldown du graviton
-            if let Some((graviton_entity, _)) = graviton_query.iter().min_by(|(_, a), (_, b)| {
+            // Cooldown du slingshot
+            if let Some((slingshot_entity, _)) = slingshot_query.iter().min_by(|(_, a), (_, b)| {
                 a.translation
                     .truncate()
                     .distance_squared(position.0)
                     .partial_cmp(&b.translation.truncate().distance_squared(position.0))
                     .unwrap()
             }) {
-                commands.entity(graviton_entity).insert(OrbitCooldown {
+                commands.entity(slingshot_entity).insert(OrbitCooldown {
                     timer: Timer::from_seconds(config.orbit_cooldown, TimerMode::Once),
                 });
             }
@@ -235,9 +238,9 @@ fn update_ejection_arrows(
 }
 
 fn update_orbit_cooldowns(
-    mut cooldown_query: Query<(Entity, &mut OrbitCooldown, &Children), With<Graviton>>,
+    mut cooldown_query: Query<(Entity, &mut OrbitCooldown, &Children), With<Slingshot>>,
     mut sprite_query: Query<&mut Sprite>,
-    visual_query: Query<&GravitonVisual>,
+    visual_query: Query<&SlingshotVisual>,
     time: Res<Time>,
 ) {
     for (entity, mut cooldown, children) in cooldown_query.iter_mut() {
