@@ -1,7 +1,7 @@
 cargo-features = ["codegen-backend"]
 
 [package]
-name = "robot-rumble-client"
+name = "robot-rumble"
 version = "0.1.0"
 edition = "2024"
 
@@ -9,6 +9,14 @@ edition = "2024"
 default = ["dev_tools"]
 dev_tools = ["dep:bevy-inspector-egui", "bevy/file_watcher"]
 embedded_assets = ["dep:bevy_embedded_assets"]
+
+[lib]
+name = "robot_rumble"
+path = "src/lib.rs"
+
+[[bin]]
+name = "robot-rumble"
+path = "src/main.rs"
 
 [dependencies]
 bevy_common_assets = { version = "0.13", features = ["ron"] }

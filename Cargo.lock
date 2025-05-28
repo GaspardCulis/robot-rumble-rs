@@ -5887,7 +5887,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "robot-rumble-client"
+name = "robot-rumble"
 version = "0.1.0"
 dependencies = [
  "bevy",
