@@ -257,8 +257,10 @@ fn add_planet_pointer_observer(
             .insert(Mesh2d(meshes.add(Mesh::from(Circle::new(radius.0 as f32)))))
             .observe(
                 move |mut trigger: Trigger<Pointer<Click>>, mut ui_state: ResMut<UiState>| {
-                    let _click_event: &Pointer<Click> = trigger.event();
-                    ui_state.focused_planet = Some(entity);
+                    let click_event: &Pointer<Click> = trigger.event();
+                    if click_event.button == PointerButton::Primary {
+                        ui_state.focused_planet = Some(entity);
+                    }
                     trigger.propagate(false);
                 },
             );
