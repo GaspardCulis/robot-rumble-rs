@@ -22,8 +22,6 @@ pub struct PhysicsBundle {
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PhysicsSet {
-    /// Where map gets updated
-    Map,
     /// Where player inputs are processed
     Player,
     /// Where Velocity gets updated
@@ -45,7 +43,6 @@ impl Plugin for PhysicsPlugin {
             .configure_sets(
                 GgrsSchedule,
                 (
-                    PhysicsSet::Map,
                     PhysicsSet::Player,
                     PhysicsSet::Gravity,
                     PhysicsSet::Interaction,
