@@ -1,3 +1,4 @@
+use bevy::dev_tools::picking_debug::{DebugPickingMode, DebugPickingPlugin};
 use bevy::{
     input::mouse::{AccumulatedMouseMotion, MouseWheel},
     prelude::*,
@@ -35,7 +36,12 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
             MeshPickingPlugin,
+            DebugPickingPlugin,
         ))
+        .insert_resource(MeshPickingSettings {
+            require_markers: true,
+            ..Default::default()
+        })
         .add_plugins(EguiPlugin {
             enable_multipass_for_primary_context: true,
         })
@@ -44,6 +50,19 @@ fn main() {
         .add_plugins(core::CorePlugins)
         .init_state::<GameState>()
         .init_resource::<UiState>()
+        .add_systems(
+            PreUpdate,
+            (|mut mode: ResMut<DebugPickingMode>| {
+                *mode = match *mode {
+                    DebugPickingMode::Disabled => DebugPickingMode::Normal,
+                    DebugPickingMode::Normal => DebugPickingMode::Noisy,
+                    DebugPickingMode::Noisy => DebugPickingMode::Disabled,
+                }
+            })
+            .distributive_run_if(bevy::input::common_conditions::input_just_pressed(
+                KeyCode::F3,
+            )),
+        )
         .add_systems(
             Update,
             (
@@ -66,7 +85,9 @@ fn main() {
 }
 
 fn setup(
+    mut commands: Commands,
     mut planet_events: EventWriter<SpawnPlanetEvent>,
+    camera: Query<Entity, With<Camera2d>>,
     worldgen_config_handle: Res<WorldgenConfigHandle>,
     worldgen_configs: Res<Assets<WorldgenConfig>>,
 ) -> Result {
@@ -80,6 +101,10 @@ fn setup(
         r#type: PlanetType::Star,
         seed: rand::rng().random(),
     });
+
+    // Enable picking on camera
+    let camera = camera.single()?;
+    commands.entity(camera).insert(MeshPickingCamera);
 
     Ok(())
 }
@@ -254,7 +279,10 @@ fn add_planet_pointer_observer(
     for (entity, radius) in query.iter() {
         commands
             .entity(entity)
-            .insert(Mesh2d(meshes.add(Mesh::from(Circle::new(radius.0 as f32)))))
+            .insert((
+                Mesh2d(meshes.add(Mesh::from(Circle::new(radius.0 as f32)))),
+                Pickable::default(),
+            ))
             .observe(
                 move |mut trigger: Trigger<Pointer<Click>>, mut ui_state: ResMut<UiState>| {
                     let click_event: &Pointer<Click> = trigger.event();
