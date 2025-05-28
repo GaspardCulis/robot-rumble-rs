@@ -11,7 +11,7 @@ use rand::Rng;
 use robot_rumble::{
     core::{
         physics::Position,
-        worldgen::{GenerationSeed, WorldgenConfig, WorldgenConfigHandle},
+        worldgen::{WorldgenConfig, WorldgenConfigHandle},
     },
     entities::planet::*,
     *,
@@ -157,9 +157,10 @@ fn render_context_menu(mut contexts: EguiContexts, mut ui_state: ResMut<UiState>
 }
 
 fn render_side_panel(
+    mut commands: Commands,
     mut contexts: EguiContexts,
     mut planet_query: Query<(&mut Position, &mut Radius)>,
-    ui_state: ResMut<UiState>,
+    mut ui_state: ResMut<UiState>,
 ) -> Result {
     let ctx = contexts
         .try_ctx_mut()
@@ -189,9 +190,18 @@ fn render_side_panel(
                     position.y = position_y_str.parse().unwrap_or_default();
                 });
 
+                ui.separator();
+
                 let mut new_radius = radius.0;
                 ui.add(egui::Slider::new(&mut new_radius, 10..=1000).text("Radius"));
                 radius.set_if_neq(Radius(new_radius));
+
+                ui.separator();
+
+                if ui.button("Delete").clicked() {
+                    commands.entity(planet).despawn();
+                    ui_state.focused_planet = None;
+                }
 
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                     ui.add(egui::Hyperlink::from_label_and_url(
