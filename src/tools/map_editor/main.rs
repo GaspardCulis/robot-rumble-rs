@@ -11,7 +11,7 @@ use rand::Rng;
 use robot_rumble::{
     core::{
         physics::Position,
-        worldgen::{WorldgenConfig, WorldgenConfigHandle},
+        worldgen::{GenerationSeed, WorldgenConfig, WorldgenConfigHandle},
     },
     entities::planet::*,
     *,
@@ -20,6 +20,7 @@ use robot_rumble::{
 #[derive(Default, Resource)]
 struct UiState {
     context_menu_position: Option<Vec2>,
+    focused_planet: Option<Entity>,
     radius_input: String,
     buttons: ButtonsState,
 }
@@ -31,7 +32,10 @@ struct ButtonsState {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .add_plugins((
+            DefaultPlugins.set(ImagePlugin::default_nearest()),
+            MeshPickingPlugin,
+        ))
         .add_plugins(EguiPlugin {
             enable_multipass_for_primary_context: true,
         })
@@ -44,12 +48,19 @@ fn main() {
             Update,
             (
                 setup.run_if(resource_added::<WorldgenConfigHandle>),
+                add_planet_pointer_observer,
+                update_planet_radius,
                 (drag_camera_view, handle_right_click).run_if(not(egui_wants_any_pointer_input)),
             ),
         )
         .add_systems(
             EguiContextPass,
-            (render_ui, handle_spawn_planet_button).chain(),
+            (
+                render_context_menu,
+                render_side_panel,
+                handle_spawn_planet_button,
+            )
+                .chain(),
         )
         .run();
 }
@@ -119,7 +130,7 @@ fn handle_right_click(
     Ok(())
 }
 
-fn render_ui(mut contexts: EguiContexts, mut ui_state: ResMut<UiState>) -> Result {
+fn render_context_menu(mut contexts: EguiContexts, mut ui_state: ResMut<UiState>) -> Result {
     let ctx = contexts
         .try_ctx_mut()
         .ok_or(BevyError::from("Couldn't get egui context"))?;
@@ -139,6 +150,55 @@ fn render_ui(mut contexts: EguiContexts, mut ui_state: ResMut<UiState>) -> Resul
                 ui.separator();
 
                 ui_state.buttons.spawn_planet = ui.button("Spawn planet").clicked();
+            });
+    }
+
+    Ok(())
+}
+
+fn render_side_panel(
+    mut contexts: EguiContexts,
+    mut planet_query: Query<(&mut Position, &mut Radius)>,
+    ui_state: ResMut<UiState>,
+) -> Result {
+    let ctx = contexts
+        .try_ctx_mut()
+        .ok_or(BevyError::from("Couldn't get egui context"))?;
+
+    if let Some(planet) = ui_state.focused_planet {
+        let (mut position, mut radius) = planet_query.get_mut(planet)?;
+
+        egui::SidePanel::left("side_panel")
+            .default_width(200.0)
+            .show(ctx, move |ui| {
+                ui.heading("Planet properties");
+
+                ui.separator();
+
+                let radius_label = ui.label("Position: ");
+                ui.horizontal(|ui| {
+                    let mut position_x_str: String = format!("{}", position.x);
+                    let mut position_y_str: String = format!("{}", position.y);
+
+                    ui.text_edit_singleline(&mut position_x_str)
+                        .labelled_by(radius_label.id);
+                    ui.text_edit_singleline(&mut position_y_str)
+                        .labelled_by(radius_label.id);
+
+                    position.x = position_x_str.parse().unwrap_or_default();
+                    position.y = position_y_str.parse().unwrap_or_default();
+                });
+
+                let mut new_radius = radius.0;
+                ui.add(egui::Slider::new(&mut new_radius, 10..=1000).text("Radius"));
+                radius.set_if_neq(Radius(new_radius));
+
+                ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                    ui.add(egui::Hyperlink::from_label_and_url(
+                        "powered by egui",
+                        "https://github.com/emilk/egui/",
+                    ));
+                });
             });
     }
 
@@ -174,6 +234,36 @@ fn handle_spawn_planet_button(
     }
 
     Ok(())
+}
+
+fn add_planet_pointer_observer(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    query: Query<(Entity, &Radius), Added<Planet>>,
+) {
+    for (entity, radius) in query.iter() {
+        commands
+            .entity(entity)
+            .insert(Mesh2d(meshes.add(Mesh::from(Circle::new(radius.0 as f32)))))
+            .observe(
+                move |mut trigger: Trigger<Pointer<Click>>, mut ui_state: ResMut<UiState>| {
+                    let _click_event: &Pointer<Click> = trigger.event();
+                    ui_state.focused_planet = Some(entity);
+                    trigger.propagate(false);
+                },
+            );
+    }
+}
+
+fn update_planet_radius(
+    mut commands: Commands,
+    query: Query<&Children, (With<Planet>, Changed<Radius>)>,
+) {
+    for material_layers in query.iter() {
+        for layer in material_layers {
+            commands.entity(*layer).despawn();
+        }
+    }
 }
 
 fn mouse_pos_to_world(mouse_pos: &Vec2, camera_transform: &Transform, window_size: &Vec2) -> Vec2 {
