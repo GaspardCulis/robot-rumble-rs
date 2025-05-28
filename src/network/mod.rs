@@ -146,12 +146,8 @@ fn wait_start_match(
 
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(args.players)
+        .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 })
         .with_input_delay(2);
-
-    if cfg!(feature = "dev_tools") {
-        session_builder =
-            session_builder.with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 });
-    }
 
     for (i, player) in players.into_iter().enumerate() {
         session_builder = session_builder

@@ -36,7 +36,7 @@ impl Plugin for MapLimitPlugin {
                 GgrsSchedule,
                 check_outsiders
                     .in_set(PhysicsSet::Collision)
-                    .run_if(in_state(GameState::InGame)),
+                    .run_if(in_state(GameState::InGame).and(resource_exists::<MapLimit>)),
             );
     }
 }

@@ -21,6 +21,7 @@ pub mod weapon;
 // TODO: Move to config file
 pub const PLAYER_MASS: u32 = 800;
 pub const PLAYER_VELOCITY: f32 = 600.;
+pub const PLAYER_JUMP_VELOCITY: f32 = 800.;
 pub const PLAYER_RADIUS: f32 = 16. * 2.;
 const PLAYER_GROUND_FRICTION_COEFF: f32 = 0.95;
 
@@ -108,11 +109,12 @@ fn player_movement(
 ) {
     let delta = time.delta_secs();
 
-    for (action_state, mut velocity, mut input_velocity, rotation, planet_collision) in
-        query.iter_mut()
+    for (action_state, mut velocity, mut input_velocity, rotation, _) in query
+        .iter_mut()
+        .filter(|(_, _, _, _, collision)| collision.collides)
     {
-        if action_state.pressed(&PlayerAction::Jump) && planet_collision.collides {
-            velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_VELOCITY * 2.;
+        if action_state.pressed(&PlayerAction::Jump) {
+            velocity.0 = Vec2::from_angle(rotation.0).rotate(Vec2::Y) * PLAYER_JUMP_VELOCITY;
         }
 
         if action_state.pressed(&PlayerAction::Right) {
@@ -125,11 +127,7 @@ fn player_movement(
         if !(action_state.pressed(&PlayerAction::Right)
             || action_state.pressed(&PlayerAction::Left))
         {
-            let mut slow_down_rate = 6.;
-            if !planet_collision.collides {
-                slow_down_rate = 1.;
-            }
-            input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * slow_down_rate);
+            input_velocity.0.x = math::lerp(input_velocity.0.x, 0., delta * 6.0);
         }
 
         if action_state.pressed(&PlayerAction::Sneak) {
