@@ -1,5 +1,6 @@
 use bevy::prelude::{App, Plugin};
 
+pub mod blackhole;
 pub mod planet;
 pub mod player;
 pub mod projectile;
@@ -10,6 +11,7 @@ impl Plugin for EntitiesPlugins {
         app.add_plugins(planet::PlanetPlugin)
             .add_plugins(projectile::ProjectilePlugin)
             .add_plugins(player::PlayerPlugin)
-            .add_plugins(satellite::SatellitePlugin);
+            .add_plugins(satellite::SatellitePlugin)
+            .add_plugins(blackhole::BlackHolePlugin);
     }
 }
