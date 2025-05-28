@@ -11,8 +11,6 @@ use rand::{Rng, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use std::marker::PhantomData;
 
-mod blackhole;
-mod blackhole_ring;
 mod clouds;
 mod common;
 mod craters;
@@ -25,8 +23,6 @@ mod star;
 mod star_blobs;
 mod star_flares;
 mod under;
-pub use blackhole::BlackHoleMaterial;
-pub use blackhole_ring::BlackHoleRingMaterial;
 pub use clouds::CloudsMaterial;
 pub use common::CommonMaterial;
 pub use craters::CratersMaterial;
@@ -76,9 +72,7 @@ impl Plugin for PlanetMaterialsPlugin {
             .add_plugins(PlanetMaterialPlugin::<StarMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<StarBlobsMaterial>::default())
             .add_plugins(PlanetMaterialPlugin::<StarFlaresMaterial>::default())
-            .add_plugins(PlanetMaterialPlugin::<UnderMaterial>::default())
-            .add_plugins(PlanetMaterialPlugin::<BlackHoleMaterial>::default())
-            .add_plugins(PlanetMaterialPlugin::<BlackHoleRingMaterial>::default());
+            .add_plugins(PlanetMaterialPlugin::<UnderMaterial>::default());
     }
 }
 

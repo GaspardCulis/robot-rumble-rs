@@ -229,41 +229,4 @@ PlanetsConfig([
             ),
         ]
     ),
-    // BlackHoleLike
-    PlanetKindConfig (
-        type: Planet,
-        layers: [
-            (
-                material: BlackHole (( 
-                    // Common
-                    size: 5.0,
-                    octaves: 3,
-                    // Material specific
-                    radius: 0.5,
-                    light_width: 0.05,
-                    palette: ( "#000000", "#fef4df", "#ff884d" )
-                ))
-            ),
-            (
-                scale: Some(5.0),
-                material: BlackHoleRing (( 
-                    // Common
-                    size: 6.598,
-                    octaves: 3,
-                    rotation: 0.766,
-                    // Matériel spécifique
-                    disk_width: 0.065,
-                    ring_perspective: 14,
-                    should_dither: true,
-                    palette: (
-                        "#000000", 
-                        "#ffb45c", 
-                        "#ff8243",
-                        "#f25c19",
-                        "#fff5cc"
-                    )
-                ))
-            )
-        ]
-    ),
 ])
