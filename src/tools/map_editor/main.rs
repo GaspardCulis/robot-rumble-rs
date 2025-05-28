@@ -267,11 +267,15 @@ fn add_planet_pointer_observer(
 
 fn update_planet_radius(
     mut commands: Commands,
-    query: Query<&Children, (With<Planet>, Changed<Radius>)>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    query: Query<(&Radius, &Mesh2d, &Children), (With<Planet>, Changed<Radius>)>,
 ) {
-    for material_layers in query.iter() {
-        for layer in material_layers {
-            commands.entity(*layer).despawn();
+    for (radius, mesh, children) in query.iter() {
+        let mesh = meshes.get_mut(mesh).unwrap();
+        *mesh = Mesh::from(Circle::new(radius.0 as f32));
+
+        for material_layer in children {
+            commands.entity(*material_layer).despawn();
         }
     }
 }
