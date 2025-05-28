@@ -1,6 +1,12 @@
-use bevy::prelude::*;
+use bevy::{
+    input::mouse::{AccumulatedMouseMotion, MouseWheel},
+    prelude::*,
+};
 
-use bevy_inspector_egui::{bevy_egui::*, quick::WorldInspectorPlugin};
+use bevy_inspector_egui::{
+    bevy_egui::{input::egui_wants_any_pointer_input, *},
+    quick::WorldInspectorPlugin,
+};
 use robot_rumble::{
     core::{
         physics::Position,
@@ -21,13 +27,18 @@ fn main() {
         .add_plugins(core::CorePlugins)
         .init_state::<GameState>()
         .init_resource::<UiState>()
-        .add_systems(Update, setup.run_if(resource_added::<WorldgenConfigHandle>))
+        .add_systems(
+            Update,
+            (
+                setup.run_if(resource_added::<WorldgenConfigHandle>),
+                drag_camera_view.run_if(not(egui_wants_any_pointer_input)),
+            ),
+        )
         .add_systems(EguiContextPass, ui_example_system)
         .run();
 }
 
 fn setup(
-    mut commands: Commands,
     mut planet_events: EventWriter<SpawnPlanetEvent>,
     worldgen_config_handle: Res<WorldgenConfigHandle>,
     worldgen_configs: Res<Assets<WorldgenConfig>>,
@@ -44,6 +55,28 @@ fn setup(
     });
 
     Ok(())
+}
+
+// Also handles zoom cuz im lazy
+fn drag_camera_view(
+    mut query: Query<&mut Transform, With<Camera2d>>,
+    mouse_motion: Res<AccumulatedMouseMotion>,
+    mouse_button: Res<ButtonInput<MouseButton>>,
+    mut mouse_wheel_event_reader: EventReader<MouseWheel>,
+) {
+    for mut camera_transform in query.iter_mut() {
+        if mouse_button.pressed(MouseButton::Left) {
+            let delta = mouse_motion.delta * camera_transform.scale.xy();
+
+            camera_transform.translation.x -= delta.x;
+            camera_transform.translation.y += delta.y;
+        }
+
+        for ev in mouse_wheel_event_reader.read() {
+            let current_scale = camera_transform.scale.x;
+            camera_transform.scale = Vec3::ONE * (current_scale + ev.y * 0.2).clamp(0.1, 10.0);
+        }
+    }
 }
 
 #[derive(Default, Resource)]
