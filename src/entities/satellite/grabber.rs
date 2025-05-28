@@ -118,10 +118,13 @@ fn display_interact_prompt(
     grabber_query: Query<&Transform, With<Grabber>>,
     prompt_query: Query<&PlayerPrompt>,
     asset_server: Res<AssetServer>,
-    local_players: Res<LocalPlayers>,
+    local_players: Option<Res<LocalPlayers>>,
 ) {
     for (player_entity, player, prompt, nearby_grabber) in player_query.iter() {
-        if !local_players.0.contains(&player.handle) {
+        if local_players
+            .as_ref()
+            .is_some_and(|local| local.0.contains(&player.handle))
+        {
             continue;
         }
 
