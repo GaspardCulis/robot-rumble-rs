@@ -6,14 +6,14 @@ pub use config::{Projectile, ProjectilesConfig};
 #[derive(Resource)]
 pub struct ProjectilesConfigHandle(pub Handle<config::ProjectilesConfig>);
 
-use super::{planet::Planet, player::Player};
+use super::{blackhole::SpawnBlackHoleEvent, planet::Planet, player::Player};
 use crate::{
     core::{
         collision::{CollisionPlugin, CollisionShape, CollisionState},
         gravity::{Mass, Passive},
         physics::{PhysicsSet, Position, Rotation, Velocity},
     },
-    entities::planet::{Radius, SpawnPlanetEvent},
+    entities::planet::Radius,
 };
 
 type PlanetCollision = CollisionState<Projectile, Planet>;
@@ -55,8 +55,8 @@ impl Plugin for ProjectilePlugin {
                 GgrsSchedule,
                 (
                     tick_projectile_timer
-                        .before(PhysicsSet::Gravity)
-                        .before(PhysicsSet::Player),
+                        .after(PhysicsSet::Player)
+                        .before(PhysicsSet::Gravity),
                     add_physical_properties
                         .before(PhysicsSet::Gravity)
                         .after(PhysicsSet::Player),
@@ -132,7 +132,7 @@ fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Projectile>,
 
 fn tick_projectile_timer(
     mut commands: Commands,
-    mut blackhole_spawn_events: EventWriter<SpawnPlanetEvent>,
+    mut blackhole_spawn_events: EventWriter<SpawnBlackHoleEvent>,
     mut projectiles_querry: Query<(Entity, &Position, &mut DecayTimer), With<Projectile>>,
     time: Res<Time>,
 ) {
@@ -141,11 +141,9 @@ fn tick_projectile_timer(
         if despawn_timer.0.just_finished() {
             // for now spawning random planets
             info!("Generating blackhole!");
-            blackhole_spawn_events.write(SpawnPlanetEvent {
+            blackhole_spawn_events.write(SpawnBlackHoleEvent {
                 position: bh_position.clone(),
                 radius: Radius(config::BLACKHOLE_RADIUS),
-                r#type: crate::entities::planet::PlanetType::Planet,
-                seed: 69420,
             });
             commands.entity(projectile).despawn();
         }
