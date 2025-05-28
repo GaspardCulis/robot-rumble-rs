@@ -18,6 +18,10 @@ path = "src/lib.rs"
 name = "robot-rumble"
 path = "src/main.rs"
 
+[[bin]]
+name = "map-editor"
+path = "src/tools/map_editor/main.rs"
+
 [dependencies]
 bevy_common_assets = { version = "0.13", features = ["ron"] }
 bevy_ggrs = { version = "0.18", features = ["wasm-bindgen"] }
