@@ -13,7 +13,9 @@ use robot_rumble::{
 };
 
 mod controller;
+mod interaction;
 mod model;
+mod utils;
 mod view;
 
 fn main() {
@@ -35,6 +37,7 @@ fn main() {
         .add_plugins(core::CorePlugins)
         .init_state::<GameState>()
         .add_plugins(controller::ControllerPlugin)
+        .add_plugins(interaction::InteractionPlugin)
         .add_plugins(model::ModelPlugin)
         .add_plugins(view::ViewPlugin)
         .add_systems(
@@ -50,7 +53,13 @@ fn main() {
                 KeyCode::F3,
             )),
         )
-        .add_systems(Update, setup.run_if(resource_added::<WorldgenConfigHandle>))
+        .add_systems(
+            Update,
+            (
+                setup.run_if(resource_added::<WorldgenConfigHandle>),
+                utils::update_planet_radius,
+            ),
+        )
         .run();
 }
 
