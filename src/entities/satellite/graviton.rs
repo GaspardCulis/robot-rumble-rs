@@ -52,7 +52,7 @@ impl Plugin for GravitonPlugin {
 
 fn detect_player_orbit_entry(
     mut commands: Commands,
-    graviton_query: Query<(&Transform, Option<&OrbitCooldown>), (With<Satellite>, With<Graviton>)>,
+    graviton_query: Query<(&Position, Option<&OrbitCooldown>), (With<Satellite>, With<Graviton>)>,
     mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -67,24 +67,23 @@ fn detect_player_orbit_entry(
     let orbit_duration = config.orbit_duration;
 
     for (player_entity, player_position, velocity) in player_query.iter_mut() {
-        for (graviton_transform, maybe_cooldown) in graviton_query.iter() {
+        for (graviton_pos, maybe_cooldown) in graviton_query.iter() {
             if let Some(cooldown) = maybe_cooldown
                 && !cooldown.timer.finished()
             {
                 continue; // graviton encore en cooldown
             }
 
-            let graviton_pos = graviton_transform.translation.truncate();
-            let distance = player_position.0.distance(graviton_pos);
+            let distance = player_position.0.distance(graviton_pos.0);
 
             let initial_speed = velocity.length();
 
-            let dir = player_position.0 - graviton_pos;
+            let dir = player_position.0 - graviton_pos.0;
             let angle = atan2(dir.y, dir.x);
 
             if distance < orbit_radius {
                 commands.entity(player_entity).insert(Orbited {
-                    center: graviton_pos,
+                    center: graviton_pos.0,
                     angular_speed: min_angular_speed,
                     time_left: orbit_duration,
                     initial_speed,
@@ -99,7 +98,7 @@ fn detect_player_orbit_entry(
 fn update_orbiting_players(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Position, &mut Velocity, &mut Orbited)>,
-    graviton_query: Query<(Entity, &Transform), (With<Satellite>, With<Graviton>)>,
+    graviton_query: Query<(Entity, &Position), (With<Satellite>, With<Graviton>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
     time: Res<Time>,
@@ -123,9 +122,10 @@ fn update_orbiting_players(
             commands.entity(entity).remove::<Orbited>();
 
             // On cherche le satellite le plus proche
+            // TODO: Use collision plugin
             if let Some((satellite_entity, _)) = graviton_query
                 .iter()
-                .map(|(e, t)| (e, t.translation.truncate()))
+                .map(|(entity, position)| (entity, position.0))
                 .min_by(|(_, a), (_, b)| {
                     a.distance_squared(position.0)
                         .partial_cmp(&b.distance_squared(position.0))
