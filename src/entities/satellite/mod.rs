@@ -19,7 +19,7 @@ use visuals::{OrbitMaterial, generate_ring};
 #[require(Visibility)]
 pub struct Satellite;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, serde::Serialize, serde::Deserialize)]
 pub enum SatelliteKind {
     Graviton,
     Bumper,
