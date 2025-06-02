@@ -13,7 +13,7 @@ use visuals::*;
 
 // TODO: move to config
 const BLACKHOLE_MASS: u32 = 1000;
-const BH_DECAY_TIME: f32 = 1.;
+const BH_DECAY_TIME: f32 = 10.;
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq)]
 #[require(Visibility)]
