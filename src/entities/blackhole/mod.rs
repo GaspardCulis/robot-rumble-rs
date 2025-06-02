@@ -1,7 +1,6 @@
 use super::planet::{Radius, materials::CommonMaterial};
 use super::projectile::DecayTimer;
 use crate::core::{
-    collision::CollisionShape,
     gravity::{Mass, Static},
     physics::{PhysicsSet, Position},
 };
@@ -12,7 +11,7 @@ mod visuals;
 use visuals::*;
 
 // TODO: move to config
-const BLACKHOLE_MASS: u32 = 1000;
+const BLACKHOLE_MASS: u32 = 100000;
 const BH_DECAY_TIME: f32 = 10.;
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq)]
@@ -31,7 +30,6 @@ struct BlackHoleBundle {
     position: Position,
     radius: Radius,
     mass: Mass,
-    _collision_shape: CollisionShape,
 }
 
 impl BlackHoleBundle {
@@ -41,7 +39,6 @@ impl BlackHoleBundle {
             position,
             mass,
             radius,
-            _collision_shape: CollisionShape::Circle(radius.0 as f32),
         }
     }
 }
