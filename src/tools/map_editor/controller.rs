@@ -87,7 +87,7 @@ fn handle_spawn_satellite_button(
 
 fn handle_save_map_button(
     ui_state: Res<UiState>,
-    map_query: Query<
+    planets_query: Query<
         (
             &physics::Position,
             &planet::Radius,
@@ -96,9 +96,18 @@ fn handle_save_map_button(
         ),
         With<planet::Planet>,
     >,
+    satellites_query: Query<
+        (
+            &physics::Position,
+            Has<satellite::bumper::Bumper>,
+            Has<satellite::grabber::Grabber>,
+            Has<satellite::graviton::Graviton>,
+        ),
+        With<satellite::Satellite>,
+    >,
 ) -> Result {
     if ui_state.buttons.save_map {
-        let planets = map_query
+        let planets = planets_query
             .iter()
             .map(|(position, radius, r#type, seed)| savefile::PlanetSave {
                 position: position.0,
@@ -108,7 +117,30 @@ fn handle_save_map_button(
             })
             .collect();
 
-        let save_file = savefile::SaveFile { planets };
+        let satellites = satellites_query
+            .iter()
+            .map(|(position, bumper, grabber, graviton)| {
+                let kind = if bumper {
+                    satellite::SatelliteKind::Bumper
+                } else if grabber {
+                    satellite::SatelliteKind::Grabber
+                } else if graviton {
+                    satellite::SatelliteKind::Graviton
+                } else {
+                    unimplemented!("Wtf man ?!")
+                };
+
+                savefile::SatelliteSave {
+                    position: position.0,
+                    kind,
+                }
+            })
+            .collect();
+
+        let save_file = savefile::SaveFile {
+            planets,
+            satellites,
+        };
 
         save_file.save(&ui_state.save_file_path)?;
     }
@@ -119,8 +151,9 @@ fn handle_save_map_button(
 fn handle_load_map_button(
     mut commands: Commands,
     mut planet_spawn_events: EventWriter<planet::SpawnPlanetEvent>,
+    mut satellite_spawn_events: EventWriter<satellite::SpawnSatelliteEvent>,
     mut ui_state: ResMut<UiState>,
-    entities: Query<Entity, With<planet::Planet>>,
+    entities: Query<Entity, Or<(With<planet::Planet>, With<satellite::Satellite>)>>,
 ) -> Result {
     if ui_state.buttons.load_map {
         let save = savefile::SaveFile::load(&ui_state.save_file_path)?;
@@ -144,6 +177,14 @@ fn handle_load_map_button(
                 radius: planet::Radius(radius),
                 r#type,
                 seed,
+            });
+        }
+
+        for savefile::SatelliteSave { position, kind } in save.satellites {
+            satellite_spawn_events.write(satellite::SpawnSatelliteEvent {
+                position: physics::Position(position),
+                scale: 0.7,
+                kind,
             });
         }
     }
