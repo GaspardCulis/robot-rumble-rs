@@ -71,7 +71,7 @@ fn render_context_menu(mut contexts: EguiContexts, mut ui_state: ResMut<UiState>
 fn render_side_panel(
     mut commands: Commands,
     mut contexts: EguiContexts,
-    mut planet_query: Query<(&mut Position, &mut Radius)>,
+    mut planet_query: Query<(&mut Position, Option<&mut Radius>)>,
     mut ui_state: ResMut<UiState>,
 ) -> Result {
     let ctx = contexts
@@ -82,10 +82,11 @@ fn render_side_panel(
         .default_width(350.0)
         .show(ctx, move |ui| {
             if let Some(planet) = ui_state.focused_entity {
-                let (mut position, mut radius) =
-                    planet_query.get_mut(planet).expect("Invalid planets");
+                let (mut position, radius) = planet_query
+                    .get_mut(planet)
+                    .expect("Invalid selected entity");
 
-                ui.heading("Planet properties");
+                ui.heading("Entity properties");
 
                 ui.separator();
 
@@ -103,11 +104,13 @@ fn render_side_panel(
                     position.y = position_y_str.parse().unwrap_or_default();
                 });
 
-                ui.separator();
+                if let Some(mut radius) = radius {
+                    ui.separator();
 
-                let mut new_radius = radius.0;
-                ui.add(egui::Slider::new(&mut new_radius, 10..=1000).text("Radius"));
-                radius.set_if_neq(Radius(new_radius));
+                    let mut new_radius = radius.0;
+                    ui.add(egui::Slider::new(&mut new_radius, 10..=1000).text("Radius"));
+                    radius.set_if_neq(Radius(new_radius));
+                }
 
                 ui.separator();
 
