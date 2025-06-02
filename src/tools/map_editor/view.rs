@@ -50,12 +50,13 @@ fn render_side_panel(
         .try_ctx_mut()
         .ok_or(BevyError::from("Couldn't get egui context"))?;
 
-    if let Some(planet) = ui_state.focused_planet {
-        let (mut position, mut radius) = planet_query.get_mut(planet)?;
+    egui::SidePanel::left("side_panel")
+        .default_width(350.0)
+        .show(ctx, move |ui| {
+            if let Some(planet) = ui_state.focused_planet {
+                let (mut position, mut radius) =
+                    planet_query.get_mut(planet).expect("Invalid planets");
 
-        egui::SidePanel::left("side_panel")
-            .default_width(200.0)
-            .show(ctx, move |ui| {
                 ui.heading("Planet properties");
 
                 ui.separator();
@@ -88,27 +89,27 @@ fn render_side_panel(
                 }
 
                 ui.separator();
+            }
 
-                ui.heading("Map layout");
+            ui.heading("Map layout");
 
-                ui.separator();
+            ui.separator();
 
-                let save_path_label = ui.label("Save file path");
-                ui.text_edit_singleline(&mut ui_state.save_file_path)
-                    .labelled_by(save_path_label.id);
-                ui.horizontal(|ui| {
-                    ui_state.buttons.save_map = ui.button("Save").clicked();
-                    ui_state.buttons.load_map = ui.button("Load").clicked();
-                });
-
-                ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                    ui.add(egui::Hyperlink::from_label_and_url(
-                        "powered by egui",
-                        "https://github.com/emilk/egui/",
-                    ));
-                });
+            let save_path_label = ui.label("Save file path");
+            ui.text_edit_singleline(&mut ui_state.save_file_path)
+                .labelled_by(save_path_label.id);
+            ui.horizontal(|ui| {
+                ui_state.buttons.save_map = ui.button("Save").clicked();
+                ui_state.buttons.load_map = ui.button("Load").clicked();
             });
-    }
+
+            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                ui.add(egui::Hyperlink::from_label_and_url(
+                    "powered by egui",
+                    "https://github.com/emilk/egui/",
+                ));
+            });
+        });
 
     Ok(())
 }
