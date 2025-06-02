@@ -241,14 +241,17 @@ fn handle_grabber_interaction(
 
 fn update_grabbed_players(
     mut commands: Commands,
-    mut query: Query<(
-        Entity,
-        &mut Position,
-        &mut Velocity,
-        &mut GrabbedOrbit,
-        &GrabbedBy,
-    )>,
-    satellite_query: Query<&Position, With<Satellite>>,
+    mut query: Query<
+        (
+            Entity,
+            &mut Position,
+            &mut Velocity,
+            &mut GrabbedOrbit,
+            &GrabbedBy,
+        ),
+        Without<Grabber>,
+    >,
+    satellite_query: Query<&Position, With<Grabber>>,
     time: Res<Time>,
 ) {
     let delta = time.delta_secs();

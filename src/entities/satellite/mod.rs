@@ -19,7 +19,7 @@ use visuals::{OrbitMaterial, generate_ring};
 #[require(Visibility)]
 pub struct Satellite;
 
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
 pub enum SatelliteKind {
     Graviton,
     Bumper,
@@ -109,7 +109,6 @@ fn handle_spawn_satellite(
             Satellite,
             Transform::from_scale(Vec3::splat(event.scale)),
             event.position.clone(),
-            event.kind,
         ));
 
         let child_transform = Transform::from_translation(Vec3::new(130.0, 75.0, 0.0));

@@ -97,7 +97,10 @@ fn detect_player_orbit_entry(
 
 fn update_orbiting_players(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Position, &mut Velocity, &mut Orbited)>,
+    mut player_query: Query<
+        (Entity, &mut Position, &mut Velocity, &mut Orbited),
+        Without<Graviton>,
+    >,
     graviton_query: Query<(Entity, &Position), (With<Satellite>, With<Graviton>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -113,7 +116,7 @@ fn update_orbiting_players(
     let orbit_cooldown_duration = config.orbit_cooldown;
     let decay_rate = config.decay_rate;
 
-    for (entity, mut position, mut velocity, mut orbited) in query.iter_mut() {
+    for (entity, mut position, mut velocity, mut orbited) in player_query.iter_mut() {
         let delta = time.delta_secs();
 
         orbited.time_left = (orbited.time_left - delta).max(0.0);
