@@ -57,7 +57,6 @@ pub struct SlingshotCordTarget {
     pub target: Entity,
 }
 
-
 pub struct SlingshotPlugin;
 impl Plugin for SlingshotPlugin {
     fn build(&self, app: &mut App) {
@@ -80,7 +79,10 @@ impl Plugin for SlingshotPlugin {
 
 fn detect_player_orbit_entry(
     mut commands: Commands,
-    slingshot_query: Query<(Entity, &Transform, Option<&OrbitCooldown>), (With<Satellite>, With<Slingshot>)>,
+    slingshot_query: Query<
+        (Entity, &Transform, Option<&OrbitCooldown>),
+        (With<Satellite>, With<Slingshot>),
+    >,
     mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -232,13 +234,11 @@ fn update_orbiting_players(
             velocity.0 = eject_dir * orbited.initial_speed;
             commands.entity(entity).remove::<Orbited>();
 
-            let animation_duration = 1.0 / orbited.initial_speed * 2.0;  // Ajuste la durée de l'animation
+            let animation_duration = 1.0 / orbited.initial_speed * 2.0; // Ajuste la durée de l'animation
             commands.entity(entity).with_children(|parent| {
-                parent.spawn((
-                    SlingshotCordAnimation {
-                        timer: Timer::from_seconds(animation_duration, TimerMode::Once),
-                    },
-                ));
+                parent.spawn((SlingshotCordAnimation {
+                    timer: Timer::from_seconds(animation_duration, TimerMode::Once),
+                },));
             });
 
             // **Ne pas despawn immédiatement la corde ici** !
@@ -267,7 +267,6 @@ fn update_orbiting_players(
         }
     }
 }
-
 
 fn update_ejection_arrows(
     mut commands: Commands,
@@ -347,7 +346,6 @@ fn animate_slingshot_cord(
     }
 }
 
-
 fn update_slingcord_transform(
     player_query: Query<(&Position, Option<&Orbited>), With<Player>>,
     mut cord_query: Query<(&mut Transform, &SlingshotCordTarget), With<SlingshotCord>>,
@@ -385,4 +383,3 @@ fn update_slingcord_transform(
         }
     }
 }
-
