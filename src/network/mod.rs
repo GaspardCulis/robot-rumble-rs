@@ -48,6 +48,8 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
             .rollback_component_with_clone::<graviton::Orbited>()
+            .rollback_component_with_clone::<projectile::DecayTimer>()
+            .rollback_component_with_clone::<projectile::ProjectileDecayed>()
             // Collisions
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
