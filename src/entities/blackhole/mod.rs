@@ -51,7 +51,7 @@ impl Plugin for BlackHolePlugin {
             .add_event::<SpawnBlackHoleEvent>()
             .add_plugins(Material2dPlugin::<BlackHoleMaterial>::default())
             .add_plugins(Material2dPlugin::<BlackHoleRingMaterial>::default())
-            .add_systems(Update, (add_visuals,))
+            .add_systems(Update, add_visuals)
             .add_systems(
                 GgrsSchedule,
                 (tick_blackhole_timer, handle_spawn_black_hole_event).before(PhysicsSet::Player),
