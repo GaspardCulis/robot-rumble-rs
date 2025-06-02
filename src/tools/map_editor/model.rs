@@ -4,7 +4,7 @@ use robot_rumble::entities::satellite;
 #[derive(Resource)]
 pub struct UiState {
     pub context_menu_position: Option<Vec2>,
-    pub focused_planet: Option<Entity>,
+    pub focused_entity: Option<Entity>,
     pub radius_input: String,
     pub scale_input: String,
     pub satellite_kind_input: satellite::SatelliteKind,
@@ -31,7 +31,7 @@ impl Default for UiState {
     fn default() -> Self {
         Self {
             context_menu_position: None,
-            focused_planet: None,
+            focused_entity: None,
             satellite_kind_input: satellite::SatelliteKind::Bumper,
             radius_input: "100".to_string(),
             scale_input: "1.0".to_string(),

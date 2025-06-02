@@ -81,7 +81,7 @@ fn render_side_panel(
     egui::SidePanel::left("side_panel")
         .default_width(350.0)
         .show(ctx, move |ui| {
-            if let Some(planet) = ui_state.focused_planet {
+            if let Some(planet) = ui_state.focused_entity {
                 let (mut position, mut radius) =
                     planet_query.get_mut(planet).expect("Invalid planets");
 
@@ -113,7 +113,7 @@ fn render_side_panel(
 
                 if ui.button("Delete").clicked() {
                     commands.entity(planet).despawn();
-                    ui_state.focused_planet = None;
+                    ui_state.focused_entity = None;
                 }
 
                 ui.separator();

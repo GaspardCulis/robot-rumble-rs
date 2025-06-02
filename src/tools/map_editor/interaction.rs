@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::input::EguiWantsInput;
-use robot_rumble::{core::physics, entities::planet};
+use robot_rumble::{
+    core::physics,
+    entities::{planet, satellite},
+};
 
 use crate::model::UiState;
 
@@ -9,7 +12,11 @@ impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (add_planet_pointer_observers, add_window_pointer_observers),
+            (
+                add_planet_pointer_observers,
+                add_satellite_pointer_observers,
+                add_window_pointer_observers,
+            ),
         );
     }
 }
@@ -98,12 +105,13 @@ fn add_planet_pointer_observers(
                 Mesh2d(meshes.add(Mesh::from(Circle::new(radius.0 as f32)))),
                 Pickable::default(),
             ))
-            .observe(handle_planet_click)
-            .observe(handle_planet_drag);
+            .observe(handle_click)
+            .observe(handle_drag);
     }
 }
 
-fn handle_planet_click(
+/// Sets clicked entity as `focused_entity`
+fn handle_click(
     mut trigger: Trigger<Pointer<Click>>,
     mut ui_state: ResMut<UiState>,
     egui_wants_input_resource: Res<EguiWantsInput>,
@@ -111,15 +119,15 @@ fn handle_planet_click(
     if !egui_wants_input_resource.wants_any_pointer_input() {
         let event: &Pointer<Click> = trigger.event();
         if event.button == PointerButton::Primary {
-            ui_state.focused_planet = Some(event.target);
+            ui_state.focused_entity = Some(event.target);
         }
         trigger.propagate(false);
     }
 }
 
-fn handle_planet_drag(
+fn handle_drag(
     mut trigger: Trigger<Pointer<Drag>>,
-    mut query: Query<&mut physics::Position, With<planet::Planet>>,
+    mut query: Query<&mut physics::Position>,
     camera: Query<&Transform, With<Camera2d>>,
     egui_wants_input_resource: Res<EguiWantsInput>,
 ) -> Result {
@@ -127,13 +135,30 @@ fn handle_planet_drag(
         let event = trigger.event();
         if event.button == PointerButton::Primary {
             let camera = camera.single()?;
-            let mut planet_position = query.get_mut(event.target)?;
+            let mut position = query.get_mut(event.target)?;
 
-            planet_position.0 += event.delta * Vec2::new(1.0, -1.0) * camera.scale.xy();
+            position.0 += event.delta * Vec2::new(1.0, -1.0) * camera.scale.xy();
 
             trigger.propagate(false);
         }
     }
 
     Ok(())
+}
+
+fn add_satellite_pointer_observers(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    query: Query<Entity, Added<satellite::Satellite>>,
+) {
+    for entity in query.iter() {
+        commands
+            .entity(entity)
+            .insert((
+                Mesh2d(meshes.add(Mesh::from(Circle::new(100.0)))),
+                Pickable::default(),
+            ))
+            .observe(handle_click)
+            .observe(handle_drag);
+    }
 }

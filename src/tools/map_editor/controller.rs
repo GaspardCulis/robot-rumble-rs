@@ -129,7 +129,7 @@ fn handle_load_map_button(
         entities
             .iter()
             .for_each(|entity| commands.entity(entity).despawn());
-        ui_state.focused_planet = None;
+        ui_state.focused_entity = None;
 
         // Spawn saved entities
         for savefile::PlanetSave {
