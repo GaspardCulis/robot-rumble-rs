@@ -63,14 +63,14 @@ impl Plugin for PhysicsPlugin {
 }
 
 fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
-    // `for_each` is more performat than a standard for loop
+    // `for_each` is more performant than a standard for loop
     query.iter_mut().for_each(|(mut position, velocity)| {
         position.0 += velocity.0 * time.delta_secs();
     });
 }
 
 fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
-    // `for_each` is more performat than a standard for loop
+    // `for_each` is more performant than a standard for loop
     query
         .iter_mut()
         .for_each(|(mut transform, position, rotation)| {
