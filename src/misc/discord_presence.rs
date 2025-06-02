@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use discord_presence::{Client, Event};
+use discord_presence::Client;
 
 const APPLICATION_ID: u64 = 1379103471302737931;
 
@@ -24,7 +24,14 @@ fn setup(mut commands: Commands, args: Res<crate::Args>) {
 
     let _ = drpc
         .set_activity(|activity| {
-            activity.state(format!("Playing in {} player(s) match", args.players))
+            activity
+                .state(format!("Playing in {} player(s) match", args.players))
+                .details("Competitive")
+                .append_buttons(|button| {
+                    button
+                        .label("See code!")
+                        .url("https://github.com/GaspardCulis/robot-rumble-rs")
+                })
         })
         .inspect_err(|e| error!("Failed to set discord activity: {}", e));
 
