@@ -23,7 +23,7 @@ impl Plugin for BumperPlugin {
 }
 
 fn bumper_push_player(
-    bumper_query: Query<&Transform, (With<Satellite>, With<Bumper>)>,
+    bumper_query: Query<&Position, (With<Satellite>, With<Bumper>)>,
     mut player_query: Query<(&Position, &mut Velocity), With<Player>>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -36,16 +36,12 @@ fn bumper_push_player(
     let bumper_radius = config.bump_radius;
     let bump_multiplier = config.bump_multiplier;
 
-    for bumper_transform in bumper_query.iter() {
-        let bumper_pos = bumper_transform.translation.truncate();
-
-        for (player_position, mut velocity) in player_query.iter_mut() {
-            let player_pos = player_position.0;
-
-            let distance = player_pos.distance(bumper_pos);
+    for bumper_pos in bumper_query.iter() {
+        for (player_pos, mut velocity) in player_query.iter_mut() {
+            let distance = player_pos.distance(bumper_pos.0);
 
             if distance < bumper_radius {
-                let push_dir = (player_pos - bumper_pos).normalize_or_zero();
+                let push_dir = (player_pos.0 - bumper_pos.0).normalize_or_zero();
                 let incoming_speed = velocity.0.length();
 
                 let bump_speed = incoming_speed * bump_multiplier;
