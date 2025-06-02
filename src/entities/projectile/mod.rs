@@ -139,7 +139,6 @@ fn tick_projectile_timer(
     for (projectile, bh_position, mut despawn_timer) in projectiles_querry.iter_mut() {
         despawn_timer.0.tick(time.delta());
         if despawn_timer.0.just_finished() {
-            // for now spawning random planets
             info!("Generating blackhole!");
             blackhole_spawn_events.write(SpawnBlackHoleEvent {
                 position: bh_position.clone(),
