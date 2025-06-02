@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::*;
-use robot_rumble::{core::physics::Position, entities::planet::Radius};
+use robot_rumble::{
+    core::physics::Position,
+    entities::{planet::Radius, satellite},
+};
 
 use crate::model::UiState;
 
@@ -20,20 +23,45 @@ fn render_context_menu(mut contexts: EguiContexts, mut ui_state: ResMut<UiState>
         .ok_or(BevyError::from("Couldn't get egui context"))?;
 
     if let Some(position) = ui_state.context_menu_position {
-        egui::Window::new("Spawn planet")
+        egui::Window::new("Spawn entity")
             .collapsible(false)
             .fixed_pos((position.x, position.y))
             .fixed_size([200.0, 300.0])
             .show(ctx, |ui| {
+                ui.heading("Planet");
                 ui.horizontal(|ui| {
                     let radius_label = ui.label("Radius: ");
                     ui.text_edit_singleline(&mut ui_state.radius_input)
                         .labelled_by(radius_label.id);
                 });
+                ui_state.buttons.spawn_planet = ui.button("Spawn planet").clicked();
 
                 ui.separator();
 
-                ui_state.buttons.spawn_planet = ui.button("Spawn planet").clicked();
+                ui.heading("Satellite");
+                ui.label("Kind");
+                ui.horizontal(|ui| {
+                    ui.selectable_value(
+                        &mut ui_state.satellite_kind_input,
+                        satellite::SatelliteKind::Bumper,
+                        "Bumper",
+                    );
+                    ui.selectable_value(
+                        &mut ui_state.satellite_kind_input,
+                        satellite::SatelliteKind::Graviton,
+                        "Graviton",
+                    );
+                    ui.selectable_value(
+                        &mut ui_state.satellite_kind_input,
+                        satellite::SatelliteKind::Grabber,
+                        "Grabber",
+                    );
+                });
+                let scale_label = ui.label("Radius: ");
+                ui.text_edit_singleline(&mut ui_state.scale_input)
+                    .labelled_by(scale_label.id);
+
+                ui_state.buttons.spawn_satellite = ui.button("Spawn satellite").clicked();
             });
     }
 

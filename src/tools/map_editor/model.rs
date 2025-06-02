@@ -1,10 +1,13 @@
 use bevy::prelude::*;
+use robot_rumble::entities::satellite;
 
 #[derive(Resource)]
 pub struct UiState {
     pub context_menu_position: Option<Vec2>,
     pub focused_planet: Option<Entity>,
     pub radius_input: String,
+    pub scale_input: String,
+    pub satellite_kind_input: satellite::SatelliteKind,
     pub save_file_path: String,
     pub buttons: ButtonsState,
 }
@@ -12,6 +15,7 @@ pub struct UiState {
 #[derive(Default)]
 pub struct ButtonsState {
     pub spawn_planet: bool,
+    pub spawn_satellite: bool,
     pub save_map: bool,
     pub load_map: bool,
 }
@@ -28,7 +32,9 @@ impl Default for UiState {
         Self {
             context_menu_position: None,
             focused_planet: None,
+            satellite_kind_input: satellite::SatelliteKind::Bumper,
             radius_input: "100".to_string(),
+            scale_input: "1.0".to_string(),
             save_file_path: "map.ron".to_string(),
             buttons: ButtonsState::default(),
         }
