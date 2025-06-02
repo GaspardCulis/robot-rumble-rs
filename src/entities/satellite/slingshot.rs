@@ -360,7 +360,7 @@ fn update_slingcord_transform(
     let orbit_radius = config.orbit_radius;
 
     for (mut transform, target) in cord_query.iter_mut() {
-        if let Ok((player_pos, Some(orbited))) = player_query.get(target.target) {
+        if let Ok((_, Some(orbited))) = player_query.get(target.target) {
             let center = orbited.center;
             let angle = orbited.angle;
 
