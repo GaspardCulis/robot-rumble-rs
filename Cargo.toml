@@ -47,6 +47,7 @@ version = "0.16"
 features = [
   "std",
   "async_executor",
+  "configurable_error_handler",
 
   "multi_threaded",
   "bevy_asset",
