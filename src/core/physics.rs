@@ -63,20 +63,24 @@ impl Plugin for PhysicsPlugin {
 }
 
 fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
-    for (mut position, velocity) in query.iter_mut() {
-        position.0 += velocity.0 * time.delta_secs()
-    }
+    // `for_each` is more performant than a standard for loop
+    query.iter_mut().for_each(|(mut position, velocity)| {
+        position.0 += velocity.0 * time.delta_secs();
+    });
 }
 
 fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
-    for (mut transform, position, rotation) in query.iter_mut() {
-        transform.translation.x = position.x;
-        transform.translation.y = position.y;
+    // `for_each` is more performant than a standard for loop
+    query
+        .iter_mut()
+        .for_each(|(mut transform, position, rotation)| {
+            transform.translation.x = position.x;
+            transform.translation.y = position.y;
 
-        if let Some(rotation) = rotation {
-            transform.rotation = Quat::from_rotation_z(rotation.0);
-        }
-    }
+            if let Some(rotation) = rotation {
+                transform.rotation = Quat::from_rotation_z(rotation.0);
+            }
+        });
 }
 
 // Chore ops implementations

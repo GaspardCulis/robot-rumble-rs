@@ -18,6 +18,7 @@ in
   pkgs.mkShell rec {
     packages = with pkgs; [
       just
+      tracy
     ];
     nativeBuildInputs = with pkgs; [
       rust
@@ -28,6 +29,8 @@ in
       mold
       clang
       llvmPackages.bintools
+      # fixes libstdc++ issues and libgl.so issues
+      stdenv.cc.cc.lib
       udev
       alsa-lib
       vulkan-loader
