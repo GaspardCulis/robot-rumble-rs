@@ -20,8 +20,12 @@ type PlanetCollision = CollisionState<Projectile, Planet>;
 type PlayerCollision = CollisionState<Projectile, Player>;
 
 // Autodespawn timer
-#[derive(Component)]
+#[derive(Component, Debug, Clone, Reflect)]
 pub struct DecayTimer(pub Timer);
+
+// Possible fix for events
+#[derive(Component, Debug, Reflect, Clone, Copy)]
+pub struct ProjectileDecayed;
 
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
@@ -29,7 +33,9 @@ pub struct Damage(pub f32);
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
-        app.register_required_components::<Projectile, CollisionShape>()
+        app.register_type::<ProjectileDecayed>()
+            .register_type::<DecayTimer>()
+            .register_required_components::<Projectile, CollisionShape>()
             .register_required_components_with::<Projectile, Transform>(|| {
                 Transform::from_scale(Vec3::splat(1.5))
             })
@@ -133,12 +139,17 @@ fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Projectile>,
 fn tick_projectile_timer(
     mut commands: Commands,
     mut blackhole_spawn_events: EventWriter<SpawnBlackHoleEvent>,
-    mut projectiles_querry: Query<(Entity, &Position, &mut DecayTimer), With<Projectile>>,
+    mut projectiles_querry: Query<
+        (Entity, &Position, &mut DecayTimer),
+        (With<Projectile>, Without<ProjectileDecayed>),
+    >,
     time: Res<Time>,
 ) {
     for (projectile, bh_position, mut despawn_timer) in projectiles_querry.iter_mut() {
         despawn_timer.0.tick(time.delta());
         if despawn_timer.0.just_finished() {
+            // Control on events rollback
+            commands.entity(projectile).insert(ProjectileDecayed);
             info!("Generating blackhole!");
             blackhole_spawn_events.write(SpawnBlackHoleEvent {
                 position: bh_position.clone(),
