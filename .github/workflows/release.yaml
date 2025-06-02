@@ -217,14 +217,14 @@ jobs:
         run: |
           cargo binstall --locked --no-confirm --force wasm-bindgen-cli
           cargo binstall --locked --no-confirm --force wasm-opt
-          bevy build --locked --release --no-default-features --features='${{ matrix.features }}' --yes web --bundle
+          bevy build --locked --release --no-default-features true --features='${{ matrix.features }}' --yes web --bundle
           mv 'target/bevy_web/web-release/${{ env.cargo_build_binary_name }}' '${{ env.app }}'
 
       - name: Build and add binaries to app (non-Web)
         if: ${{ env.is_platform_enabled == 'true' && matrix.platform != 'web' }}
         run: |
           for target in ${{ matrix.targets }}; do
-            bevy build --locked --release --target="${target}" --no-default-features --features='${{ matrix.features }}'
+            bevy build --locked --release --target="${target}" --no-default-features true --features='${{ matrix.features }}'
             mv target/"${target}"/release/'${{ env.cargo_build_binary_name }}${{ matrix.binary_ext }}' tmp/binary/"${target}"'${{ matrix.binary_ext }}'
           done
           if [ '${{ matrix.platform }}' = 'macos' ]; then
