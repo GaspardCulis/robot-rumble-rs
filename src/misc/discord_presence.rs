@@ -9,11 +9,12 @@ struct DiscordPresence(Client);
 pub struct DiscordPresencePlugin;
 impl Plugin for DiscordPresencePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        app.add_systems(Startup, setup)
+            .add_systems(OnEnter(crate::GameState::InGame), set_ingame_presence);
     }
 }
 
-fn setup(mut commands: Commands, args: Res<crate::Args>) {
+fn setup(mut commands: Commands) {
     let mut drpc = Client::new(APPLICATION_ID);
     drpc.on_ready(|_ctx| {
         info!("Discord presence ready");
@@ -22,7 +23,12 @@ fn setup(mut commands: Commands, args: Res<crate::Args>) {
 
     drpc.start();
 
-    let _ = drpc
+    commands.insert_resource(DiscordPresence(drpc));
+}
+
+fn set_ingame_presence(mut presence: ResMut<DiscordPresence>, args: Res<crate::Args>) {
+    let _ = presence
+        .0
         .set_activity(|activity| {
             activity
                 .state(format!("Playing in {} player(s) match", args.players))
@@ -34,6 +40,4 @@ fn setup(mut commands: Commands, args: Res<crate::Args>) {
                 })
         })
         .inspect_err(|e| error!("Failed to set discord activity: {}", e));
-
-    commands.insert_resource(DiscordPresence(drpc));
 }
