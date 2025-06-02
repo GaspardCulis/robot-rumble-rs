@@ -41,6 +41,23 @@ pub struct EjectionArrow {
     pub player: Entity,
 }
 
+#[derive(Component)]
+pub struct SlingshotCord;
+
+#[derive(Resource)]
+pub struct SlingshotCordFrames(pub Vec<Handle<Image>>);
+
+#[derive(Component)]
+pub struct SlingshotCordAnimation {
+    pub timer: Timer,
+}
+
+#[derive(Component)]
+pub struct SlingshotCordTarget {
+    pub target: Entity,
+}
+
+
 pub struct SlingshotPlugin;
 impl Plugin for SlingshotPlugin {
     fn build(&self, app: &mut App) {
@@ -51,6 +68,9 @@ impl Plugin for SlingshotPlugin {
                 update_orbiting_players,
                 update_orbit_cooldowns,
                 update_ejection_arrows,
+                load_slingcord_frames,
+                animate_slingshot_cord,
+                update_slingcord_transform,
             )
                 .chain()
                 .in_set(SatelliteSet::Slingshot),
@@ -60,15 +80,13 @@ impl Plugin for SlingshotPlugin {
 
 fn detect_player_orbit_entry(
     mut commands: Commands,
-    slingshot_query: Query<
-        (&Transform, Option<&OrbitCooldown>),
-        (With<Satellite>, With<Slingshot>),
-    >,
+    slingshot_query: Query<(Entity, &Transform, Option<&OrbitCooldown>), (With<Satellite>, With<Slingshot>)>,
     mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     let Some(config) = configs.get(&config_handle.0) else {
         warn!("Satellite config not loaded yet");
@@ -79,7 +97,7 @@ fn detect_player_orbit_entry(
     let orbit_duration = config.orbit_duration;
 
     for (player_entity, player_position, velocity) in player_query.iter_mut() {
-        for (slingshot_transform, maybe_cooldown) in slingshot_query.iter() {
+        for (slingshot_entity, slingshot_transform, maybe_cooldown) in slingshot_query.iter() {
             if let Some(cooldown) = maybe_cooldown {
                 if !cooldown.timer.finished() {
                     continue; // slingshot encore en cooldown
@@ -128,12 +146,34 @@ fn detect_player_orbit_entry(
                         player: player_entity,
                     },
                 ));
+
+                commands.entity(slingshot_entity).with_children(|parent| {
+                    parent.spawn((
+                        Sprite {
+                            image: asset_server.load("skins/satellite/slingshot/Corde_1.png"),
+                            ..default()
+                        },
+                        Transform {
+                            translation: Vec3::new(0.0, 0.0, 1.0),
+                            ..default()
+                        },
+                        GlobalTransform::default(),
+                        SlingshotCord,
+                        SlingshotCordTarget {
+                            target: player_entity,
+                        },
+                        SlingshotCordAnimation {
+                            timer: Timer::from_seconds(1.0, TimerMode::Once),
+                        },
+                    ));
+                });
                 break;
             }
         }
     }
 }
 
+// Retarde le despawn de la corde jusqu'à ce que l'animation soit terminée
 fn update_orbiting_players(
     mut commands: Commands,
     mut query: Query<(
@@ -144,6 +184,7 @@ fn update_orbiting_players(
         &ActionState<PlayerAction>,
     )>,
     slingshot_query: Query<(Entity, &Transform), (With<Satellite>, With<Slingshot>)>,
+    cord_query: Query<(Entity, &SlingshotCordTarget, &SlingshotCordAnimation)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
     time: Res<Time>,
@@ -158,15 +199,13 @@ fn update_orbiting_players(
         orbited.elapsed += delta;
         orbited.time_left = (orbited.time_left - delta).max(0.0);
 
-        let t = orbited.elapsed / 1.0;
-
         // Phase 1 : arrivée vers le centre du satellite
         if orbited.elapsed < 1.0 {
-            let eased_t = 1.0 - powf(1.0 - t, 2.0);
+            let eased_t = 1.0 - powf(1.0 - orbited.elapsed, 2.0);
             position.0 = orbited.entry_pos.lerp(orbited.center, eased_t);
 
             let direction = (orbited.center - orbited.entry_pos).normalize_or_zero();
-            velocity.0 = direction * orbited.initial_speed * (1.0 - t);
+            velocity.0 = direction * orbited.initial_speed * (1.0 - orbited.elapsed);
             continue;
         }
 
@@ -193,6 +232,26 @@ fn update_orbiting_players(
             velocity.0 = eject_dir * orbited.initial_speed;
             commands.entity(entity).remove::<Orbited>();
 
+            let animation_duration = 1.0 / orbited.initial_speed * 2.0;  // Ajuste la durée de l'animation
+            commands.entity(entity).with_children(|parent| {
+                parent.spawn((
+                    SlingshotCordAnimation {
+                        timer: Timer::from_seconds(animation_duration, TimerMode::Once),
+                    },
+                ));
+            });
+
+            // **Ne pas despawn immédiatement la corde ici** !
+            // Retarde le despawn à la fin de l'animation
+            for (cord_entity, cord_target, animation) in cord_query.iter() {
+                if cord_target.target == entity {
+                    // Si l'animation est terminée, on despawn la corde
+                    if animation.timer.finished() {
+                        commands.entity(cord_entity).despawn();
+                    }
+                }
+            }
+
             // Cooldown du slingshot
             if let Some((slingshot_entity, _)) = slingshot_query.iter().min_by(|(_, a), (_, b)| {
                 a.translation
@@ -208,6 +267,7 @@ fn update_orbiting_players(
         }
     }
 }
+
 
 fn update_ejection_arrows(
     mut commands: Commands,
@@ -259,3 +319,70 @@ fn update_orbit_cooldowns(
         }
     }
 }
+
+fn load_slingcord_frames(asset_server: Res<AssetServer>, mut commands: Commands) {
+    let frames = vec![
+        asset_server.load("skins/satellite/slingshot/Corde_1.png"),
+        asset_server.load("skins/satellite/slingshot/Corde_2.png"),
+        asset_server.load("skins/satellite/slingshot/Corde_3.png"),
+        asset_server.load("skins/satellite/slingshot/Corde_4.png"),
+    ];
+    commands.insert_resource(SlingshotCordFrames(frames));
+}
+
+fn animate_slingshot_cord(
+    time: Res<Time>,
+    frames: Res<SlingshotCordFrames>,
+    mut query: Query<(&mut Sprite, &mut SlingshotCordAnimation)>,
+) {
+    for (mut sprite, mut animation) in query.iter_mut() {
+        animation.timer.tick(time.delta());
+
+        let progress = animation.timer.elapsed_secs().min(1.0);
+        let frame_index = (progress / (1.0 / frames.0.len() as f32)).floor() as usize;
+
+        if let Some(image) = frames.0.get(frame_index.min(frames.0.len() - 1)) {
+            sprite.image = image.clone();
+        }
+    }
+}
+
+
+fn update_slingcord_transform(
+    player_query: Query<(&Position, Option<&Orbited>), With<Player>>,
+    mut cord_query: Query<(&mut Transform, &SlingshotCordTarget), With<SlingshotCord>>,
+    config_handle: Res<SatelliteConfigHandle>,
+    configs: Res<Assets<SatelliteConfig>>,
+) {
+    let Some(config) = configs.get(&config_handle.0) else {
+        warn!("Satellite config not loaded yet");
+        return;
+    };
+
+    let orbit_radius = config.orbit_radius;
+
+    for (mut transform, target) in cord_query.iter_mut() {
+        if let Ok((player_pos, Some(orbited))) = player_query.get(target.target) {
+            let center = orbited.center;
+            let angle = orbited.angle;
+
+            // On définit un petit angle de décalage pour simuler les deux attaches
+            let delta_angle = 0.5; // ~28.6° (ajuste si nécessaire)
+
+            let left_anchor = center + Vec2::from_angle(angle + delta_angle) * orbit_radius;
+            let right_anchor = center + Vec2::from_angle(angle - delta_angle) * orbit_radius;
+
+            // Point milieu entre les deux attaches
+            let midpoint = (left_anchor + right_anchor) * 0.5;
+            let direction = right_anchor - left_anchor;
+            let distance = direction.length();
+            let angle_z = atan2(direction.y, direction.x);
+
+            // Position relative à son parent (le satellite)
+            transform.translation = (midpoint - center).extend(1.0);
+            transform.scale = Vec3::new(distance / 20.0, 8.0, 1.0); // ajuste les diviseurs à ton sprite
+            transform.rotation = Quat::from_rotation_z(angle_z);
+        }
+    }
+}
+
