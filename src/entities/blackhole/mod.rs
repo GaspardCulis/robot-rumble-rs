@@ -1,4 +1,5 @@
 use super::planet::{Radius, materials::CommonMaterial};
+use super::projectile::DecayTimer;
 use crate::core::{
     collision::CollisionShape,
     gravity::{Mass, Static},
@@ -11,7 +12,8 @@ mod visuals;
 use visuals::*;
 
 // TODO: move to config
-pub const BLACKHOLE_MASS: u32 = 1000;
+const BLACKHOLE_MASS: u32 = 1000;
+const BH_DECAY_TIME: f32 = 1.;
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq)]
 #[require(Visibility)]
@@ -21,7 +23,6 @@ pub struct BlackHole;
 pub struct SpawnBlackHoleEvent {
     pub position: Position,
     pub radius: Radius,
-    // TODO: add DecayTimer
 }
 
 #[derive(Bundle)]
@@ -51,14 +52,27 @@ impl Plugin for BlackHolePlugin {
         app.register_required_components_with::<BlackHole, Static>(|| Static)
             .register_required_components_with::<BlackHole, Name>(|| Name::new("Blackhole"))
             .add_event::<SpawnBlackHoleEvent>()
-            // visuals
             .add_plugins(Material2dPlugin::<BlackHoleMaterial>::default())
             .add_plugins(Material2dPlugin::<BlackHoleRingMaterial>::default())
             .add_systems(Update, (add_visuals,))
             .add_systems(
                 GgrsSchedule,
-                handle_spawn_black_hole_event.before(PhysicsSet::Player),
+                (tick_blackhole_timer, handle_spawn_black_hole_event).before(PhysicsSet::Player),
             );
+    }
+}
+
+fn tick_blackhole_timer(
+    mut query: Query<(Entity, &mut DecayTimer), With<BlackHole>>,
+    mut commands: Commands,
+    time: Res<Time>,
+) {
+    for (blackhole, mut despawn_timer) in query.iter_mut() {
+        despawn_timer.0.tick(time.delta());
+
+        if despawn_timer.0.just_finished() {
+            commands.entity(blackhole).despawn();
+        }
     }
 }
 
@@ -67,11 +81,16 @@ fn handle_spawn_black_hole_event(
     mut commands: Commands,
 ) {
     for event in events.read() {
-        commands.spawn((BlackHoleBundle::new(
-            event.position.clone(),
-            event.radius,
-            Mass(BLACKHOLE_MASS),
-        ),));
+        commands
+            .spawn((BlackHoleBundle::new(
+                event.position.clone(),
+                event.radius,
+                Mass(BLACKHOLE_MASS),
+            ),))
+            .insert(DecayTimer(Timer::from_seconds(
+                BH_DECAY_TIME,
+                TimerMode::Once,
+            )));
     }
 }
 
