@@ -1,7 +1,7 @@
 use bevy::prelude::{App, Plugin};
 
-mod limit;
-mod spawn;
+pub mod limit;
+pub mod spawn;
 
 pub struct LevelPlugins;
 impl Plugin for LevelPlugins {
