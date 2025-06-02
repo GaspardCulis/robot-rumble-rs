@@ -1,4 +1,5 @@
 use bevy::dev_tools::picking_debug::{DebugPickingMode, DebugPickingPlugin};
+use bevy::ecs::error::{ErrorContext, GLOBAL_ERROR_HANDLER};
 use bevy::prelude::*;
 
 use bevy_inspector_egui::{bevy_egui::*, quick::WorldInspectorPlugin};
@@ -19,6 +20,13 @@ mod utils;
 mod view;
 
 fn main() {
+    // Avoid some crashes/hangups when EGui context is `get_mut` when window closes
+    GLOBAL_ERROR_HANDLER
+        .set(|error: BevyError, _ctx: ErrorContext| {
+            warn!("Encountered error: {}", error);
+        })
+        .expect("The error handler can only be set once.");
+
     App::new()
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
