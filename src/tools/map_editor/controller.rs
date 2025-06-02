@@ -68,18 +68,14 @@ fn handle_spawn_satellite_button(
     {
         let spawn_position = mouse_pos_to_world(&click_position, camera_transform, &window.size());
 
-        if let Ok(scale) = ui_state.scale_input.parse::<f32>() {
-            satellite_events.write(satellite::SpawnSatelliteEvent {
-                position: physics::Position(spawn_position),
-                kind: ui_state.satellite_kind_input,
-                scale,
-            });
+        satellite_events.write(satellite::SpawnSatelliteEvent {
+            position: physics::Position(spawn_position),
+            kind: ui_state.satellite_kind_input,
+            scale: 0.7,
+        });
 
-            ui_state.context_menu_position = None;
-            ui_state.buttons.spawn_satellite = false;
-        } else {
-            // You dumb fuck
-        }
+        ui_state.context_menu_position = None;
+        ui_state.buttons.spawn_satellite = false;
     }
 
     Ok(())

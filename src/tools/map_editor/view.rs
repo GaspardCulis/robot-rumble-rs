@@ -57,10 +57,6 @@ fn render_context_menu(mut contexts: EguiContexts, mut ui_state: ResMut<UiState>
                         "Grabber",
                     );
                 });
-                let scale_label = ui.label("Radius: ");
-                ui.text_edit_singleline(&mut ui_state.scale_input)
-                    .labelled_by(scale_label.id);
-
                 ui_state.buttons.spawn_satellite = ui.button("Spawn satellite").clicked();
             });
     }
