@@ -27,7 +27,7 @@ env:
   assets_path: assets
 
   # Whether to build and package a release for a given target platform.
-  build_for_web: true
+  build_for_web: false # Not working currently, do manually
   build_for_linux: true
   build_for_windows: true
   build_for_macos: true
