@@ -92,6 +92,16 @@ where
     }
 }
 
+impl<A, B> Default for CollisionPlugin<A, B>
+where
+    A: Component,
+    B: Component,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CollisionShape {
     pub fn bounding_radius(&self) -> f32 {
         match self {
