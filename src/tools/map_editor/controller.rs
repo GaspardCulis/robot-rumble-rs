@@ -1,13 +1,16 @@
 use bevy::prelude::*;
 use rand::Rng as _;
-use robot_rumble::{core::physics, entities::planet};
+use robot_rumble::{
+    core::{physics, worldgen},
+    entities::planet,
+};
 
-use crate::{model::UiState, utils::mouse_pos_to_world};
+use crate::{model::UiState, savefile, utils::mouse_pos_to_world};
 
 pub struct ControllerPlugin;
 impl Plugin for ControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, handle_spawn_planet_button);
+        app.add_systems(Update, (handle_spawn_planet_button, handle_save_map_button));
     }
 }
 
@@ -38,6 +41,37 @@ fn handle_spawn_planet_button(
         } else {
             // You dumb fuck
         }
+    }
+
+    Ok(())
+}
+
+fn handle_save_map_button(
+    ui_state: Res<UiState>,
+    map_query: Query<
+        (
+            &physics::Position,
+            &planet::Radius,
+            &planet::PlanetType,
+            &worldgen::GenerationSeed,
+        ),
+        With<planet::Planet>,
+    >,
+) -> Result {
+    if ui_state.buttons.save_map {
+        let planets = map_query
+            .iter()
+            .map(|(position, radius, r#type, seed)| savefile::PlanetSave {
+                position: position.0,
+                radius: radius.0,
+                r#type: *r#type,
+                seed: seed.0,
+            })
+            .collect();
+
+        let save_file = savefile::SaveFile { planets };
+
+        save_file.save(&ui_state.save_file_path)?;
     }
 
     Ok(())

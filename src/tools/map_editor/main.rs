@@ -16,6 +16,7 @@ use robot_rumble::{
 mod controller;
 mod interaction;
 mod model;
+mod savefile;
 mod utils;
 mod view;
 
