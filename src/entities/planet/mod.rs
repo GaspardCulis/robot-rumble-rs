@@ -22,7 +22,9 @@ pub struct Planet;
 #[derive(Component, Debug, Reflect, Copy, Clone, PartialEq)]
 pub struct Radius(pub u32);
 
-#[derive(Component, Debug, Reflect, Copy, Clone, PartialEq, serde::Deserialize)]
+#[derive(
+    Component, Debug, Reflect, Copy, Clone, PartialEq, serde::Deserialize, serde::Serialize,
+)]
 pub enum PlanetType {
     Planet,
     Star,
