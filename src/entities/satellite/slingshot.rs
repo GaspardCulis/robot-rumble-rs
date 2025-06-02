@@ -80,7 +80,7 @@ impl Plugin for SlingshotPlugin {
 fn detect_player_orbit_entry(
     mut commands: Commands,
     slingshot_query: Query<
-        (Entity, &Transform, Option<&OrbitCooldown>),
+        (Entity, &Position, Option<&OrbitCooldown>),
         (With<Satellite>, With<Slingshot>),
     >,
     mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
@@ -99,32 +99,31 @@ fn detect_player_orbit_entry(
     let orbit_duration = config.orbit_duration;
 
     for (player_entity, player_position, velocity) in player_query.iter_mut() {
-        for (slingshot_entity, slingshot_transform, maybe_cooldown) in slingshot_query.iter() {
+        for (slingshot_entity, slingshot_pos, maybe_cooldown) in slingshot_query.iter() {
             if let Some(cooldown) = maybe_cooldown {
                 if !cooldown.timer.finished() {
                     continue; // slingshot encore en cooldown
                 }
             }
 
-            let slingshot_pos = slingshot_transform.translation.truncate();
-            let distance = player_position.0.distance(slingshot_pos);
+            let distance = player_position.0.distance(slingshot_pos.0);
 
             let initial_speed = velocity.length();
 
             let entry_pos = player_position.0;
-            let offset = player_position.0 - slingshot_pos;
+            let offset = player_position.0 - slingshot_pos.0;
             let angle = atan2(offset.y, offset.x);
 
             if distance < orbit_radius {
                 commands.entity(player_entity).insert(Orbited {
-                    center: slingshot_pos,
+                    center: slingshot_pos.0,
                     time_left: orbit_duration,
                     initial_speed,
                     entry_pos,
                     elapsed: 0.0,
                     angle,
                 });
-                let center = slingshot_pos;
+                let center = slingshot_pos.0;
                 let direction = (entry_pos - center).normalize();
                 let arrow_distance = (entry_pos - center).length() + 30.0;
                 let arrow_pos = center + direction * arrow_distance;
@@ -178,14 +177,17 @@ fn detect_player_orbit_entry(
 // Retarde le despawn de la corde jusqu'à ce que l'animation soit terminée
 fn update_orbiting_players(
     mut commands: Commands,
-    mut query: Query<(
-        Entity,
-        &mut Position,
-        &mut Velocity,
-        &mut Orbited,
-        &ActionState<PlayerAction>,
-    )>,
-    slingshot_query: Query<(Entity, &Transform), (With<Satellite>, With<Slingshot>)>,
+    mut query: Query<
+        (
+            Entity,
+            &mut Position,
+            &mut Velocity,
+            &mut Orbited,
+            &ActionState<PlayerAction>,
+        ),
+        Without<Slingshot>,
+    >,
+    slingshot_query: Query<(Entity, &Position), (With<Satellite>, With<Slingshot>)>,
     cord_query: Query<(Entity, &SlingshotCordTarget, &SlingshotCordAnimation)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -202,7 +204,7 @@ fn update_orbiting_players(
         orbited.time_left = (orbited.time_left - delta).max(0.0);
 
         // Phase 1 : arrivée vers le centre du satellite
-        if orbited.elapsed < 1.0 {
+        if orbited.elapsed < 1.2 {
             let eased_t = 1.0 - powf(1.0 - orbited.elapsed, 2.0);
             position.0 = orbited.entry_pos.lerp(orbited.center, eased_t);
 
@@ -254,10 +256,8 @@ fn update_orbiting_players(
 
             // Cooldown du slingshot
             if let Some((slingshot_entity, _)) = slingshot_query.iter().min_by(|(_, a), (_, b)| {
-                a.translation
-                    .truncate()
-                    .distance_squared(position.0)
-                    .partial_cmp(&b.translation.truncate().distance_squared(position.0))
+                a.0.distance_squared(position.0)
+                    .partial_cmp(&b.0.distance_squared(position.0))
                     .unwrap()
             }) {
                 commands.entity(slingshot_entity).insert(OrbitCooldown {
