@@ -8,11 +8,7 @@ use bevy::{prelude::*, sprite::Material2dPlugin};
 use bevy_ggrs::GgrsSchedule;
 
 mod visuals;
-use visuals::{
-    BlackHoleMaterial, BlackHoleRingMaterial, CORE_LIGHT_WIDTH, CORE_OCTAVES, CORE_PALETTE,
-    CORE_RADIUS, CORE_SCALE, CORE_SIZE, RING_DISK_PERSPECTIVE, RING_DISK_WIDTH, RING_OCTAVES,
-    RING_PALETTE, RING_ROTATION, RING_SIZE,
-};
+use visuals::*;
 
 // TODO: move to config
 pub const BLACKHOLE_MASS: u32 = 1000;
