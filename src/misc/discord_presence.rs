@@ -13,7 +13,7 @@ impl Plugin for DiscordPresencePlugin {
     }
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, args: Res<crate::Args>) {
     let mut drpc = Client::new(APPLICATION_ID);
     drpc.on_ready(|_ctx| {
         info!("Discord presence ready");
@@ -21,6 +21,12 @@ fn setup(mut commands: Commands) {
     .persist();
 
     drpc.start();
+
+    let _ = drpc
+        .set_activity(|activity| {
+            activity.state(format!("Playing in {} player(s) match", args.players))
+        })
+        .inspect_err(|e| error!("Failed to set discord activity: {}", e));
 
     commands.insert_resource(DiscordPresence(drpc));
 }
