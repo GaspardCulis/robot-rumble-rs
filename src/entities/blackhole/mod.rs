@@ -5,7 +5,7 @@ use crate::core::{
     physics::{PhysicsSet, Position},
 };
 use bevy::{prelude::*, sprite::Material2dPlugin};
-use bevy_ggrs::GgrsSchedule;
+use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 
 mod visuals;
 use visuals::*;
@@ -25,7 +25,7 @@ pub struct SpawnBlackHoleEvent {
 }
 
 #[derive(Bundle)]
-struct BlackHoleBundle {
+pub struct BlackHoleBundle {
     marker: BlackHole,
     position: Position,
     radius: Radius,
@@ -33,7 +33,7 @@ struct BlackHoleBundle {
 }
 
 impl BlackHoleBundle {
-    fn new(position: Position, radius: Radius, mass: Mass) -> Self {
+    pub fn new(position: Position, radius: Radius, mass: Mass) -> Self {
         Self {
             marker: BlackHole,
             position,
@@ -87,7 +87,8 @@ fn handle_spawn_black_hole_event(
             .insert(DecayTimer(Timer::from_seconds(
                 BH_DECAY_TIME,
                 TimerMode::Once,
-            )));
+            )))
+            .add_rollback();
     }
 }
 
