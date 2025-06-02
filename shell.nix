@@ -18,6 +18,7 @@ in
   pkgs.mkShell rec {
     packages = with pkgs; [
       just
+      tracy
     ];
     nativeBuildInputs = with pkgs; [
       rust
