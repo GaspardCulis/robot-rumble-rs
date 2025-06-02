@@ -3,15 +3,7 @@ use bevy::ecs::error::{ErrorContext, GLOBAL_ERROR_HANDLER};
 use bevy::prelude::*;
 
 use bevy_inspector_egui::{bevy_egui::*, quick::WorldInspectorPlugin};
-use rand::Rng;
-use robot_rumble::{
-    core::{
-        physics::Position,
-        worldgen::{WorldgenConfig, WorldgenConfigHandle},
-    },
-    entities::planet::*,
-    *,
-};
+use robot_rumble::*;
 
 mod controller;
 mod interaction;
@@ -44,6 +36,12 @@ fn main() {
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(entities::EntitiesPlugins)
         .add_plugins(core::CorePlugins)
+        .add_plugins(level::spawn::MapSpawnPlugin)
+        .add_plugins(network::NetworkPlugin)
+        .insert_resource(robot_rumble::Args {
+            players: 1,
+            synctest: false,
+        })
         .init_state::<GameState>()
         .add_plugins(controller::ControllerPlugin)
         .add_plugins(interaction::InteractionPlugin)
@@ -65,34 +63,28 @@ fn main() {
         .add_systems(
             Update,
             (
-                setup.run_if(resource_added::<WorldgenConfigHandle>),
+                enable_camera_picking,
+                disable_camera_follow,
                 utils::update_planet_radius,
             ),
         )
         .run();
 }
 
-fn setup(
-    mut commands: Commands,
-    mut planet_events: EventWriter<SpawnPlanetEvent>,
-    camera: Query<Entity, With<Camera2d>>,
-    worldgen_config_handle: Res<WorldgenConfigHandle>,
-    worldgen_configs: Res<Assets<WorldgenConfig>>,
-) -> Result {
-    let worldgen_config = worldgen_configs
-        .get(&worldgen_config_handle.0)
-        .ok_or(BevyError::from("Failed to get worlgen config"))?;
-
-    planet_events.write(SpawnPlanetEvent {
-        position: Position(Vec2::ZERO),
-        radius: Radius(worldgen_config.central_star_radius),
-        r#type: PlanetType::Star,
-        seed: rand::rng().random(),
-    });
-
-    // Enable picking on camera
+fn enable_camera_picking(mut commands: Commands, camera: Query<Entity, With<Camera2d>>) -> Result {
     let camera = camera.single()?;
     commands.entity(camera).insert(MeshPickingCamera);
 
     Ok(())
+}
+
+fn disable_camera_follow(
+    mut commands: Commands,
+    query: Query<Entity, With<core::camera::CameraFollowTarget>>,
+) {
+    for entity in query.iter() {
+        commands
+            .entity(entity)
+            .remove::<core::camera::CameraFollowTarget>();
+    }
 }
