@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::Rng as _;
 use robot_rumble::{
     core::{physics, worldgen},
-    entities::planet,
+    entities::{planet, satellite},
 };
 
 use crate::{model::UiState, savefile, utils::mouse_pos_to_world};
@@ -14,6 +14,7 @@ impl Plugin for ControllerPlugin {
             Update,
             (
                 handle_spawn_planet_button,
+                handle_spawn_satellite_button,
                 handle_save_map_button,
                 handle_load_map_button,
             ),
@@ -45,6 +46,37 @@ fn handle_spawn_planet_button(
 
             ui_state.context_menu_position = None;
             ui_state.buttons.spawn_planet = false;
+        } else {
+            // You dumb fuck
+        }
+    }
+
+    Ok(())
+}
+
+fn handle_spawn_satellite_button(
+    mut ui_state: ResMut<UiState>,
+    camera: Query<&Transform, With<Camera2d>>,
+    window: Query<&Window>,
+    mut satellite_events: EventWriter<satellite::SpawnSatelliteEvent>,
+) -> Result {
+    let camera_transform = camera.single()?;
+    let window = window.single()?;
+
+    if ui_state.buttons.spawn_satellite
+        && let Some(click_position) = ui_state.context_menu_position
+    {
+        let spawn_position = mouse_pos_to_world(&click_position, camera_transform, &window.size());
+
+        if let Ok(scale) = ui_state.scale_input.parse::<f32>() {
+            satellite_events.write(satellite::SpawnSatelliteEvent {
+                position: physics::Position(spawn_position),
+                kind: ui_state.satellite_kind_input,
+                scale,
+            });
+
+            ui_state.context_menu_position = None;
+            ui_state.buttons.spawn_satellite = false;
         } else {
             // You dumb fuck
         }
