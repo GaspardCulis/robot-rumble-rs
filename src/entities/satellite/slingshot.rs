@@ -100,10 +100,10 @@ fn detect_player_orbit_entry(
 
     for (player_entity, player_position, velocity) in player_query.iter_mut() {
         for (slingshot_entity, slingshot_pos, maybe_cooldown) in slingshot_query.iter() {
-            if let Some(cooldown) = maybe_cooldown {
-                if !cooldown.timer.finished() {
-                    continue; // slingshot encore en cooldown
-                }
+            if let Some(cooldown) = maybe_cooldown
+                && !cooldown.timer.finished()
+            {
+                continue; // slingshot encore en cooldown
             }
 
             let distance = player_position.0.distance(slingshot_pos.0);
