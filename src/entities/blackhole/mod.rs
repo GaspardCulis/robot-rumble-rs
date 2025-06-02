@@ -8,7 +8,11 @@ use bevy::{prelude::*, sprite::Material2dPlugin};
 use bevy_ggrs::GgrsSchedule;
 
 mod visuals;
-use visuals::{BlackHoleMaterial, BlackHoleRingMaterial};
+use visuals::{
+    BlackHoleMaterial, BlackHoleRingMaterial, CORE_LIGHT_WIDTH, CORE_OCTAVES, CORE_PALETTE,
+    CORE_RADIUS, CORE_SCALE, CORE_SIZE, RING_DISK_PERSPECTIVE, RING_DISK_WIDTH, RING_OCTAVES,
+    RING_PALETTE, RING_ROTATION, RING_SIZE,
+};
 
 // TODO: move to config
 pub const BLACKHOLE_MASS: u32 = 1000;
@@ -88,67 +92,51 @@ fn add_visuals(
             seed: 69.,
             ..Default::default()
         };
-        // Common
-        let size = 5.0;
-        let octaves = 3;
-        common.size = size;
-        common.octaves = octaves;
 
-        // Material specific
-        let radius = 0.5;
-        let light_width = 0.05;
-        let core_palette: Vec<&str> = vec!["#000000", "#fef4df", "#ff884d"];
+        // Material spesific
+        common.size = CORE_SIZE;
+        common.octaves = CORE_OCTAVES;
 
         let core = core_materials.add(BlackHoleMaterial {
             common,
-            radius,
-            light_width,
-            color_core: Srgba::hex(core_palette[0]).unwrap().into(),
-            color_inner: Srgba::hex(core_palette[1]).unwrap().into(),
-            color_outer: Srgba::hex(core_palette[2]).unwrap().into(),
+            radius: CORE_RADIUS,
+            light_width: CORE_LIGHT_WIDTH,
+            color_core: Srgba::hex(CORE_PALETTE[0]).unwrap().into(),
+            color_inner: Srgba::hex(CORE_PALETTE[1]).unwrap().into(),
+            color_outer: Srgba::hex(CORE_PALETTE[2]).unwrap().into(),
             _wasm_padding: Vec2::ZERO,
         });
 
-        let scale = 5.0;
         common = CommonMaterial {
             pixels: f32::min(bh_radius.0 as f32 / 2., 200.),
             seed: 69.,
             ..Default::default()
         }
-        .scale(scale);
+        .scale(CORE_SCALE);
 
-        // common
-        let size = 6.598;
-        let octaves = 3;
-        let rotation = 0.766;
-        common.rotation = rotation;
-        common.size = size;
-        common.octaves = octaves;
-
-        // material specific
-        let disk_width = 0.065;
-        let ring_perspective = 14.;
-        let ring_palette: Vec<&str> = vec!["#000000", "#ffb45c", "#ff8243", "#f25c19", "#fff5cc"];
+        common.rotation = RING_ROTATION;
+        common.size = RING_SIZE;
+        common.octaves = RING_OCTAVES;
 
         let ring = ring_materials.add(BlackHoleRingMaterial {
             common,
-            disk_width,
-            ring_perspective,
+            disk_width: RING_DISK_WIDTH,
+            ring_perspective: RING_DISK_PERSPECTIVE,
             should_dither: true as u32,
             n_colors: 5,
             colors: [
-                Srgba::hex(ring_palette[0]).unwrap().into(),
-                Srgba::hex(ring_palette[1]).unwrap().into(),
-                Srgba::hex(ring_palette[2]).unwrap().into(),
-                Srgba::hex(ring_palette[3]).unwrap().into(),
-                Srgba::hex(ring_palette[4]).unwrap().into(),
+                Srgba::hex(RING_PALETTE[0]).unwrap().into(),
+                Srgba::hex(RING_PALETTE[1]).unwrap().into(),
+                Srgba::hex(RING_PALETTE[2]).unwrap().into(),
+                Srgba::hex(RING_PALETTE[3]).unwrap().into(),
+                Srgba::hex(RING_PALETTE[4]).unwrap().into(),
             ],
             _wasm_padding: Vec2::ZERO,
         });
 
         let core_entity = commands
             .spawn((
-                Name::new("CoreMesh"),
+                Name::new("BH_CoreMesh"),
                 Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
                 MeshMaterial2d(core),
                 Transform::from_scale(Vec3::splat(bh_radius.0 as f32 * 2.0)).with_translation(
@@ -162,10 +150,10 @@ fn add_visuals(
             .id();
         let ring_entity = commands
             .spawn((
-                Name::new("RingMesh"),
+                Name::new("BH_RingMesh"),
                 Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
                 MeshMaterial2d(ring),
-                Transform::from_scale(Vec3::splat((bh_radius.0 as f32 * 2.0) * scale))
+                Transform::from_scale(Vec3::splat((bh_radius.0 as f32 * 2.0) * CORE_SCALE))
                     .with_translation(Vec3 {
                         x: 0.,
                         y: 0.,

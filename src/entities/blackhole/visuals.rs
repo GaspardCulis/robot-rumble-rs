@@ -6,6 +6,24 @@ use bevy::{
 
 use crate::entities::planet::materials::CommonMaterial;
 
+// TODO: move to config
+
+// Black hole material values
+pub const CORE_SIZE: f32 = 5.0;
+pub const CORE_OCTAVES: i32 = 3;
+pub const CORE_RADIUS: f32 = 0.5;
+pub const CORE_LIGHT_WIDTH: f32 = 0.05;
+pub const CORE_SCALE: f32 = 5.0;
+pub static CORE_PALETTE: [&str; 3] = ["#000000", "#fef4df", "#ff884d"];
+
+// Ring material values
+pub const RING_SIZE: f32 = 6.598;
+pub const RING_OCTAVES: i32 = 3;
+pub const RING_ROTATION: f32 = 0.766;
+pub const RING_DISK_WIDTH: f32 = 0.065;
+pub const RING_DISK_PERSPECTIVE: f32 = 14.;
+pub static RING_PALETTE: [&str; 5] = ["#000000", "#ffb45c", "#ff8243", "#f25c19", "#fff5cc"];
+
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone)]
 pub struct BlackHoleMaterial {
     #[uniform(0)]
