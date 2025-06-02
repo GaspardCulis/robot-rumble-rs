@@ -86,15 +86,16 @@ fn render_side_panel(
 
                 ui.separator();
 
-                let radius_label = ui.label("Position: ");
+                let position_x_label = ui.label("Position X:");
+                let position_y_label = ui.label("Position Y:");
                 ui.horizontal(|ui| {
                     let mut position_x_str: String = format!("{}", position.x);
                     let mut position_y_str: String = format!("{}", position.y);
 
                     ui.text_edit_singleline(&mut position_x_str)
-                        .labelled_by(radius_label.id);
+                        .labelled_by(position_x_label.id);
                     ui.text_edit_singleline(&mut position_y_str)
-                        .labelled_by(radius_label.id);
+                        .labelled_by(position_y_label.id);
 
                     position.x = position_x_str.parse().unwrap_or_default();
                     position.y = position_y_str.parse().unwrap_or_default();
