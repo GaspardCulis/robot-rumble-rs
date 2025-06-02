@@ -32,4 +32,14 @@ impl SaveFile {
 
         Ok(())
     }
+
+    pub fn load<P>(path: P) -> Result<Self, ron::Error>
+    where
+        P: AsRef<Path>,
+    {
+        let f = File::open(path)?;
+        let save: SaveFile = ron::de::from_reader(f)?;
+
+        Ok(save)
+    }
 }

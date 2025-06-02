@@ -10,7 +10,14 @@ use crate::{model::UiState, savefile, utils::mouse_pos_to_world};
 pub struct ControllerPlugin;
 impl Plugin for ControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (handle_spawn_planet_button, handle_save_map_button));
+        app.add_systems(
+            Update,
+            (
+                handle_spawn_planet_button,
+                handle_save_map_button,
+                handle_load_map_button,
+            ),
+        );
     }
 }
 
@@ -72,6 +79,41 @@ fn handle_save_map_button(
         let save_file = savefile::SaveFile { planets };
 
         save_file.save(&ui_state.save_file_path)?;
+    }
+
+    Ok(())
+}
+
+fn handle_load_map_button(
+    mut commands: Commands,
+    mut planet_spawn_events: EventWriter<planet::SpawnPlanetEvent>,
+    mut ui_state: ResMut<UiState>,
+    entities: Query<Entity, With<planet::Planet>>,
+) -> Result {
+    if ui_state.buttons.load_map {
+        let save = savefile::SaveFile::load(&ui_state.save_file_path)?;
+
+        // Clear out old map first
+        entities
+            .iter()
+            .for_each(|entity| commands.entity(entity).despawn());
+        ui_state.focused_planet = None;
+
+        // Spawn saved entities
+        for savefile::PlanetSave {
+            position,
+            radius,
+            r#type,
+            seed,
+        } in save.planets
+        {
+            planet_spawn_events.write(planet::SpawnPlanetEvent {
+                position: physics::Position(position),
+                radius: planet::Radius(radius),
+                r#type,
+                seed,
+            });
+        }
     }
 
     Ok(())
