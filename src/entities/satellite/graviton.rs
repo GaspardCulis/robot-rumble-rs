@@ -3,7 +3,6 @@ use bevy::prelude::*;
 
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::Player;
-use crate::entities::satellite::Satellite;
 
 use bevy_ggrs::GgrsSchedule;
 
@@ -52,7 +51,7 @@ impl Plugin for GravitonPlugin {
 
 fn detect_player_orbit_entry(
     mut commands: Commands,
-    graviton_query: Query<(&Position, Option<&OrbitCooldown>), (With<Satellite>, With<Graviton>)>,
+    graviton_query: Query<(&Position, Option<&OrbitCooldown>), With<Graviton>>,
     mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -101,7 +100,7 @@ fn update_orbiting_players(
         (Entity, &mut Position, &mut Velocity, &mut Orbited),
         Without<Graviton>,
     >,
-    graviton_query: Query<(Entity, &Position), (With<Satellite>, With<Graviton>)>,
+    graviton_query: Query<(Entity, &Position), With<Graviton>>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
     time: Res<Time>,

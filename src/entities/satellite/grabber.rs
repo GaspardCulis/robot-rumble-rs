@@ -4,7 +4,7 @@ use bevy::text::{JustifyText, Text2d, TextColor, TextFont, TextLayout};
 use bevy_ggrs::{GgrsSchedule, LocalPlayers};
 use leafwing_input_manager::prelude::ActionState;
 
-use super::{Satellite, SatelliteSet};
+use super::SatelliteSet;
 use super::{SatelliteConfig, SatelliteConfigHandle};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
@@ -280,7 +280,7 @@ fn update_grabber_ropes(
     mut commands: Commands,
     rope_query: Query<(Entity, &GrabberRope)>,
     player_query: Query<&Transform, With<Player>>,
-    satellite_query: Query<&Transform, With<Satellite>>,
+    satellite_query: Query<&Transform, With<Grabber>>,
 ) {
     for (entity, rope) in rope_query.iter() {
         match (
