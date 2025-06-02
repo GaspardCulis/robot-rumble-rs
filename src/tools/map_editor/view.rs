@@ -87,6 +87,20 @@ fn render_side_panel(
                     ui_state.focused_planet = None;
                 }
 
+                ui.separator();
+
+                ui.heading("Map layout");
+
+                ui.separator();
+
+                let save_path_label = ui.label("Save file path");
+                ui.text_edit_singleline(&mut ui_state.save_file_path)
+                    .labelled_by(save_path_label.id);
+                ui.horizontal(|ui| {
+                    ui_state.buttons.save_map = ui.button("Save").clicked();
+                    ui_state.buttons.load_map = ui.button("Load").clicked();
+                });
+
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                     ui.add(egui::Hyperlink::from_label_and_url(
                         "powered by egui",
