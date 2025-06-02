@@ -31,6 +31,7 @@ fn apply_forces(
     time: Res<Time>,
 ) {
     // `for_each` is more performat than a standard for loop
+    // Par iter was tried, yielding an average 58μs, 37μs for current
     on.iter_mut()
         .for_each(|(a_mass, a_position, mut a_velocity)| {
             let mut force_vec = Vec2::new(0., 0.);
