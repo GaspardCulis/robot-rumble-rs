@@ -16,9 +16,10 @@ use graviton::{Graviton, GravitonVisual};
 use visuals::{OrbitMaterial, generate_ring};
 
 #[derive(Component)]
+#[require(Visibility)]
 pub struct Satellite;
 
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
 pub enum SatelliteKind {
     Graviton,
     Bumper,
@@ -105,22 +106,12 @@ fn handle_spawn_satellite(
 
     for event in events.read() {
         let mut entity = commands.spawn((
-            Transform {
-                translation: event.position.0.extend(0.0),
-                scale: Vec3::splat(event.scale),
-                ..default()
-            },
-            GlobalTransform::default(),
-            Visibility::Visible,
             Satellite,
-            event.kind,
+            Transform::from_scale(Vec3::splat(event.scale)),
+            event.position.clone(),
         ));
 
-        let child_transform = (
-            Transform::from_translation(Vec3::new(130.0, 75.0, 0.0)),
-            GlobalTransform::default(),
-            Visibility::Visible,
-        );
+        let child_transform = Transform::from_translation(Vec3::new(130.0, 75.0, 0.0));
 
         match event.kind {
             SatelliteKind::Graviton => {
@@ -199,7 +190,6 @@ fn handle_spawn_satellite(
                 Mesh2d::from(orbit_ring),
                 MeshMaterial2d(orbit_material_handle),
                 Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)),
-                GlobalTransform::default(),
             ));
         });
     }
