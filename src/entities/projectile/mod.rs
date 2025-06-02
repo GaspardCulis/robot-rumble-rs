@@ -139,13 +139,13 @@ fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Projectile>,
 fn tick_projectile_timer(
     mut commands: Commands,
     mut blackhole_spawn_events: EventWriter<SpawnBlackHoleEvent>,
-    mut projectiles_querry: Query<
+    mut projectiles_query: Query<
         (Entity, &Position, &mut DecayTimer),
         (With<Projectile>, Without<ProjectileDecayed>),
     >,
     time: Res<Time>,
 ) {
-    for (projectile, bh_position, mut despawn_timer) in projectiles_querry.iter_mut() {
+    for (projectile, bh_position, mut despawn_timer) in projectiles_query.iter_mut() {
         despawn_timer.0.tick(time.delta());
         if despawn_timer.0.just_finished() {
             // Control on events rollback
