@@ -2,7 +2,7 @@ use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
     entities::projectile::{Damage, ProjectilesConfigHandle, config::ProjectilesConfig},
 };
-use bevy::prelude::*;
+use bevy::{math::ops::cos, prelude::*};
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use rand::{Rng as _, SeedableRng as _};
@@ -147,7 +147,7 @@ fn fire_weapon_system(
     mut weapon_query: Query<
         (
             &mut WeaponState,
-            &WeaponMode,
+            &mut WeaponMode,
             &Position,
             &Velocity,
             &Rotation,
@@ -169,7 +169,8 @@ fn fire_weapon_system(
             return;
         };
 
-    for (mut state, mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut() {
+    for (mut state, mut mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut()
+    {
         if (*mode == WeaponMode::Triggered)
             && state.cooldown_timer.finished()
             && state.current_ammo > 0
@@ -181,14 +182,16 @@ fn fire_weapon_system(
                     let projectile_stats = &projectile_config.stats;
                     let random_angle = rng.random_range(-stats.spread..stats.spread);
 
+                    let projectile_direction = Vec2::from_angle(rotation.0 + random_angle);
+                    // 1 if player and bullet directions points to the same direction, 0 if perpendicular, -1 if opposite
+                    let player_velocity_multiplier = cos(velocity.0.angle_to(projectile_direction));
+                    let added_velocity = velocity.0.length() * player_velocity_multiplier;
+
                     let new_projectile = (
                         stats.projectile,
                         // Avoid bullet hitting player firing
                         Position(position.0 + Vec2::from_angle(rotation.0) * super::PLAYER_RADIUS),
-                        Velocity(
-                            Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
-                                + velocity.0,
-                        ),
+                        Velocity(projectile_direction * (stats.projectile_speed + added_velocity)),
                         Damage(stats.damage_multiplier * projectile_stats.damage),
                     );
 
@@ -199,11 +202,13 @@ fn fire_weapon_system(
             }
 
             state.current_ammo -= 1;
-
             // Reset timers if shooting
             state.cooldown_timer.reset();
             state.reload_timer.reset();
-
+            // Auto-reload if empty mag
+            if state.current_ammo == 0 {
+                *mode = WeaponMode::Reloading;
+            }
             // Recoil
             if let Ok(mut owner_velocity) = owner_query.get_mut(owner.0) {
                 owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;

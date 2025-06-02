@@ -4,7 +4,7 @@ use bevy::text::{JustifyText, Text2d, TextColor, TextFont, TextLayout};
 use bevy_ggrs::{GgrsSchedule, LocalPlayers};
 use leafwing_input_manager::prelude::ActionState;
 
-use super::{Satellite, SatelliteSet};
+use super::SatelliteSet;
 use super::{SatelliteConfig, SatelliteConfigHandle};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
@@ -12,6 +12,7 @@ use crate::entities::player::{Player, PlayerAction};
 const ROPE_MIN_LENGTH: f32 = 50.0;
 const ROPE_MAX_LENGTH: f32 = 275.0;
 const ROPE_ADJUST_SPEED: f32 = 50.0;
+const GRABBER_ENTRY_MARGIN: f32 = 10.0;
 
 #[derive(Component)]
 #[require(Name::new("Grabber"))]
@@ -73,7 +74,7 @@ impl Plugin for GrabberPlugin {
 fn detect_player_entry(
     mut commands: Commands,
     player_query: Query<(Entity, &Position), With<Player>>,
-    grabber_query: Query<(Entity, &Transform), With<Grabber>>,
+    grabber_query: Query<(Entity, &Position), With<Grabber>>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
 ) {
@@ -85,9 +86,10 @@ fn detect_player_entry(
     for (player_entity, player_position) in player_query.iter() {
         let closest_grabber = grabber_query
             .iter()
-            .filter_map(|(entity, transform)| {
-                let distance = player_position.distance(transform.translation.truncate()) + 30.0;
-                (distance < config.grabber_radius).then_some((entity, distance))
+            .filter_map(|(entity, position)| {
+                let distance = player_position.distance(position.0) + 30.0;
+                (distance < config.grabber_radius + GRABBER_ENTRY_MARGIN)
+                    .then_some((entity, distance))
             })
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
@@ -178,16 +180,16 @@ fn handle_grabber_interaction(
         ),
         With<Player>,
     >,
-    grabber_query: Query<&Transform, With<Grabber>>,
+    grabber_query: Query<&Position, With<Grabber>>,
 ) {
     for (player_entity, actions, position, nearby, grabbed_by, vel) in player_query.iter_mut() {
         let is_pressed = actions.pressed(&PlayerAction::Interact);
 
         if is_pressed && grabbed_by.is_none() {
             if let Some(nearby) = nearby
-                && let Ok(grabber_tf) = grabber_query.get(nearby.0)
+                && let Ok(grabber_pos) = grabber_query.get(nearby.0)
             {
-                let center = grabber_tf.translation.truncate();
+                let center = grabber_pos.0;
                 let pos = position.0;
                 let offset = pos - center;
                 let distance = offset.length();
@@ -222,7 +224,6 @@ fn handle_grabber_interaction(
                     MeshMaterial2d(material),
                     Transform::from_translation(((center + pos) / 2.0).extend(1.0))
                         .looking_at((pos - center).extend(0.0), Vec3::Y),
-                    GlobalTransform::default(),
                     GrabberRope {
                         player: player_entity,
                         grabber: nearby.0,
@@ -240,21 +241,24 @@ fn handle_grabber_interaction(
 
 fn update_grabbed_players(
     mut commands: Commands,
-    mut query: Query<(
-        Entity,
-        &mut Position,
-        &mut Velocity,
-        &mut GrabbedOrbit,
-        &GrabbedBy,
-    )>,
-    satellite_query: Query<&Transform, With<Satellite>>,
+    mut query: Query<
+        (
+            Entity,
+            &mut Position,
+            &mut Velocity,
+            &mut GrabbedOrbit,
+            &GrabbedBy,
+        ),
+        Without<Grabber>,
+    >,
+    satellite_query: Query<&Position, With<Grabber>>,
     time: Res<Time>,
 ) {
     let delta = time.delta_secs();
 
     for (entity, mut pos, mut vel, mut orbit, grabbed_by) in query.iter_mut() {
-        if let Ok(sat_tf) = satellite_query.get(grabbed_by.0) {
-            orbit.center = sat_tf.translation.truncate();
+        if let Ok(sat_pos) = satellite_query.get(grabbed_by.0) {
+            orbit.center = sat_pos.0;
             orbit.angle += (orbit.initial_speed / orbit.distance) * delta;
 
             let offset = Vec2::from_angle(orbit.angle) * orbit.distance;
@@ -276,7 +280,7 @@ fn update_grabber_ropes(
     mut commands: Commands,
     rope_query: Query<(Entity, &GrabberRope)>,
     player_query: Query<&Transform, With<Player>>,
-    satellite_query: Query<&Transform, With<Satellite>>,
+    satellite_query: Query<&Transform, With<Grabber>>,
 ) {
     for (entity, rope) in rope_query.iter() {
         match (
