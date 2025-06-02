@@ -7,3 +7,6 @@ target/
 
 .vscode
 .helix
+
+# Avoid map editor oopsies
+map.ron
