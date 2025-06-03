@@ -134,7 +134,7 @@ fn handle_save_map_button(
             })
             .collect();
 
-        let save_file = save::SaveFile {
+        let save_file = save::LevelSave {
             planets,
             satellites,
         };
@@ -153,7 +153,7 @@ fn handle_load_map_button(
     entities: Query<Entity, Or<(With<planet::Planet>, With<satellite::Satellite>)>>,
 ) -> Result {
     if ui_state.buttons.load_map {
-        let save = save::SaveFile::load(&ui_state.save_file_path)?;
+        let save = save::LevelSave::load(&ui_state.save_file_path)?;
 
         // Clear out old map first
         entities

@@ -4,7 +4,7 @@ use crate::entities::{planet, satellite};
 use bevy::math::Vec2;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct SaveFile {
+pub struct LevelSave {
     pub planets: Vec<PlanetSave>,
     pub satellites: Vec<SatelliteSave>,
 }
@@ -23,7 +23,7 @@ pub struct SatelliteSave {
     pub kind: satellite::SatelliteKind,
 }
 
-impl SaveFile {
+impl LevelSave {
     pub fn save<P>(&self, path: P) -> Result<(), ron::Error>
     where
         P: AsRef<Path>,
@@ -45,7 +45,7 @@ impl SaveFile {
         P: AsRef<Path>,
     {
         let f = File::open(path)?;
-        let save: SaveFile = ron::de::from_reader(f)?;
+        let save: LevelSave = ron::de::from_reader(f)?;
 
         Ok(save)
     }
