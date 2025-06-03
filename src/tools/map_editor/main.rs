@@ -36,10 +36,12 @@ fn main() {
         .add_plugins(entities::EntitiesPlugins)
         .add_plugins(core::CorePlugins)
         .add_plugins(level::spawn::MapSpawnPlugin)
+        .add_plugins(level::save::LevelSavePlugin)
         .add_plugins(network::NetworkPlugin)
         .insert_resource(robot_rumble::Args {
             players: 1,
             synctest: false,
+            level_path: None,
         })
         .init_state::<GameState>()
         .add_plugins(controller::ControllerPlugin)

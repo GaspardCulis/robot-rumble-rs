@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use bevy::prelude::{Resource, States};
 use clap::Parser;
 
@@ -22,6 +24,10 @@ pub struct Args {
     /// Runs the game in synctest mode
     #[clap(long)]
     pub synctest: bool,
+    /// Number of players to match against
     #[arg(short, long, default_value_t = 2)]
     pub players: usize,
+    /// File path for the level save file to be used instead of default worldgen
+    #[arg(short, long)]
+    pub level_path: Option<PathBuf>,
 }
