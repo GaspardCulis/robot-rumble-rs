@@ -4,6 +4,7 @@ use clap::Parser;
 pub mod core;
 pub mod entities;
 pub mod level;
+pub mod misc;
 pub mod network;
 pub mod utils;
 
