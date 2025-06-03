@@ -1,7 +1,30 @@
-use std::{fs::File, path::Path};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+};
 
-use crate::entities::{planet, satellite};
-use bevy::math::Vec2;
+use bevy::prelude::*;
+
+use crate::{
+    core::physics::Position,
+    entities::{
+        planet::{self, Radius},
+        satellite,
+    },
+};
+
+#[derive(Event)]
+pub struct LoadLevelSaveEvent {
+    pub path: PathBuf,
+}
+
+pub struct LevelSavePlugin;
+impl Plugin for LevelSavePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_event::<LoadLevelSaveEvent>()
+            .add_systems(Update, handle_load_level_save_events);
+    }
+}
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct LevelSave {
@@ -21,6 +44,41 @@ pub struct PlanetSave {
 pub struct SatelliteSave {
     pub position: Vec2,
     pub kind: satellite::SatelliteKind,
+}
+
+fn handle_load_level_save_events(
+    mut events: EventReader<LoadLevelSaveEvent>,
+    mut planet_spawn_events: EventWriter<planet::SpawnPlanetEvent>,
+    mut satellite_spawn_events: EventWriter<satellite::SpawnSatelliteEvent>,
+) -> Result {
+    for event in events.read() {
+        let save = LevelSave::load(&event.path)?;
+
+        for PlanetSave {
+            position,
+            radius,
+            r#type,
+            seed,
+        } in save.planets
+        {
+            planet_spawn_events.write(planet::SpawnPlanetEvent {
+                position: Position(position),
+                radius: Radius(radius),
+                r#type,
+                seed,
+            });
+        }
+
+        for SatelliteSave { position, kind } in save.satellites {
+            satellite_spawn_events.write(satellite::SpawnSatelliteEvent {
+                position: Position(position),
+                scale: 0.7,
+                kind,
+            });
+        }
+    }
+
+    Ok(())
 }
 
 impl LevelSave {
