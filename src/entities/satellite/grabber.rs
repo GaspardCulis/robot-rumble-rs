@@ -8,10 +8,6 @@ use super::{SatelliteConfig, SatelliteConfigHandle};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
 
-const ROPE_MIN_LENGTH: f32 = 50.0;
-const ROPE_MAX_LENGTH: f32 = 275.0;
-const ROPE_ADJUST_SPEED: f32 = 50.0;
-const GRABBER_ENTRY_MARGIN: f32 = 10.0;
 const MAX_GRABBER_SPEED: f32 = 2000.0; 
 
 
@@ -29,12 +25,6 @@ pub struct NearbyGrabber(pub Entity);
 
 #[derive(Component, Clone)]
 pub struct GrabbedBy;
-
-#[derive(Component, Clone)]
-pub struct GrabbedOrbit {
-    pub distance: f32,
-    pub initial_speed: f32,
-}
 
 #[derive(Component)]
 #[require(Name::new("PlayerPrompt"))]
@@ -69,9 +59,7 @@ impl Plugin for GrabberPlugin {
             (
                 detect_player_entry,
                 handle_grabber_interaction,
-                adjust_rope_length,
                 update_grabbed_players,
-                cleanup_grabbed_orbits,
                 cleanup_grabber_ropes,
                 update_grabber_ropes,
                 tick_grabber_cooldown,
@@ -100,7 +88,7 @@ fn detect_player_entry(
             .iter()
             .filter_map(|(entity, position)| {
                 let distance = player_position.distance(position.0) + 30.0;
-                (distance < config.grabber_radius + GRABBER_ENTRY_MARGIN)
+                (distance < config.grabber_radius + config.grabber_entry_margin)
                     .then_some((entity, distance))
             })
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
@@ -220,10 +208,6 @@ fn handle_grabber_interaction(
                     .insert(GrabbedConstraint {
                         anchor: nearby.0,
                         distance,
-                    })
-                    .insert(GrabbedOrbit {
-                        distance,
-                        initial_speed: tangential_speed,
                     });
 
                 let mesh = meshes.add(Rectangle::new(4.0, 1.0));
@@ -243,8 +227,7 @@ fn handle_grabber_interaction(
             commands
                 .entity(player_entity)
                 .remove::<GrabbedBy>()
-                .remove::<GrabbedConstraint>()
-                .remove::<GrabbedOrbit>();
+                .remove::<GrabbedConstraint>();
         }
     }
 }
@@ -254,9 +237,15 @@ fn update_grabbed_players(
     mut commands: Commands,
     mut query: Query<(Entity ,&mut Position, &mut Velocity, &GrabbedConstraint), With<Player>>,
     anchor_query: Query<&Position, (With<Grabber>, Without<Player>)>,
+    config_handle: Res<SatelliteConfigHandle>,
+    configs: Res<Assets<SatelliteConfig>>,
 ) {
     for (entity, position, mut velocity, constraint) in query.iter_mut() {
-         if velocity.0.length_squared() > MAX_GRABBER_SPEED * MAX_GRABBER_SPEED {
+        let Some(config) = configs.get(&config_handle.0) else {
+            warn!("Satellite config not loaded yet");
+            return;
+        };
+        if velocity.0.length() > config.max_grabber_speed {
             commands.entity(entity)
                 .remove::<GrabbedBy>()
                 .remove::<GrabbedConstraint>()
@@ -318,45 +307,6 @@ fn update_grabber_ropes(
             }
             _ => commands.entity(entity).despawn(),
         }
-    }
-}
-
-fn adjust_rope_length(
-    mut query: Query<
-        (&ActionState<PlayerAction>, &mut GrabbedOrbit),
-        (With<Player>, With<GrabbedBy>),
-    >,
-) {
-    for (actions, mut orbit) in query.iter_mut() {
-        let delta = match (
-            actions.pressed(&PlayerAction::RopeRetract),
-            actions.pressed(&PlayerAction::RopeExtend),
-        ) {
-            (true, false) => -ROPE_ADJUST_SPEED,
-            (false, true) => ROPE_ADJUST_SPEED,
-            _ => 0.0,
-        };
-
-        if delta != 0.0 {
-            let old = orbit.distance;
-            let new = (old + delta).clamp(ROPE_MIN_LENGTH, ROPE_MAX_LENGTH);
-
-            if old > 1.0 && new != old {
-                let speed = orbit.initial_speed * old / new;
-                orbit.initial_speed = orbit.initial_speed * 0.5 + speed * 0.5;
-            }
-
-            orbit.distance = new;
-        }
-    }
-}
-
-fn cleanup_grabbed_orbits(
-    mut commands: Commands,
-    query: Query<Entity, (With<GrabbedOrbit>, Without<GrabbedBy>)>,
-) {
-    for entity in query.iter() {
-        commands.entity(entity).remove::<GrabbedOrbit>();
     }
 }
 

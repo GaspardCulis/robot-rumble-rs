@@ -43,6 +43,8 @@ pub struct SatelliteConfig {
     pub bump_radius: f32,
     pub bump_multiplier: f32,
     pub grabber_radius: f32,
+    pub grabber_entry_margin: f32,
+    pub max_grabber_speed: f32,
 }
 
 #[derive(Resource)]

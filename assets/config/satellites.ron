@@ -9,5 +9,7 @@
     bump_multiplier: 1.5,
 
     grabber_radius: 300,
+    grabber_entry_margin: 10.0,
+    max_grabber_speed: 2000.0,
 
 )
