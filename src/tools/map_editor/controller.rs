@@ -147,14 +147,11 @@ fn handle_save_map_button(
 
 fn handle_load_map_button(
     mut commands: Commands,
-    mut planet_spawn_events: EventWriter<planet::SpawnPlanetEvent>,
-    mut satellite_spawn_events: EventWriter<satellite::SpawnSatelliteEvent>,
+    mut load_level_save_events: EventWriter<save::LoadLevelSaveEvent>,
     mut ui_state: ResMut<UiState>,
     entities: Query<Entity, Or<(With<planet::Planet>, With<satellite::Satellite>)>>,
 ) -> Result {
     if ui_state.buttons.load_map {
-        let save = save::LevelSave::load(&ui_state.save_file_path)?;
-
         // Clear out old map first
         entities
             .iter()
@@ -162,28 +159,9 @@ fn handle_load_map_button(
         ui_state.focused_entity = None;
 
         // Spawn saved entities
-        for save::PlanetSave {
-            position,
-            radius,
-            r#type,
-            seed,
-        } in save.planets
-        {
-            planet_spawn_events.write(planet::SpawnPlanetEvent {
-                position: physics::Position(position),
-                radius: planet::Radius(radius),
-                r#type,
-                seed,
-            });
-        }
-
-        for save::SatelliteSave { position, kind } in save.satellites {
-            satellite_spawn_events.write(satellite::SpawnSatelliteEvent {
-                position: physics::Position(position),
-                scale: 0.7,
-                kind,
-            });
-        }
+        load_level_save_events.write(save::LoadLevelSaveEvent {
+            path: ui_state.save_file_path.clone().into(),
+        });
     }
 
     Ok(())
