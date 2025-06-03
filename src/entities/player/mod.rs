@@ -7,6 +7,7 @@ use weapon::{WeaponMode, WeaponState};
 
 use crate::core::collision::{CollisionPlugin, CollisionShape, CollisionState};
 use crate::core::gravity::{Mass, Passive};
+use crate::core::interpolation::Interpolate;
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
@@ -32,6 +33,7 @@ type PlanetCollision = CollisionState<Player, planet::Planet>;
     // Position, Velocity and Rotation not required because handled by level::spawn.
     // Might change in the future
     Visibility,
+    Interpolate,
     PlayerInputVelocity,
     Passive,
     ActionState<PlayerAction>,

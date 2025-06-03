@@ -10,6 +10,7 @@ use super::{planet::Planet, player::Player};
 use crate::core::{
     collision::{CollisionPlugin, CollisionShape, CollisionState},
     gravity::{Mass, Passive},
+    interpolation::Interpolate,
     physics::{PhysicsSet, Rotation, Velocity},
 };
 
@@ -23,6 +24,7 @@ pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
         app.register_required_components::<Projectile, CollisionShape>()
+            .register_required_components::<Projectile, Interpolate>()
             .register_required_components_with::<Projectile, Transform>(|| {
                 Transform::from_scale(Vec3::splat(1.5))
             })

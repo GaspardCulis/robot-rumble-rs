@@ -1,5 +1,8 @@
 use crate::{
-    core::physics::{PhysicsSet, Position, Rotation, Velocity},
+    core::{
+        interpolation::Interpolate,
+        physics::{PhysicsSet, Position, Rotation, Velocity},
+    },
     entities::projectile::{Damage, ProjectilesConfigHandle, config::ProjectilesConfig},
 };
 use bevy::{math::ops::cos, prelude::*};
@@ -40,6 +43,7 @@ impl Plugin for WeaponPlugin {
             .register_type::<WeaponState>()
             .register_type::<WeaponMode>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
+            .register_required_components::<WeaponType, Interpolate>()
             .register_required_components::<WeaponType, WeaponMode>()
             .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
             .add_systems(Startup, load_weapons_config)
