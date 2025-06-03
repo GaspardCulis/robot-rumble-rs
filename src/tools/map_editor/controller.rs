@@ -48,7 +48,8 @@ fn handle_spawn_planet_button(
             ui_state.context_menu_position = None;
             ui_state.buttons.spawn_planet = false;
         } else {
-            // You dumb fuck
+            ui_state.error_message =
+                Some(format!("Failed to parse radius: {}", ui_state.radius_input));
         }
     }
 

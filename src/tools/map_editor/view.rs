@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::bevy_egui::*;
+use bevy_inspector_egui::{bevy_egui::*, egui::RichText};
 use robot_rumble::{
     core::physics::Position,
     entities::{planet::Radius, satellite},
@@ -78,9 +78,13 @@ fn render_side_panel(
         .default_width(350.0)
         .show(ctx, move |ui| {
             if let Some(planet) = ui_state.focused_entity {
-                let (mut position, radius) = planet_query
-                    .get_mut(planet)
-                    .expect("Invalid selected entity");
+                let Ok((mut position, radius)) = planet_query.get_mut(planet) else {
+                    ui_state.error_message = Some(format!(
+                        "Invalid focused entity: {:?}",
+                        ui_state.focused_entity
+                    ));
+                    return;
+                };
 
                 ui.heading("Entity properties");
 
@@ -96,8 +100,17 @@ fn render_side_panel(
                     ui.text_edit_singleline(&mut position_y_str)
                         .labelled_by(radius_label.id);
 
-                    position.x = position_x_str.parse().unwrap_or_default();
-                    position.y = position_y_str.parse().unwrap_or_default();
+                    if let Ok(x) = position_x_str.parse()
+                        && let Ok(y) = position_y_str.parse()
+                    {
+                        position.x = x;
+                        position.y = y;
+                    } else {
+                        ui_state.error_message = Some(format!(
+                            "Failed to parse position (x: {}, y: {})",
+                            position_x_str, position_y_str
+                        ));
+                    }
                 });
 
                 if let Some(mut radius) = radius {
@@ -131,6 +144,10 @@ fn render_side_panel(
             });
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                if let Some(error_msg) = &ui_state.error_message {
+                    ui.label(RichText::new(error_msg).color(egui::Color32::RED));
+                };
+
                 ui.add(egui::Hyperlink::from_label_and_url(
                     "powered by egui",
                     "https://github.com/emilk/egui/",

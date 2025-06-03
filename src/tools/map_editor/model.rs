@@ -5,6 +5,7 @@ use robot_rumble::entities::satellite;
 pub struct UiState {
     pub context_menu_position: Option<Vec2>,
     pub focused_entity: Option<Entity>,
+    pub error_message: Option<String>,
     pub radius_input: String,
     pub satellite_kind_input: satellite::SatelliteKind,
     pub save_file_path: String,
@@ -31,6 +32,7 @@ impl Default for UiState {
         Self {
             context_menu_position: None,
             focused_entity: None,
+            error_message: None,
             satellite_kind_input: satellite::SatelliteKind::Bumper,
             radius_input: "100".to_string(),
             save_file_path: "map.ron".to_string(),
