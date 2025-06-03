@@ -3,14 +3,16 @@ use discord_presence::Client;
 
 const APPLICATION_ID: u64 = 1379103471302737931;
 
-#[derive(Resource)]
+#[derive(Resource, Deref, DerefMut)]
 struct DiscordPresence(Client);
 
 pub struct DiscordPresencePlugin;
 impl Plugin for DiscordPresencePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
-            .add_systems(OnEnter(crate::GameState::InGame), set_ingame_presence);
+        app.add_systems(Startup, setup).add_systems(
+            OnEnter(crate::GameState::InGame),
+            set_ingame_presence.run_if(client_ready),
+        );
     }
 }
 
@@ -28,7 +30,6 @@ fn setup(mut commands: Commands) {
 
 fn set_ingame_presence(mut presence: ResMut<DiscordPresence>, args: Res<crate::Args>) {
     let _ = presence
-        .0
         .set_activity(|activity| {
             activity
                 .state(format!("Playing in {} player(s) match", args.players))
@@ -40,4 +41,8 @@ fn set_ingame_presence(mut presence: ResMut<DiscordPresence>, args: Res<crate::A
                 })
         })
         .inspect_err(|e| error!("Failed to set discord activity: {}", e));
+}
+
+fn client_ready() -> bool {
+    Client::is_ready()
 }
