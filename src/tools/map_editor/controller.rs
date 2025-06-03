@@ -3,9 +3,10 @@ use rand::Rng as _;
 use robot_rumble::{
     core::{physics, worldgen},
     entities::{planet, satellite},
+    level::save,
 };
 
-use crate::{model::UiState, savefile, utils::mouse_pos_to_world};
+use crate::{model::UiState, utils::mouse_pos_to_world};
 
 pub struct ControllerPlugin;
 impl Plugin for ControllerPlugin {
@@ -105,7 +106,7 @@ fn handle_save_map_button(
     if ui_state.buttons.save_map {
         let planets = planets_query
             .iter()
-            .map(|(position, radius, r#type, seed)| savefile::PlanetSave {
+            .map(|(position, radius, r#type, seed)| save::PlanetSave {
                 position: position.0,
                 radius: radius.0,
                 r#type: *r#type,
@@ -126,14 +127,14 @@ fn handle_save_map_button(
                     unimplemented!("Wtf man ?!")
                 };
 
-                savefile::SatelliteSave {
+                save::SatelliteSave {
                     position: position.0,
                     kind,
                 }
             })
             .collect();
 
-        let save_file = savefile::SaveFile {
+        let save_file = save::SaveFile {
             planets,
             satellites,
         };
@@ -152,7 +153,7 @@ fn handle_load_map_button(
     entities: Query<Entity, Or<(With<planet::Planet>, With<satellite::Satellite>)>>,
 ) -> Result {
     if ui_state.buttons.load_map {
-        let save = savefile::SaveFile::load(&ui_state.save_file_path)?;
+        let save = save::SaveFile::load(&ui_state.save_file_path)?;
 
         // Clear out old map first
         entities
@@ -161,7 +162,7 @@ fn handle_load_map_button(
         ui_state.focused_entity = None;
 
         // Spawn saved entities
-        for savefile::PlanetSave {
+        for save::PlanetSave {
             position,
             radius,
             r#type,
@@ -176,7 +177,7 @@ fn handle_load_map_button(
             });
         }
 
-        for savefile::SatelliteSave { position, kind } in save.satellites {
+        for save::SatelliteSave { position, kind } in save.satellites {
             satellite_spawn_events.write(satellite::SpawnSatelliteEvent {
                 position: physics::Position(position),
                 scale: 0.7,

@@ -1,7 +1,7 @@
 use std::{fs::File, path::Path};
 
+use crate::entities::{planet, satellite};
 use bevy::math::Vec2;
-use robot_rumble::entities::{planet, satellite};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct SaveFile {
