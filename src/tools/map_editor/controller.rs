@@ -72,6 +72,7 @@ fn handle_spawn_satellite_button(
         satellite_events.write(satellite::SpawnSatelliteEvent {
             position: physics::Position(spawn_position),
             kind: ui_state.satellite_kind_input,
+            // FIX: Config file or constant, will be done when we have better satellite sprites
             scale: 0.7,
         });
 
