@@ -7,7 +7,7 @@ use crate::{
         physics::{PhysicsSet, Position},
         worldgen,
     },
-    entities::player::Player,
+    entities::player::{Player, weapon::WeaponType},
 };
 
 #[derive(Resource, Reflect)]
@@ -19,6 +19,7 @@ struct MapLimit {
 }
 
 #[derive(Event)]
+#[allow(dead_code)] // Temporarly until entity gets used
 /// Points to a Player entity
 pub struct DeathEvent(pub Entity);
 
@@ -34,8 +35,8 @@ impl Plugin for MapLimitPlugin {
             .add_systems(
                 GgrsSchedule,
                 check_outsiders
-                    .after(PhysicsSet::Movement)
-                    .run_if(in_state(GameState::InGame)),
+                    .in_set(PhysicsSet::Collision)
+                    .run_if(in_state(GameState::InGame).and(resource_exists::<MapLimit>)),
             );
     }
 }
@@ -56,21 +57,24 @@ fn setup(
     });
 }
 
+// FIX: Ugly AF
 fn check_outsiders(
     mut commands: Commands,
     mut death_events: EventWriter<DeathEvent>,
-    query: Query<(Entity, &Position, Has<Player>)>,
+    query: Query<(Entity, &Position, Has<Player>, Has<WeaponType>)>,
     limit: Res<MapLimit>,
 ) {
-    for (entity, position, is_player) in query.iter() {
+    for (entity, position, is_player, is_weapon) in query.iter() {
         if position.length_squared() > limit.radius_squared {
-            if is_player {
-                death_events.send(DeathEvent(entity));
+            if is_weapon {
+                continue;
+            } else if is_player {
+                death_events.write(DeathEvent(entity));
 
                 // FIX: Temporary way to handle death
                 commands.entity(entity).remove::<Position>();
             } else {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
             }
         }
     }

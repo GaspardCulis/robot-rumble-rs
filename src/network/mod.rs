@@ -7,10 +7,12 @@ use rand::Rng as _;
 
 use crate::{
     GameState,
-    core::{camera::CameraFollowTarget, physics, worldgen},
+    core::{camera::CameraFollowTarget, collision, physics, worldgen},
     entities::{
+        planet,
         player::{self, Player, PlayerAction, weapon},
         projectile,
+        satellite::{grabber, graviton},
     },
 };
 use synctest::{
@@ -37,12 +39,19 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Position>()
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
-            .rollback_component_with_clone::<player::InAir>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
-            .rollback_component_with_clone::<player::Weapon>()
-            .rollback_component_with_clone::<weapon::Triggered>()
+            .rollback_immutable_component_with_clone::<player::Weapon>()
+            .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
+            .rollback_component_with_clone::<grabber::GrabbedOrbit>()
+            .rollback_component_with_clone::<grabber::GrabbedBy>()
+            .rollback_component_with_clone::<grabber::NearbyGrabber>()
+            .rollback_component_with_clone::<graviton::Orbited>()
+            // Collisions
+            .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
+            .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
+            .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
             .checksum_component::<physics::Position>(checksum_position)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
@@ -176,7 +185,7 @@ fn generate_world(
     mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>,
     seed: Res<SessionSeed>,
 ) {
-    worldgen_events.send(worldgen::GenerateWorldEvent { seed: seed.0 });
+    worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
 }
 
 fn add_local_player_components(
@@ -203,9 +212,15 @@ fn add_local_player_components(
         (PlayerAction::Slot1, KeyCode::Digit1),
         (PlayerAction::Slot2, KeyCode::Digit2),
         (PlayerAction::Slot3, KeyCode::Digit3),
+        // Reload
+        (PlayerAction::Reload, KeyCode::KeyR),
+        // Interaction
+        (PlayerAction::Interact, KeyCode::KeyE),
     ])
     .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
+    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
+    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
 
     let local_players_query = query
         .iter()

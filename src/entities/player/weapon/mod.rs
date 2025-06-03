@@ -1,28 +1,36 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::Projectile,
+    entities::projectile::{Damage, ProjectilesConfigHandle, config::ProjectilesConfig},
 };
-use bevy::prelude::*;
+use bevy::{math::ops::cos, prelude::*};
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
-mod config;
-
+pub mod config;
 pub use config::{WeaponStats, WeaponType};
 
-#[derive(Component, Clone, Default, Reflect)]
-pub struct Triggered(pub bool);
+#[derive(Component, Clone, PartialEq, Default, Reflect)]
+pub enum WeaponMode {
+    #[default]
+    Idle,
+    Triggered,
+    Reloading,
+}
 
 #[derive(Component, Clone, Debug, Reflect)]
 pub struct WeaponState {
-    current_ammo: usize,
+    pub current_ammo: usize,
     cooldown_timer: Timer,
     reload_timer: Timer,
 }
 
+#[derive(Component, Reflect)]
+#[relationship_target(relationship = super::Weapon)]
+pub struct Owner(Entity);
+
 #[derive(Resource)]
-struct WeaponsConfigHandle(Handle<config::WeaponsConfig>);
+pub struct WeaponsConfigHandle(pub Handle<config::WeaponsConfig>);
 
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
@@ -30,15 +38,15 @@ impl Plugin for WeaponPlugin {
         app.register_type::<WeaponType>()
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
-            .register_type::<Triggered>()
+            .register_type::<WeaponMode>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
-            .register_required_components::<WeaponType, Triggered>()
+            .register_required_components::<WeaponType, WeaponMode>()
             .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
             .add_systems(Startup, load_weapons_config)
             .add_systems(
                 Update,
                 (
-                    #[cfg(debug_assertions)]
+                    #[cfg(feature = "dev_tools")]
                     handle_config_reload,
                     (add_stats_component, add_sprite)
                         .before(PhysicsSet::Player)
@@ -117,14 +125,19 @@ fn add_sprite(
 }
 
 /// Also handles ammo reloads for convenience
-fn tick_weapon_timers(mut query: Query<(&mut WeaponState, &WeaponStats)>, time: Res<Time>) {
-    for (mut state, stats) in query.iter_mut() {
+fn tick_weapon_timers(
+    mut query: Query<(&mut WeaponState, &WeaponStats, &mut WeaponMode), With<Position>>,
+    time: Res<Time>,
+) {
+    for (mut state, stats, mut mode) in query.iter_mut() {
         state.cooldown_timer.tick(time.delta());
-        state.reload_timer.tick(time.delta());
-
+        if *mode == WeaponMode::Reloading {
+            state.reload_timer.tick(time.delta());
+        }
         // Verify current_ammo is 0 to avoid a subtle bug where we fire when WeaponState is instantiated
-        if state.reload_timer.just_finished() && state.current_ammo == 0 {
+        if state.reload_timer.finished() && state.current_ammo < stats.magazine_size {
             state.current_ammo = stats.magazine_size;
+            *mode = WeaponMode::Idle;
         }
     }
 }
@@ -134,74 +147,88 @@ fn fire_weapon_system(
     mut weapon_query: Query<
         (
             &mut WeaponState,
-            &Triggered,
+            &mut WeaponMode,
             &Position,
             &Velocity,
             &Rotation,
             &WeaponStats,
-            Entity,
+            &Owner,
         ),
         With<WeaponType>,
     >,
-    mut owner_query: Query<(&mut Velocity, &super::Weapon), Without<WeaponType>>,
+    mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
+    projectile_config_handle: Res<ProjectilesConfigHandle>,
+    projectile_config_assets: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    for (mut state, triggered, position, velocity, rotation, stats, entity) in
-        weapon_query.iter_mut()
+    let projectile_config =
+        if let Some(c) = projectile_config_assets.get(projectile_config_handle.0.id()) {
+            c
+        } else {
+            warn!("Couldn't load ProjectileConfig");
+            return;
+        };
+
+    for (mut state, mut mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut()
     {
-        if triggered.0 && state.cooldown_timer.finished() && state.current_ammo > 0 {
+        if (*mode == WeaponMode::Triggered)
+            && state.cooldown_timer.finished()
+            && state.current_ammo > 0
+        {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
-                let random_angle = rng.random_range(-stats.spread..stats.spread);
+                if let Some(projectile_config) = projectile_config.0.get(&stats.projectile) {
+                    let projectile_stats = &projectile_config.stats;
+                    let random_angle = rng.random_range(-stats.spread..stats.spread);
 
-                let bullet = (
-                    Projectile::Bullet,
-                    Position(position.0),
-                    Velocity(
-                        Vec2::from_angle(rotation.0 + random_angle) * stats.projectile_speed
-                            + velocity.0,
-                    ),
-                );
+                    let projectile_direction = Vec2::from_angle(rotation.0 + random_angle);
+                    // 1 if player and bullet directions points to the same direction, 0 if perpendicular, -1 if opposite
+                    let player_velocity_multiplier = cos(velocity.0.angle_to(projectile_direction));
+                    let added_velocity = velocity.0.length() * player_velocity_multiplier;
 
-                commands.spawn(bullet).add_rollback();
+                    let new_projectile = (
+                        stats.projectile,
+                        // Avoid bullet hitting player firing
+                        Position(position.0 + Vec2::from_angle(rotation.0) * super::PLAYER_RADIUS),
+                        Velocity(projectile_direction * (stats.projectile_speed + added_velocity)),
+                        Damage(stats.damage_multiplier * projectile_stats.damage),
+                    );
+
+                    commands.spawn(new_projectile).add_rollback();
+                } else {
+                    warn!("Empy projectile config!")
+                }
             }
 
             state.current_ammo -= 1;
             // Reset timers if shooting
             state.cooldown_timer.reset();
-
+            state.reload_timer.reset();
+            // Auto-reload if empty mag
             if state.current_ammo == 0 {
-                state.reload_timer.reset();
+                *mode = WeaponMode::Reloading;
             }
-
             // Recoil
-            if let Some((mut velocity, _)) = owner_query
-                .iter_mut()
-                // FIX: Use bevy 0.16 relationships for better performance
-                .find(|(_, weapon)| weapon.0 == entity)
-            {
-                velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
+            if let Ok(mut owner_velocity) = owner_query.get_mut(owner.0) {
+                owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
             }
         }
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(feature = "dev_tools")]
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<config::WeaponsConfig>>,
     weapons: Query<Entity, Or<(With<WeaponStats>, With<Sprite>)>>,
 ) {
     for event in events.read() {
-        match event {
-            AssetEvent::Modified { id: _ } => {
-                for weapon in weapons.iter() {
-                    commands.entity(weapon).remove::<WeaponStats>();
-                    commands.entity(weapon).remove::<Sprite>();
-                }
+        if let AssetEvent::Modified { id: _ } = event {
+            for weapon in weapons.iter() {
+                commands.entity(weapon).remove::<WeaponStats>();
+                commands.entity(weapon).remove::<Sprite>();
             }
-            _ => {}
         };
     }
 }

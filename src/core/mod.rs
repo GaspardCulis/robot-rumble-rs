@@ -2,6 +2,7 @@ use bevy::prelude::{App, Plugin};
 
 pub mod background;
 pub mod camera;
+pub mod collision;
 pub mod gravity;
 pub mod physics;
 pub mod worldgen;

@@ -22,9 +22,16 @@ pub struct PhysicsBundle {
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PhysicsSet {
-    Movement,
-    Gravity,
+    /// Where player inputs are processed
     Player,
+    /// Where Velocity gets updated
+    Gravity,
+    /// Where entities interact with each other
+    Interaction,
+    /// Where Position gets updated
+    Movement,
+    /// Where collision detection systems are run
+    Collision,
 }
 
 pub struct PhysicsPlugin;
@@ -38,31 +45,42 @@ impl Plugin for PhysicsPlugin {
                 (
                     PhysicsSet::Player,
                     PhysicsSet::Gravity,
+                    PhysicsSet::Interaction,
                     PhysicsSet::Movement,
+                    PhysicsSet::Collision,
                 )
                     .chain()
                     .run_if(in_state(GameState::InGame)),
             )
             .add_systems(GgrsSchedule, update_position.in_set(PhysicsSet::Movement))
-            .add_systems(Update, update_spatial_bundles);
+            .add_systems(
+                Update,
+                update_spatial_bundles
+                    .in_set(PhysicsSet::Movement)
+                    .after(update_position),
+            );
     }
 }
 
-pub fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
-    for (mut position, velocity) in query.iter_mut() {
-        position.0 += velocity.0 * time.delta_secs()
-    }
+fn update_position(mut query: Query<(&mut Position, &Velocity)>, time: Res<Time>) {
+    // `for_each` is more performant than a standard for loop
+    query.iter_mut().for_each(|(mut position, velocity)| {
+        position.0 += velocity.0 * time.delta_secs();
+    });
 }
 
 fn update_spatial_bundles(mut query: Query<(&mut Transform, &Position, Option<&Rotation>)>) {
-    for (mut transform, position, rotation) in query.iter_mut() {
-        transform.translation.x = position.x;
-        transform.translation.y = position.y;
+    // `for_each` is more performant than a standard for loop
+    query
+        .iter_mut()
+        .for_each(|(mut transform, position, rotation)| {
+            transform.translation.x = position.x;
+            transform.translation.y = position.y;
 
-        if rotation.is_some() {
-            transform.rotation = Quat::from_rotation_z(rotation.unwrap().0);
-        }
-    }
+            if let Some(rotation) = rotation {
+                transform.rotation = Quat::from_rotation_z(rotation.0);
+            }
+        });
 }
 
 // Chore ops implementations
@@ -80,6 +98,14 @@ impl std::ops::Mul<f32> for &Position {
 
     fn mul(self, rhs: f32) -> Self::Output {
         Position(self.0 * rhs)
+    }
+}
+
+impl std::ops::Sub for Position {
+    type Output = Self;
+    #[inline]
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0.sub(rhs.0))
     }
 }
 
@@ -104,7 +130,7 @@ impl Eq for &Position {}
 impl PartialOrd for &Position {
     /// Compares distance from origin
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.length_squared().partial_cmp(&other.length_squared())
+        Some(self.cmp(other))
     }
 }
 

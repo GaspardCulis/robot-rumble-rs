@@ -30,8 +30,12 @@ impl Plugin for InventoryPlugin {
     }
 }
 
-fn spawn_arsenal(mut commands: Commands, query: Query<Entity, (With<Player>, Without<Arsenal>)>) {
-    for player_entity in query.iter() {
+fn spawn_arsenal(mut commands: Commands, query: Query<(Entity, &Player), Without<Arsenal>>) {
+    for (player_entity, _) in query
+        .iter()
+        //Sort by handle for determinism
+        .sort::<&Player>()
+    {
         let arsenal = Arsenal(
             DEFAULT_ARSENAL
                 .iter()
@@ -72,9 +76,9 @@ fn summon_current_weapon(
 
 fn handle_slot_change_inputs(
     mut commands: Commands,
-    mut query: Query<(&mut Weapon, &Arsenal, &ActionState<PlayerAction>)>,
+    query: Query<(Entity, &Weapon, &Arsenal, &ActionState<PlayerAction>)>,
 ) {
-    for (mut current_weapon, arsenal, action_state) in query.iter_mut() {
+    for (player, current_weapon, arsenal, action_state) in query.iter() {
         for action in action_state.get_pressed() {
             let selected_slot = match action {
                 PlayerAction::Slot1 => Some(1),
@@ -86,12 +90,15 @@ fn handle_slot_change_inputs(
             if let Some(slot) = selected_slot {
                 if let Some((_, selected_weapon)) = arsenal.0.get(slot - 1) {
                     if &current_weapon.0 != selected_weapon {
+                        // Hide current weapon
                         commands
                             .entity(current_weapon.0)
                             .remove::<physics::PhysicsBundle>()
                             .insert(Visibility::Hidden);
 
-                        current_weapon.0 = *selected_weapon;
+                        // Set selected weapon
+                        // Cannot mutate relationship components so we replace the old one
+                        commands.entity(player).insert(Weapon(*selected_weapon));
                     }
                 } else {
                     warn!("Weapon slot overflow");

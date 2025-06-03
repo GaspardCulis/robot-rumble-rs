@@ -3,7 +3,7 @@ use crate::{
     entities::player::{Player, PlayerAction},
     network::SessionConfig,
 };
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_ggrs::{GgrsSchedule, LocalInputs, LocalPlayers, PlayerInputs, ReadInputs};
 use leafwing_input_manager::prelude::ActionState;
 use serde::{Deserialize, Serialize};
@@ -22,6 +22,10 @@ const INPUT_SHOOT: u32 = 1 << 4;
 const INPUT_SLOT1: u32 = 1 << 5;
 const INPUT_SLOT2: u32 = 1 << 6;
 const INPUT_SLOT3: u32 = 1 << 7;
+const INPUT_INTERACT: u32 = 1 << 8;
+const INPUT_ROPE_EXTEND: u32 = 1 << 9;
+const INPUT_ROPE_RETRACT: u32 = 1 << 10;
+const INPUT_RELOAD: u32 = 1 << 11;
 
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
@@ -89,7 +93,11 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
                 PlayerAction::Slot1 => INPUT_SLOT1,
                 PlayerAction::Slot2 => INPUT_SLOT2,
                 PlayerAction::Slot3 => INPUT_SLOT3,
+                PlayerAction::Reload => INPUT_RELOAD,
                 PlayerAction::PointerDirection => unimplemented!("Should not get called"),
+                PlayerAction::Interact => INPUT_INTERACT,
+                PlayerAction::RopeExtend => INPUT_ROPE_EXTEND,
+                PlayerAction::RopeRetract => INPUT_ROPE_RETRACT,
             };
         }
 
@@ -133,6 +141,18 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
         if keys & INPUT_SLOT3 != 0 {
             action_state.press(&PlayerAction::Slot3);
         }
+        if keys & INPUT_RELOAD != 0 {
+            action_state.press(&PlayerAction::Reload);
+        }
+        if keys & INPUT_INTERACT != 0 {
+            action_state.press(&PlayerAction::Interact);
+        }
+        if keys & INPUT_ROPE_EXTEND != 0 {
+            action_state.press(&PlayerAction::RopeExtend);
+        }
+        if keys & INPUT_ROPE_RETRACT != 0 {
+            action_state.press(&PlayerAction::RopeRetract);
+        }
 
         action_state.set_axis_pair(&PlayerAction::PointerDirection, input.pointer_direction);
 
@@ -145,9 +165,9 @@ fn update_local_pointer_direction(
     windows: Query<&Window>,
     query_view: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     local_players: Res<LocalPlayers>,
-) {
-    let window = windows.single();
-    let (camera, view) = query_view.single();
+) -> Result {
+    let window = windows.single()?;
+    let (camera, view) = query_view.single()?;
     if let Some(world_position) = window
         .cursor_position()
         .map(|cursor| camera.viewport_to_world_2d(view, cursor).unwrap())
@@ -161,5 +181,9 @@ fn update_local_pointer_direction(
 
             action_state.set_axis_pair(&PlayerAction::PointerDirection, pointer_direction);
         }
+    } else {
+        // Not an error pointer could be out of window
     }
+
+    Ok(())
 }

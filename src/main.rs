@@ -1,13 +1,16 @@
+#[cfg(feature = "dev_tools")]
+use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 use bevy::prelude::*;
 #[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
-#[cfg(debug_assertions)]
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+#[cfg(feature = "dev_tools")]
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use clap::Parser;
 
 mod core;
 mod entities;
 mod level;
+mod misc;
 mod network;
 mod ui;
 mod utils;
@@ -56,13 +59,26 @@ fn main() {
     .add_plugins(core::CorePlugins)
     .add_plugins(entities::EntitiesPlugins)
     .add_plugins(level::LevelPlugins)
+    .add_plugins(misc::MiscPlugins)
     .add_plugins(network::NetworkPlugin)
     .add_plugins(ui::UiPlugin)
     .init_state::<GameState>()
     .insert_resource(args);
 
-    #[cfg(debug_assertions)]
-    app.add_plugins(WorldInspectorPlugin::new());
+    #[cfg(feature = "dev_tools")]
+    app.add_plugins(EguiPlugin {
+        enable_multipass_for_primary_context: true,
+    })
+    .add_plugins(WorldInspectorPlugin::new())
+    .add_plugins(FpsOverlayPlugin {
+        config: FpsOverlayConfig {
+            text_config: TextFont {
+                font_size: 16.0,
+                ..default()
+            },
+            ..default()
+        },
+    });
 
     app.run();
 }

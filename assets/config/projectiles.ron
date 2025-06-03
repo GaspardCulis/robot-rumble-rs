@@ -1,12 +1,35 @@
 ProjectilesConfig({
     Bullet: (
         stats: (
-            mass: 1000,
-            damage: 1.0,
+            mass: 100,
+            damage: 10.0,
+            radius: 1.0,
         ),
         skin: (
             sprite: "projectiles/bullet.png",
             scale: 3.0,
+        ),
+    ),
+    Rocket: (
+        stats: (
+            mass: 100,
+            damage: 1000.0,
+            radius: 10.0,
+        ),
+        skin: (
+            sprite: "projectiles/explosive.png",
+            scale: 4.0,
+        ),
+    ),
+    Laser: (
+        stats: (
+            mass: 50,
+            damage: 100.0,
+            radius: 5.0,
+        ),
+        skin: (
+            sprite: "projectiles/laser.png",
+            scale: 4.0,
         ),
     ),
 })

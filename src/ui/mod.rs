@@ -1,11 +1,11 @@
 use bevy::{color::palettes::css, prelude::*};
 
-use crate::{GameState, entities::player::weapons};
+use crate::{GameState, entities::player::weapon};
 
-const WEAPON_SLOTS: [weapons::WeaponType; 3] = [
-    weapons::WeaponType::Pistol,
-    weapons::WeaponType::Shotgun,
-    weapons::WeaponType::Rifle,
+const WEAPON_SLOTS: [weapon::WeaponType; 3] = [
+    weapon::WeaponType::Pistol,
+    weapon::WeaponType::Shotgun,
+    weapon::WeaponType::Rifle,
 ];
 
 pub struct UiPlugin;
@@ -17,8 +17,8 @@ impl Plugin for UiPlugin {
 
 fn spawn_arsenal_hud(
     mut commands: Commands,
-    config_handle: Res<weapons::WeaponsConfigHandle>,
-    config_assets: Res<Assets<weapons::config::WeaponsConfig>>,
+    config_handle: Res<weapon::WeaponsConfigHandle>,
+    config_assets: Res<Assets<weapon::config::WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
     let weapons_config = if let Some(c) = config_assets.get(config_handle.0.id()) {
