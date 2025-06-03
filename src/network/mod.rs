@@ -23,6 +23,8 @@ use synctest::{
 pub mod inputs;
 mod synctest;
 
+pub const GGRS_SCHEDULE_FPS: usize = 24;
+
 pub type SessionConfig = bevy_ggrs::GgrsConfig<NetworkInputs, PeerId>;
 
 #[derive(Resource, Default, Clone, Copy, Debug, Deref, DerefMut)]
@@ -53,6 +55,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
             .checksum_component::<physics::Position>(checksum_position)
+            .set_rollback_schedule_fps(GGRS_SCHEDULE_FPS)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
                 (
