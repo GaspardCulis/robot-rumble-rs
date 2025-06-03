@@ -107,8 +107,7 @@ fn render_side_panel(
                         position.y = y;
                     } else {
                         ui_state.error_message = Some(format!(
-                            "Failed to parse position (x: {}, y: {})",
-                            position_x_str, position_y_str
+                            "Failed to parse position (x: {position_x_str}, y: {position_y_str})"
                         ));
                     }
                 });
