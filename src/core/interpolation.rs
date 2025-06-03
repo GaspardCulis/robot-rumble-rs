@@ -24,7 +24,6 @@ impl Plugin for InterpolationPlugin {
         app.register_type::<Interpolate>()
             .register_type::<InterpolationCache>()
             .init_resource::<LastTickDuration>()
-            .register_required_components::<Interpolate, InterpolationCache>()
             .add_systems(
                 GgrsSchedule,
                 (reset_last_tick_duration, update_interpolation_cache).after(PhysicsSet::Movement),
@@ -32,6 +31,7 @@ impl Plugin for InterpolationPlugin {
             .add_systems(
                 Update,
                 (
+                    setup_interpolation_cache,
                     update_last_tick_duration,
                     interpolate_transforms,
                     update_normal_transforms,
@@ -43,6 +43,21 @@ impl Plugin for InterpolationPlugin {
 
 fn reset_last_tick_duration(mut last: ResMut<LastTickDuration>) {
     last.0 = Duration::default();
+}
+
+fn update_last_tick_duration(mut last: ResMut<LastTickDuration>, time: Res<Time>) {
+    last.0 += time.delta();
+}
+
+fn setup_interpolation_cache(
+    mut commands: Commands,
+    query: Query<(Entity, &Transform), (Added<Transform>, With<Interpolate>)>,
+) {
+    query.iter().for_each(|(entity, transform)| {
+        commands
+            .entity(entity)
+            .insert(InterpolationCache::from(*transform));
+    });
 }
 
 fn update_interpolation_cache(
@@ -79,10 +94,6 @@ fn update_normal_transforms(
         });
 }
 
-fn update_last_tick_duration(mut last: ResMut<LastTickDuration>, time: Res<Time>) {
-    last.0 += time.delta();
-}
-
 // Inspired by https://bevyengine.org/examples/movement/physics-in-fixed-timestep/
 fn interpolate_transforms(
     mut query: Query<(&mut Transform, &InterpolationCache)>,
@@ -95,5 +106,14 @@ fn interpolate_transforms(
         transform.translation = cache.old.translation.lerp(cache.target.translation, alpha);
 
         transform.rotation = cache.old.rotation.lerp(cache.target.rotation, alpha);
+    }
+}
+
+impl From<Transform> for InterpolationCache {
+    fn from(value: Transform) -> Self {
+        Self {
+            old: value,
+            target: value,
+        }
     }
 }
