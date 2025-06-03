@@ -1,21 +1,31 @@
-use bevy::prelude::*;
-use robot_rumble::entities::planet;
+use bevy::{prelude::*, render::primitives::Aabb};
+use robot_rumble::{core::collision::CollisionShape, entities::planet};
 
 pub fn update_planet_radius(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<
-        (&planet::Radius, &Mesh2d, &Children),
+        (Entity, &planet::Radius, &Mesh2d, &Children),
         (With<planet::Planet>, Changed<planet::Radius>),
     >,
 ) {
-    for (radius, mesh, children) in query.iter() {
+    for (entity, radius, mesh, children) in query.iter() {
+        // Update mesh
         let mesh = meshes.get_mut(mesh).unwrap();
         *mesh = Mesh::from(Circle::new(radius.0 as f32));
 
+        // Update material layers
         for material_layer in children {
             commands.entity(*material_layer).despawn();
         }
+
+        // Update collision shape
+        commands
+            .entity(entity)
+            .insert(CollisionShape::Circle(radius.0 as f32));
+
+        // Update mesh Aabb (see https://github.com/bevyengine/bevy/issues/18221)
+        commands.entity(entity).remove::<Aabb>();
     }
 }
 
