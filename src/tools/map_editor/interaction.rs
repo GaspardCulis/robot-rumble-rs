@@ -63,7 +63,7 @@ fn handle_window_scroll(
         let mut camera = query.single_mut()?;
 
         let current_scale = camera.scale.x;
-        camera.scale = Vec3::ONE * (current_scale + event.y * 0.2).clamp(0.1, 10.0);
+        camera.scale = Vec3::ONE * (current_scale - event.y * 0.2).clamp(0.1, 10.0);
 
         trigger.propagate(false);
     }
