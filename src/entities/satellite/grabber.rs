@@ -8,8 +8,7 @@ use super::{SatelliteConfig, SatelliteConfigHandle};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
 
-const MAX_GRABBER_SPEED: f32 = 2000.0; 
-
+const MAX_GRABBER_SPEED: f32 = 2000.0;
 
 #[derive(Component)]
 #[require(Name::new("Grabber"))]
@@ -49,7 +48,6 @@ pub struct GrabbedConstraint {
 pub struct GrabberCooldown {
     pub timer: Timer,
 }
-
 
 pub struct GrabberPlugin;
 impl Plugin for GrabberPlugin {
@@ -169,19 +167,24 @@ fn handle_grabber_interaction(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut player_query: Query<(
-        Entity,
-        &ActionState<PlayerAction>,
-        &Position,
-        Option<&NearbyGrabber>,
-        Option<&GrabbedBy>,
-        Option<&GrabberCooldown>,
-        &mut Velocity,
-    ), With<Player>>,
+    mut player_query: Query<
+        (
+            Entity,
+            &ActionState<PlayerAction>,
+            &Position,
+            Option<&NearbyGrabber>,
+            Option<&GrabbedBy>,
+            Option<&GrabberCooldown>,
+            &mut Velocity,
+        ),
+        With<Player>,
+    >,
     grabber_query: Query<&Position, With<Grabber>>,
 ) {
-    for (player_entity, actions, position, nearby, grabbed_by, grabber_cooldown,mut velocity) in player_query.iter_mut() {
-        if grabber_cooldown.is_some(){
+    for (player_entity, actions, position, nearby, grabbed_by, grabber_cooldown, mut velocity) in
+        player_query.iter_mut()
+    {
+        if grabber_cooldown.is_some() {
             continue;
         }
 
@@ -199,7 +202,11 @@ fn handle_grabber_interaction(
                 // Appliquer une vélocité tangentielle pour commencer l'orbite
                 let tangent = Vec2::new(-offset.y, offset.x).normalize_or_zero();
                 let tangential_speed = 800.0; // Ajustable
-                let direction_sign = if velocity.0.dot(tangent) >= 0.0 { 1.0 } else { -1.0 };
+                let direction_sign = if velocity.0.dot(tangent) >= 0.0 {
+                    1.0
+                } else {
+                    -1.0
+                };
                 velocity.0 = tangent * tangential_speed * direction_sign;
 
                 commands
@@ -232,10 +239,9 @@ fn handle_grabber_interaction(
     }
 }
 
-
 fn update_grabbed_players(
     mut commands: Commands,
-    mut query: Query<(Entity ,&mut Position, &mut Velocity, &GrabbedConstraint), With<Player>>,
+    mut query: Query<(Entity, &mut Position, &mut Velocity, &GrabbedConstraint), With<Player>>,
     anchor_query: Query<&Position, (With<Grabber>, Without<Player>)>,
     config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
@@ -246,7 +252,8 @@ fn update_grabbed_players(
             return;
         };
         if velocity.0.length() > config.max_grabber_speed {
-            commands.entity(entity)
+            commands
+                .entity(entity)
                 .remove::<GrabbedBy>()
                 .remove::<GrabbedConstraint>()
                 .insert(GrabberCooldown {
@@ -270,7 +277,7 @@ fn update_grabbed_players(
             velocity.0 += correction;
 
             let radial_speed = velocity.0.dot(direction);
-            velocity.0 -= direction * radial_speed * 0.2; 
+            velocity.0 -= direction * radial_speed * 0.2;
 
             let tangent = Vec2::new(-direction.y, direction.x);
             let tangential_speed = velocity.0.dot(tangent);
