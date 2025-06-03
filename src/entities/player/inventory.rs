@@ -42,7 +42,7 @@ fn spawn_arsenal(mut commands: Commands, query: Query<(Entity, &Player), Without
                 .map(|weapon_type| {
                     let weapon_entity = commands
                         .spawn(weapon_type.clone())
-                        .insert(Visibility::Hidden)
+                        .insert((Visibility::Hidden, Transform::from_xyz(0.0, 0.0, 20.0)))
                         .add_rollback()
                         .id();
 
