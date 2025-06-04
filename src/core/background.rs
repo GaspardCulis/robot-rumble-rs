@@ -8,6 +8,8 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 
 use crate::{GameState, network::SessionSeed, utils::gradient};
 
+use super::camera::VisualsSet;
+
 #[derive(Component)]
 struct Background;
 
@@ -17,7 +19,7 @@ impl Plugin for BackgroundPlugin {
         app.add_plugins(Material2dPlugin::<NebulaeMaterial>::default())
             .add_plugins(Material2dPlugin::<StarsMaterial>::default())
             .add_systems(OnEnter(GameState::WorldGen), setup)
-            .add_systems(Update, scale_and_center);
+            .add_systems(Update, scale_and_center.after(VisualsSet::CameraMovement));
     }
 }
 

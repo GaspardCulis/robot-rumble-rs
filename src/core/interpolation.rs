@@ -3,7 +3,10 @@ use std::time::Duration;
 use bevy::prelude::*;
 use bevy_ggrs::{GgrsSchedule, GgrsTime};
 
-use super::physics::{PhysicsSet, Position, Rotation};
+use super::{
+    camera::VisualsSet,
+    physics::{PhysicsSet, Position, Rotation},
+};
 
 #[derive(Component, Default, Reflect)]
 pub struct Interpolate;
@@ -36,7 +39,8 @@ impl Plugin for InterpolationPlugin {
                     interpolate_transforms,
                     update_normal_transforms,
                 )
-                    .chain(),
+                    .chain()
+                    .in_set(VisualsSet::Interpolation),
             );
     }
 }

@@ -4,14 +4,26 @@ use crate::utils::math;
 
 use super::physics::PhysicsSet;
 
-pub struct CameraPlugin;
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+/// Runs after movement has been performed
+pub enum VisualsSet {
+    Interpolation,
+    CameraMovement,
+}
 
+pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, |mut commands: Commands| {
+        app.configure_sets(
+            Update,
+            (VisualsSet::Interpolation, VisualsSet::CameraMovement)
+                .chain()
+                .after(PhysicsSet::Movement),
+        )
+        .add_systems(Startup, |mut commands: Commands| {
             commands.spawn((Camera2d, Msaa::Off, Transform::from_scale(Vec3::splat(1.4))));
         })
-        .add_systems(Update, camera_movement.after(PhysicsSet::Movement));
+        .add_systems(Update, camera_movement.in_set(VisualsSet::CameraMovement));
     }
 }
 
