@@ -26,7 +26,7 @@ pub struct ProjectileDecayedEvent {
     /// Where the projectile decayed
     pub position: Position,
     /// Which type of projectile it is.
-    /// Can be None if the entity isn't a projectile, so that decay functionnality can be used in other modules.
+    /// Can be None if the entity isn't a projectile, so that decay functionality can be used in other modules.
     /// Might get moved somewhere else in the future
     pub r#type: Option<Projectile>,
 }
