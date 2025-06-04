@@ -51,13 +51,27 @@ fn update_last_tick_duration(mut last: ResMut<LastTickDuration>, time: Res<Time>
 
 fn setup_interpolation_cache(
     mut commands: Commands,
-    query: Query<(Entity, &Transform), (Added<Transform>, With<Interpolate>)>,
+    mut query: Query<
+        (Entity, &mut Transform, &Position, Option<&Rotation>),
+        (Added<Transform>, With<Interpolate>),
+    >,
 ) {
-    query.iter().for_each(|(entity, transform)| {
-        commands
-            .entity(entity)
-            .insert(InterpolationCache::from(*transform));
-    });
+    query
+        .iter_mut()
+        .for_each(|(entity, mut transform, position, rotation)| {
+            // Immediatly update transform in order to not have to wait for next tick
+            // Yields better visual results
+            transform.translation.x = position.x;
+            transform.translation.y = position.y;
+
+            if let Some(rotation) = rotation {
+                transform.rotation = Quat::from_rotation_z(rotation.0);
+            }
+
+            commands
+                .entity(entity)
+                .insert(InterpolationCache::from(*transform));
+        });
 }
 
 fn update_interpolation_cache(
