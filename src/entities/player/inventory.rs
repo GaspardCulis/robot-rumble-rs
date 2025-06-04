@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::core::physics;
+use crate::core::{interpolation::Interpolate, physics};
 
 use super::{Player, PlayerAction, Weapon, weapon};
 
@@ -66,10 +66,11 @@ fn summon_current_weapon(
 ) {
     for weapon_ref in owner_query.iter() {
         if let Ok(weapon_entity) = weapon_query.get(weapon_ref.0) {
-            commands
-                .entity(weapon_entity)
-                .insert(physics::PhysicsBundle::default())
-                .insert(Visibility::Visible);
+            commands.entity(weapon_entity).insert((
+                physics::PhysicsBundle::default(),
+                Visibility::Visible,
+                Interpolate,
+            ));
         }
     }
 }
