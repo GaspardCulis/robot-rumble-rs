@@ -1,9 +1,11 @@
 use super::planet::{Radius, materials::CommonMaterial};
-use super::projectile::DecayTimer;
+use super::projectile::config::BLACKHOLE_RADIUS;
+use super::projectile::{DecayTimer, ProjectileDecayedEvent};
 use crate::core::{
     gravity::{Mass, Static},
-    physics::{PhysicsSet, Position},
+    physics::PhysicsSet,
 };
+use crate::entities::projectile::Projectile;
 use bevy::{prelude::*, sprite::Material2dPlugin};
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 
@@ -14,81 +16,46 @@ use visuals::*;
 const BLACKHOLE_MASS: u32 = 100000;
 const BH_DECAY_TIME: f32 = 10.;
 
-#[derive(Component, Debug, Reflect, Clone, PartialEq)]
+#[derive(Component, Debug, Reflect, Clone, Copy, PartialEq)]
 #[require(Visibility)]
 pub struct BlackHole;
-
-#[derive(Event)]
-pub struct SpawnBlackHoleEvent {
-    pub position: Position,
-    pub radius: Radius,
-}
-
-#[derive(Bundle)]
-pub struct BlackHoleBundle {
-    marker: BlackHole,
-    position: Position,
-    radius: Radius,
-    mass: Mass,
-}
-
-impl BlackHoleBundle {
-    pub fn new(position: Position, radius: Radius, mass: Mass) -> Self {
-        Self {
-            marker: BlackHole,
-            position,
-            mass,
-            radius,
-        }
-    }
-}
 
 pub struct BlackHolePlugin;
 impl Plugin for BlackHolePlugin {
     fn build(&self, app: &mut App) {
-        app.register_required_components_with::<BlackHole, Static>(|| Static)
+        app.register_required_components::<BlackHole, Static>()
             .register_required_components_with::<BlackHole, Name>(|| Name::new("Blackhole"))
-            .add_event::<SpawnBlackHoleEvent>()
+            .register_required_components_with::<BlackHole, Mass>(|| Mass(BLACKHOLE_MASS))
+            .register_required_components_with::<BlackHole, Radius>(|| Radius(BLACKHOLE_RADIUS))
             .add_plugins(Material2dPlugin::<BlackHoleMaterial>::default())
             .add_plugins(Material2dPlugin::<BlackHoleRingMaterial>::default())
             .add_systems(Update, add_visuals)
             .add_systems(
                 GgrsSchedule,
-                (tick_blackhole_timer, handle_spawn_black_hole_event).before(PhysicsSet::Player),
+                handle_blackhole_projectile_decay
+                    // Needs to run after `projectile::tick_decay_timers`
+                    .after(PhysicsSet::Player)
+                    .before(PhysicsSet::Gravity),
             );
     }
 }
 
-fn tick_blackhole_timer(
-    mut query: Query<(Entity, &mut DecayTimer), With<BlackHole>>,
+fn handle_blackhole_projectile_decay(
     mut commands: Commands,
-    time: Res<Time>,
-) {
-    for (blackhole, mut despawn_timer) in query.iter_mut() {
-        despawn_timer.0.tick(time.delta());
-
-        if despawn_timer.0.just_finished() {
-            commands.entity(blackhole).despawn();
-        }
-    }
-}
-
-fn handle_spawn_black_hole_event(
-    mut events: EventReader<SpawnBlackHoleEvent>,
-    mut commands: Commands,
+    mut events: EventReader<ProjectileDecayedEvent>,
 ) {
     for event in events.read() {
-        commands
-            .spawn((BlackHoleBundle::new(
-                event.position.clone(),
-                event.radius,
-                Mass(BLACKHOLE_MASS),
-            ),))
-            .insert(DecayTimer(Timer::from_seconds(
-                BH_DECAY_TIME,
-                TimerMode::Once,
-            )))
-            .add_rollback();
+        if let Some(r#type) = event.r#type {
+            if let Projectile::Blackhole = r#type {
+                commands
+                    .spawn((
+                        BlackHole,
+                        event.position.clone(),
+                        DecayTimer(Timer::from_seconds(BH_DECAY_TIME, TimerMode::Once)),
+                    ))
+                    .add_rollback();
+            }
+        }
     }
 }
 
