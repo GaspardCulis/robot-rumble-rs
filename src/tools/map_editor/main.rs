@@ -35,8 +35,7 @@ fn main() {
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(entities::EntitiesPlugins)
         .add_plugins(core::CorePlugins)
-        .add_plugins(level::spawn::MapSpawnPlugin)
-        .add_plugins(level::save::LevelSavePlugin)
+        .add_plugins(level::LevelPlugins)
         .add_plugins(network::NetworkPlugin)
         .insert_resource(robot_rumble::Args {
             players: 1,
