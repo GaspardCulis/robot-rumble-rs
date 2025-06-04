@@ -1,0 +1,68 @@
+(
+    planets: [
+        (
+            position: (-85.18725, 757.0472),
+            radius: 400,
+            type: Star,
+            seed: 16198476177261495701,
+        ),
+        (
+            position: (-828.77435, -546.15295),
+            radius: 130,
+            type: Planet,
+            seed: 3974609980117221315,
+        ),
+        (
+            position: (1496.8221, 1377.316),
+            radius: 171,
+            type: Planet,
+            seed: 11549925982761297268,
+        ),
+        (
+            position: (1257.9253, -5.2484775),
+            radius: 300,
+            type: Planet,
+            seed: 15791167536104007771,
+        ),
+        (
+            position: (1434.8303, 615.6386),
+            radius: 145,
+            type: Planet,
+            seed: 14867277508970448697,
+        ),
+        (
+            position: (622.40094, -489.03632),
+            radius: 170,
+            type: Planet,
+            seed: 17161634680365400368,
+        ),
+        (
+            position: (20.912596, -678.1725),
+            radius: 150,
+            type: Planet,
+            seed: 1851713150242066767,
+        ),
+    ],
+    satellites: [
+        (
+            position: (-440.49313, -740.9708),
+            kind: Bumper,
+        ),
+        (
+            position: (397.68893, -807.58496),
+            kind: Bumper,
+        ),
+        (
+            position: (1033.9043, -500.33923),
+            kind: Bumper,
+        ),
+        (
+            position: (802.05597, 599.6296),
+            kind: Grabber,
+        ),
+        (
+            position: (-929.8043, 269.208),
+            kind: Grabber,
+        ),
+    ],
+)

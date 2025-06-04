@@ -1,0 +1,84 @@
+(
+    planets: [
+        (
+            position: (-1228.5276, 470.65002),
+            radius: 180,
+            type: Planet,
+            seed: 11208393554041330869,
+        ),
+        (
+            position: (0.0, 0.0),
+            radius: 400,
+            type: Star,
+            seed: 3242473843100432645,
+        ),
+        (
+            position: (-782.1979, -959.0483),
+            radius: 172,
+            type: Planet,
+            seed: 16511378224972769461,
+        ),
+        (
+            position: (-1000.56946, -286.35828),
+            radius: 260,
+            type: Planet,
+            seed: 313747448266922749,
+        ),
+        (
+            position: (-2051.501, -5.3068027),
+            radius: 250,
+            type: Planet,
+            seed: 12164312394824106210,
+        ),
+        (
+            position: (947.99133, 536.56433),
+            radius: 217,
+            type: Planet,
+            seed: 228461304122501128,
+        ),
+        (
+            position: (1929.81, 110.10563),
+            radius: 399,
+            type: Planet,
+            seed: 13229729044282591799,
+        ),
+        (
+            position: (798.4, -801.2901),
+            radius: 177,
+            type: Planet,
+            seed: 18324277247547364213,
+        ),
+        (
+            position: (-188.81189, 835.51117),
+            radius: 142,
+            type: Planet,
+            seed: 711331626286547384,
+        ),
+    ],
+    satellites: [
+        (
+            position: (1028.0437, -313.18997),
+            kind: Bumper,
+        ),
+        (
+            position: (1537.2872, 848.1901),
+            kind: Bumper,
+        ),
+        (
+            position: (371.0982, 1014.64026),
+            kind: Grabber,
+        ),
+        (
+            position: (116.66293, -889.3379),
+            kind: Grabber,
+        ),
+        (
+            position: (-695.7515, 887.6002),
+            kind: Bumper,
+        ),
+        (
+            position: (-1657.0664, -817.57184),
+            kind: Bumper,
+        ),
+    ],
+)

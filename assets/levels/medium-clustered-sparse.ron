@@ -1,0 +1,90 @@
+(
+    planets: [
+        (
+            position: (636.78186, -1175.4241),
+            radius: 100,
+            type: Planet,
+            seed: 11994778811715586168,
+        ),
+        (
+            position: (0.0, 0.0),
+            radius: 400,
+            type: Star,
+            seed: 3242473843100432645,
+        ),
+        (
+            position: (-33.049656, -1362.1631),
+            radius: 250,
+            type: Planet,
+            seed: 228461304122501128,
+        ),
+        (
+            position: (-140.7395, 1370.8228),
+            radius: 260,
+            type: Planet,
+            seed: 313747448266922749,
+        ),
+        (
+            position: (-2051.501, -5.3068027),
+            radius: 250,
+            type: Planet,
+            seed: 12164312394824106210,
+        ),
+        (
+            position: (-2238.4707, 533.63525),
+            radius: 142,
+            type: Planet,
+            seed: 711331626286547384,
+        ),
+        (
+            position: (1929.81, 110.10563),
+            radius: 399,
+            type: Planet,
+            seed: 13229729044282591799,
+        ),
+        (
+            position: (-1411.517, 87.18506),
+            radius: 150,
+            type: Planet,
+            seed: 11208393554041330869,
+        ),
+        (
+            position: (-632.5581, 1507.726),
+            radius: 80,
+            type: Planet,
+            seed: 18324277247547364213,
+        ),
+        (
+            position: (2509.598, -654.2047),
+            radius: 250,
+            type: Planet,
+            seed: 16511378224972769461,
+        ),
+    ],
+    satellites: [
+        (
+            position: (1537.2872, 848.1901),
+            kind: Bumper,
+        ),
+        (
+            position: (491.54315, 1028.8243),
+            kind: Grabber,
+        ),
+        (
+            position: (-1307.18, -1013.4237),
+            kind: Grabber,
+        ),
+        (
+            position: (-1593.0258, 761.02435),
+            kind: Bumper,
+        ),
+        (
+            position: (720.0591, -1712.2771),
+            kind: Bumper,
+        ),
+        (
+            position: (1532.3337, -652.3928),
+            kind: Bumper,
+        ),
+    ],
+)
