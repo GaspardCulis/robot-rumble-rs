@@ -8,6 +8,7 @@ pub struct ProjectilesConfigHandle(pub Handle<config::ProjectilesConfig>);
 
 use super::{planet::Planet, player::Player};
 use crate::core::{
+    camera::VisualsSet,
     collision::{CollisionPlugin, CollisionShape, CollisionState},
     gravity::{Mass, Passive},
     interpolation::Interpolate,
@@ -25,9 +26,6 @@ impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
         app.register_required_components::<Projectile, CollisionShape>()
             .register_required_components::<Projectile, Interpolate>()
-            .register_required_components_with::<Projectile, Transform>(|| {
-                Transform::from_scale(Vec3::splat(1.5))
-            })
             .register_required_components_with::<Projectile, Rotation>(|| Rotation(0.))
             .register_required_components_with::<Projectile, Passive>(|| Passive)
             .register_required_components_with::<Projectile, Name>(|| Name::new("Projectile"))
@@ -44,6 +42,7 @@ impl Plugin for ProjectilePlugin {
                     rotate_sprite,
                 )
                     .chain()
+                    .before(VisualsSet::Interpolation)
                     .run_if(resource_exists::<ProjectilesConfigHandle>),
             )
             .add_systems(
