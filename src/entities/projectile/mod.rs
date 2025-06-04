@@ -6,26 +6,30 @@ pub use config::{Projectile, ProjectilesConfig};
 #[derive(Resource)]
 pub struct ProjectilesConfigHandle(pub Handle<config::ProjectilesConfig>);
 
-use super::{blackhole::SpawnBlackHoleEvent, planet::Planet, player::Player};
-use crate::{
-    core::{
-        collision::{CollisionPlugin, CollisionShape, CollisionState},
-        gravity::{Mass, Passive},
-        physics::{PhysicsSet, Position, Rotation, Velocity},
-    },
-    entities::planet::Radius,
+use super::{planet::Planet, player::Player};
+use crate::core::{
+    collision::{CollisionPlugin, CollisionShape, CollisionState},
+    gravity::{Mass, Passive},
+    physics::{PhysicsSet, Position, Rotation, Velocity},
 };
 
 type PlanetCollision = CollisionState<Projectile, Planet>;
 type PlayerCollision = CollisionState<Projectile, Player>;
 
-// Autodespawn timer
+/// Autodespawn timer. Yields `ProjectileDecayedEvent`.
 #[derive(Component, Debug, Clone, Reflect)]
 pub struct DecayTimer(pub Timer);
 
 // Possible fix for events
-#[derive(Component, Debug, Reflect, Clone, Copy)]
-pub struct ProjectileDecayed;
+#[derive(Event, Debug, Reflect, Clone)]
+pub struct ProjectileDecayedEvent {
+    /// Where the projectile decayed
+    pub position: Position,
+    /// Which type of projectile it is.
+    /// Can be None if the entity isn't a projectile, so that decay functionnality can be used in other modules.
+    /// Might get moved somewhere else in the future
+    pub r#type: Option<Projectile>,
+}
 
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct Damage(pub f32);
@@ -33,8 +37,7 @@ pub struct Damage(pub f32);
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<ProjectileDecayed>()
-            .register_type::<DecayTimer>()
+        app.register_type::<DecayTimer>()
             .register_required_components::<Projectile, CollisionShape>()
             .register_required_components_with::<Projectile, Transform>(|| {
                 Transform::from_scale(Vec3::splat(1.5))
@@ -42,6 +45,7 @@ impl Plugin for ProjectilePlugin {
             .register_required_components_with::<Projectile, Rotation>(|| Rotation(0.))
             .register_required_components_with::<Projectile, Passive>(|| Passive)
             .register_required_components_with::<Projectile, Name>(|| Name::new("Projectile"))
+            .add_event::<ProjectileDecayedEvent>()
             .add_plugins(RonAssetPlugin::<config::ProjectilesConfig>::new(&[]))
             .add_plugins(CollisionPlugin::<Projectile, Planet>::new())
             .add_plugins(CollisionPlugin::<Projectile, Player>::new())
@@ -60,7 +64,7 @@ impl Plugin for ProjectilePlugin {
             .add_systems(
                 GgrsSchedule,
                 (
-                    tick_projectile_timer
+                    tick_decay_timers
                         .after(PhysicsSet::Player)
                         .before(PhysicsSet::Gravity),
                     add_physical_properties
@@ -136,26 +140,21 @@ fn rotate_sprite(mut query: Query<(&mut Rotation, &Velocity), (With<Projectile>,
     }
 }
 
-fn tick_projectile_timer(
+fn tick_decay_timers(
     mut commands: Commands,
-    mut blackhole_spawn_events: EventWriter<SpawnBlackHoleEvent>,
-    mut projectiles_query: Query<
-        (Entity, &Position, &mut DecayTimer),
-        (With<Projectile>, Without<ProjectileDecayed>),
-    >,
+    mut projectile_decay_events: EventWriter<ProjectileDecayedEvent>,
+    mut projectiles_query: Query<(Entity, Option<&Projectile>, &Position, &mut DecayTimer)>,
     time: Res<Time>,
 ) {
-    for (projectile, bh_position, mut despawn_timer) in projectiles_query.iter_mut() {
+    for (entity, projectile, position, mut despawn_timer) in projectiles_query.iter_mut() {
         despawn_timer.0.tick(time.delta());
         if despawn_timer.0.just_finished() {
-            // Control on events rollback
-            commands.entity(projectile).insert(ProjectileDecayed);
-            info!("Generating blackhole!");
-            blackhole_spawn_events.write(SpawnBlackHoleEvent {
-                position: bh_position.clone(),
-                radius: Radius(config::BLACKHOLE_RADIUS),
+            // TODO: Control on events rollback
+            projectile_decay_events.write(ProjectileDecayedEvent {
+                position: position.clone(),
+                r#type: projectile.cloned(),
             });
-            commands.entity(projectile).despawn();
+            commands.entity(entity).despawn();
         }
     }
 }

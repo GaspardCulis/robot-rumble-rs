@@ -7,7 +7,7 @@ use rand::Rng as _;
 
 use crate::{
     GameState,
-    core::{camera::CameraFollowTarget, collision, physics, worldgen},
+    core::{camera::CameraFollowTarget, collision, gravity, physics, worldgen},
     entities::{
         planet,
         player::{self, Player, PlayerAction, weapon},
@@ -39,6 +39,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Position>()
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
+            .rollback_component_with_clone::<gravity::Mass>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .rollback_immutable_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::WeaponMode>()
@@ -49,7 +50,6 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
             .rollback_component_with_clone::<graviton::Orbited>()
             .rollback_component_with_clone::<projectile::DecayTimer>()
-            .rollback_component_with_clone::<projectile::ProjectileDecayed>()
             // Collisions
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
