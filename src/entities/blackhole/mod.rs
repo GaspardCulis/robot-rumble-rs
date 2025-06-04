@@ -3,7 +3,7 @@ use super::projectile::config::BLACKHOLE_RADIUS;
 use super::projectile::{DecayTimer, ProjectileDecayedEvent};
 use crate::core::{
     gravity::{Mass, Static},
-    physics::{PhysicsSet, Position},
+    physics::PhysicsSet,
 };
 use crate::entities::projectile::Projectile;
 use bevy::{prelude::*, sprite::Material2dPlugin};
@@ -20,12 +20,6 @@ const BH_DECAY_TIME: f32 = 10.;
 #[require(Visibility)]
 pub struct BlackHole;
 
-#[derive(Event)]
-pub struct SpawnBlackHoleEvent {
-    pub position: Position,
-    pub radius: Radius,
-}
-
 pub struct BlackHolePlugin;
 impl Plugin for BlackHolePlugin {
     fn build(&self, app: &mut App) {
@@ -33,17 +27,12 @@ impl Plugin for BlackHolePlugin {
             .register_required_components_with::<BlackHole, Name>(|| Name::new("Blackhole"))
             .register_required_components_with::<BlackHole, Mass>(|| Mass(BLACKHOLE_MASS))
             .register_required_components_with::<BlackHole, Radius>(|| Radius(BLACKHOLE_RADIUS))
-            .add_event::<SpawnBlackHoleEvent>()
             .add_plugins(Material2dPlugin::<BlackHoleMaterial>::default())
             .add_plugins(Material2dPlugin::<BlackHoleRingMaterial>::default())
             .add_systems(Update, add_visuals)
             .add_systems(
                 GgrsSchedule,
-                (
-                    handle_spawn_black_hole_event,
-                    handle_blackhole_projectile_decay,
-                )
-                    .before(PhysicsSet::Player),
+                handle_blackhole_projectile_decay.before(PhysicsSet::Player),
             );
     }
 }
@@ -64,21 +53,6 @@ fn handle_blackhole_projectile_decay(
                     .add_rollback();
             }
         }
-    }
-}
-
-fn handle_spawn_black_hole_event(
-    mut events: EventReader<SpawnBlackHoleEvent>,
-    mut commands: Commands,
-) {
-    for event in events.read() {
-        commands
-            .spawn((
-                BlackHole,
-                event.position.clone(),
-                DecayTimer(Timer::from_seconds(BH_DECAY_TIME, TimerMode::Once)),
-            ))
-            .add_rollback();
     }
 }
 
