@@ -8,8 +8,6 @@ use super::{SatelliteConfig, SatelliteConfigHandle};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::{Player, PlayerAction};
 
-const MAX_GRABBER_SPEED: f32 = 2000.0;
-
 #[derive(Component)]
 #[require(Name::new("Grabber"))]
 pub struct Grabber;
