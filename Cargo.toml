@@ -1,9 +1,10 @@
 cargo-features = ["codegen-backend"]
 
 [package]
-name = "robot-rumble-client"
+name = "robot-rumble"
 version = "0.1.0"
 edition = "2024"
+default-run = "robot-rumble"
 
 [features]
 default = ["dev_tools", "discord_presence"]
@@ -14,6 +15,18 @@ dev_tools = [
 ]
 embedded_assets = ["dep:bevy_embedded_assets"]
 discord_presence = ["dep:discord-presence"]
+
+[lib]
+name = "robot_rumble"
+path = "src/lib.rs"
+
+[[bin]]
+name = "robot-rumble"
+path = "src/main.rs"
+
+[[bin]]
+name = "map-editor"
+path = "src/tools/map_editor/main.rs"
 
 [dependencies]
 bevy_common_assets = { version = "0.13", features = ["ron"] }
@@ -36,6 +49,7 @@ version = "0.16"
 features = [
   "std",
   "async_executor",
+  "configurable_error_handler",
 
   "multi_threaded",
   "bevy_asset",

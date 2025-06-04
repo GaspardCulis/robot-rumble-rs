@@ -14,6 +14,7 @@ use crate::{
         projectile,
         satellite::{grabber, graviton},
     },
+    level::save,
 };
 use synctest::{
     checksum_position, handle_ggrs_events, p2p_mode, spawn_synctest_players,
@@ -183,9 +184,17 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
 
 fn generate_world(
     mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>,
+    mut load_level_save_events: EventWriter<save::LoadLevelSaveEvent>,
+    args: Res<crate::Args>,
     seed: Res<SessionSeed>,
 ) {
-    worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
+    if let Some(level_path) = &args.level_path {
+        load_level_save_events.write(save::LoadLevelSaveEvent {
+            path: level_path.clone(),
+        });
+    } else {
+        worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
+    }
 }
 
 fn add_local_player_components(

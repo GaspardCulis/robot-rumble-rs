@@ -5,31 +5,9 @@ use bevy::prelude::*;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 #[cfg(feature = "dev_tools")]
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
-use clap::Parser;
+use clap::Parser as _;
 
-mod core;
-mod entities;
-mod level;
-mod misc;
-mod network;
-mod utils;
-
-#[derive(Parser, Resource, Debug)]
-pub struct Args {
-    /// Runs the game in synctest mode
-    #[clap(long)]
-    pub synctest: bool,
-    #[arg(short, long, default_value_t = 2)]
-    pub players: usize,
-}
-
-#[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
-pub enum GameState {
-    #[default]
-    MatchMaking,
-    WorldGen,
-    InGame,
-}
+use robot_rumble::*;
 
 fn main() {
     let args = Args::parse();
