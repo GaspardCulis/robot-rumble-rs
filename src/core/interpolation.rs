@@ -53,7 +53,7 @@ fn setup_interpolation_cache(
     mut commands: Commands,
     mut query: Query<
         (Entity, &mut Transform, &Position, Option<&Rotation>),
-        (Added<Transform>, With<Interpolate>),
+        Or<(Changed<Interpolate>, Added<Transform>)>,
     >,
 ) {
     query
