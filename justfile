@@ -6,7 +6,7 @@ dev:
     cargo run -- -p 1
 
 release-build:
-    cargo build --release --no-default-features --features embedded_assets
+    cargo build --release --no-default-features --features "embedded_assets discord_presence"
 
 wasm-build:
     @echo "Building WASM release target"
