@@ -32,7 +32,10 @@ impl Plugin for BlackHolePlugin {
             .add_systems(Update, add_visuals)
             .add_systems(
                 GgrsSchedule,
-                handle_blackhole_projectile_decay.before(PhysicsSet::Player),
+                handle_blackhole_projectile_decay
+                    // Needs to run after `projectile::tick_decay_timers`
+                    .after(PhysicsSet::Player)
+                    .before(PhysicsSet::Gravity),
             );
     }
 }

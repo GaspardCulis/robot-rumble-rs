@@ -64,9 +64,7 @@ impl Plugin for ProjectilePlugin {
             .add_systems(
                 GgrsSchedule,
                 (
-                    tick_decay_timers
-                        .after(PhysicsSet::Player)
-                        .before(PhysicsSet::Gravity),
+                    tick_decay_timers.before(PhysicsSet::Player),
                     add_physical_properties
                         .before(PhysicsSet::Gravity)
                         .after(PhysicsSet::Player),
