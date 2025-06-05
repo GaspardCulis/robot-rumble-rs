@@ -98,11 +98,11 @@ fn handle_spawn_satellite(
         warn!("Satellite config not loaded yet");
         return;
     };
-    let graviton_active = asset_server.load("skins/satellite/working_graviton.png");
-    let graviton_inactive = asset_server.load("skins/satellite/destroyed_graviton.png");
+    let graviton_active = asset_server.load("img/satellites/working_graviton.png");
+    let graviton_inactive = asset_server.load("img/satellites/destroyed_graviton.png");
 
-    let bumper_texture = asset_server.load("skins/satellite/working_bumper.png");
-    let grabber_texture = asset_server.load("skins/satellite/working_grabber.png");
+    let bumper_texture = asset_server.load("img/satellites/working_bumper.png");
+    let grabber_texture = asset_server.load("img/satellites/working_grabber.png");
 
     for event in events.read() {
         let mut entity = commands.spawn((
