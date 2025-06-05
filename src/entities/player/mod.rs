@@ -11,7 +11,7 @@ use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
 use super::planet;
-use crate::entities::satellite::graviton::Orbited;
+use crate::entities::satellite::slingshot::Orbited;
 
 mod animation;
 mod inventory;
