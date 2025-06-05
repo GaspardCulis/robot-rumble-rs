@@ -4,7 +4,8 @@ use crate::entities::satellite::Satellite;
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
-use super::{SatelliteConfig, SatelliteConfigHandle, SatelliteSet};
+use super::SatelliteSet;
+use super::assets::{SatelliteAssets, SatelliteConfig};
 
 use bevy::asset::Assets;
 
@@ -25,10 +26,10 @@ impl Plugin for BumperPlugin {
 fn bumper_push_player(
     bumper_query: Query<&Position, (With<Satellite>, With<Bumper>)>,
     mut player_query: Query<(&Position, &mut Velocity), With<Player>>,
-    config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
+    assets: Res<SatelliteAssets>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
