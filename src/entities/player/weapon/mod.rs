@@ -3,12 +3,12 @@ use crate::{
     entities::projectile::{Damage, ProjectilesConfigHandle, config::ProjectilesConfig},
 };
 use bevy::{math::ops::cos, prelude::*};
-use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
+use config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
-mod config;
-pub use config::{WeaponStats, WeaponType};
+
+pub mod config;
 
 #[derive(Component, Clone, PartialEq, Default, Reflect)]
 pub enum WeaponMode {
@@ -29,9 +29,6 @@ pub struct WeaponState {
 #[relationship_target(relationship = super::Weapon)]
 pub struct Owner(Entity);
 
-#[derive(Resource)]
-struct WeaponsConfigHandle(Handle<config::WeaponsConfig>);
-
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
@@ -41,8 +38,6 @@ impl Plugin for WeaponPlugin {
             .register_type::<WeaponMode>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
             .register_required_components::<WeaponType, WeaponMode>()
-            .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
-            .add_systems(Startup, load_weapons_config)
             .add_systems(
                 Update,
                 (
@@ -50,7 +45,7 @@ impl Plugin for WeaponPlugin {
                     handle_config_reload,
                     (add_stats_component, add_sprite)
                         .before(PhysicsSet::Player)
-                        .run_if(resource_exists::<WeaponsConfigHandle>),
+                        .run_if(resource_exists::<WeaponsAssets>),
                 ),
             )
             .add_systems(
@@ -63,18 +58,13 @@ impl Plugin for WeaponPlugin {
     }
 }
 
-fn load_weapons_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let weapons_config = WeaponsConfigHandle(asset_server.load("config/config.weapons.ron"));
-    commands.insert_resource(weapons_config);
-}
-
 fn add_stats_component(
     mut commands: Commands,
     query: Query<(Entity, &WeaponType), Without<WeaponStats>>,
-    config_handle: Res<WeaponsConfigHandle>,
-    config_assets: Res<Assets<config::WeaponsConfig>>,
+    assets: Res<WeaponsAssets>,
+    configs: Res<Assets<WeaponsConfig>>,
 ) {
-    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
+    let config = if let Some(c) = configs.get(&assets.config) {
         c
     } else {
         warn!("Couldn't load WeaponsConfig");
@@ -100,11 +90,11 @@ fn add_stats_component(
 fn add_sprite(
     mut commands: Commands,
     query: Query<(Entity, &WeaponType), Without<Sprite>>,
-    config_handle: Res<WeaponsConfigHandle>,
-    config_assets: Res<Assets<config::WeaponsConfig>>,
+    assets: Res<WeaponsAssets>,
+    configs: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
+    let config = if let Some(c) = configs.get(&assets.config) {
         c
     } else {
         warn!("Couldn't load WeaponsConfig");

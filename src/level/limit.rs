@@ -7,7 +7,7 @@ use crate::{
         physics::{PhysicsSet, Position},
         worldgen,
     },
-    entities::player::{Player, weapon::WeaponType},
+    entities::player::{Player, weapon::config::WeaponType},
 };
 
 #[derive(Resource, Reflect)]

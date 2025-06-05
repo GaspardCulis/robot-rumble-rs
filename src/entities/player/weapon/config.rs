@@ -1,8 +1,15 @@
 use std::time::Duration;
 
 use bevy::{platform::collections::HashMap, prelude::*};
+use bevy_asset_loader::asset_collection::AssetCollection;
 
 use crate::entities::projectile::Projectile;
+
+#[derive(AssetCollection, Resource)]
+pub struct WeaponsAssets {
+    #[asset(path = "config/config.weapons.ron")]
+    pub config: Handle<WeaponsConfig>,
+}
 
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct WeaponsConfig(pub HashMap<WeaponType, WeaponConfig>);
