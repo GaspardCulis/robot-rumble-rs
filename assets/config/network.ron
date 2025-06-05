@@ -1,0 +1,9 @@
+NetworkConfig (
+    input_delay: 2,
+    session_fps: 24,
+    schedule_fps: 60,
+    check_distance: 2,
+    max_prediction_window: 32,
+    disconnect_timeout: 2.0,
+    desync_detection: On ( interval: 6 )
+)

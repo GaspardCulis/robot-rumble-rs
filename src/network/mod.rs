@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
@@ -21,6 +22,7 @@ use synctest::{
     start_synctest_session, synctest_mode,
 };
 
+mod config;
 pub mod inputs;
 mod synctest;
 
@@ -36,6 +38,7 @@ pub struct NetworkPlugin;
 impl Plugin for NetworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(GgrsPlugin::<SessionConfig>::default())
+            .add_plugins(RonAssetPlugin::<config::NetworkConfig>::new(&[]))
             .add_plugins(inputs::NetworkInputsPlugin)
             .rollback_component_with_clone::<physics::Position>()
             .rollback_component_with_clone::<physics::Rotation>()
@@ -54,6 +57,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
             .checksum_component::<physics::Position>(checksum_position)
+            .add_systems(Startup, config::load_network_config)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
                 (
@@ -134,21 +138,33 @@ fn wait_start_match(
     mut socket: ResMut<MatchboxSocket>,
     mut next_state: ResMut<NextState<GameState>>,
     mut timeout: ResMut<StartMatchDelay>,
+    config_handle: Res<config::NetworkConfigHandle>,
+    config_assets: Res<Assets<config::NetworkConfig>>,
     args: Res<crate::Args>,
     time: Res<Time>,
-) {
+) -> Result {
     timeout.0.tick(time.delta());
     if !timeout.0.finished() {
-        return;
+        return Ok(());
     }
+
+    let config = config_assets
+        .get(config_handle.0.id())
+        .ok_or(BevyError::from("Couldn't get NetworkConfig"))?;
 
     let players = socket.players();
     assert_eq!(players.len(), args.players);
 
+    // Setup sesion
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(args.players)
-        .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 })
-        .with_input_delay(2);
+        .with_input_delay(config.input_delay)
+        .with_fps(config.session_fps)
+        .unwrap()
+        .with_check_distance(config.check_distance)
+        .with_max_prediction_window(config.max_prediction_window)
+        .with_disconnect_timeout(config.disconnect_timeout)
+        .with_desync_detection_mode(config.desync_detection.into());
 
     for (i, player) in players.into_iter().enumerate() {
         session_builder = session_builder
@@ -167,6 +183,8 @@ fn wait_start_match(
     commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
 
     next_state.set(GameState::InGame);
+
+    Ok(())
 }
 
 /// Spawn position is handled by level::spawn
