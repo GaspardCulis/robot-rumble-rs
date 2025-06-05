@@ -41,7 +41,7 @@ pub struct SpawnPlanetEvent {
 #[derive(AssetCollection, Resource)]
 pub struct PlanetAssets {
     #[asset(path = "config/config.planets.ron")]
-    config: Handle<PlanetsConfig>,
+    pub config: Handle<PlanetsConfig>,
 }
 
 #[derive(Bundle)]
