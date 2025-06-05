@@ -6,8 +6,19 @@ ProjectilesConfig({
             radius: 1.0,
         ),
         skin: (
-            sprite: "projectiles/bullet.png",
+            sprite: "img/projectiles/bullet.png",
             scale: 3.0,
+        ),
+    ),
+    Blackhole: (
+        stats: (
+            mass: 1,
+            damage: 0.0,
+            radius: 1.0,
+        ),
+        skin: (
+            sprite: "img/projectiles/explosive.png",
+            scale: 4.0,
         ),
     ),
     Rocket: (
@@ -17,7 +28,7 @@ ProjectilesConfig({
             radius: 1.,
         ),
         skin: (
-            sprite: "projectiles/explosive.png",
+            sprite: "img/projectiles/explosive.png",
             scale: 4.0,
         ),
     ),
@@ -28,7 +39,7 @@ ProjectilesConfig({
             radius: 5.0,
         ),
         skin: (
-            sprite: "projectiles/laser.png",
+            sprite: "img/projectiles/laser.png",
             scale: 4.0,
         ),
     ),
