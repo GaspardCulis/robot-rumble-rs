@@ -4,6 +4,7 @@ use bevy_common_assets::ron::RonAssetPlugin;
 
 use crate::entities::satellite::assets as satellite_assets;
 
+/// Responsible for loading all crate's assets, and registering their asset loaders.
 pub struct AssetsPlugin;
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
