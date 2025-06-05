@@ -7,22 +7,26 @@ pub use config::{Projectile, ProjectilesConfig};
 pub struct ProjectilesConfigHandle(pub Handle<config::ProjectilesConfig>);
 
 use super::{planet::Planet, player::Player};
-use crate::core::{
-    collision::{CollisionPlugin, CollisionShape, CollisionState},
-    gravity::{Mass, Passive},
-    physics::{PhysicsSet, Rotation, Velocity},
+use crate::{
+    core::{
+        collision::{CollisionPlugin, CollisionShape, CollisionState},
+        gravity::{Mass, Passive},
+        physics::{PhysicsSet, Rotation, Velocity},
+    },
+    entities::player::Percentage,
 };
 
 type PlanetCollision = CollisionState<Projectile, Planet>;
 type PlayerCollision = CollisionState<Projectile, Player>;
 
-#[derive(Component, Reflect, Clone, Copy)]
+#[derive(Component, Clone, Copy, Debug, Reflect)]
 pub struct Damage(pub f32);
 
 pub struct ProjectilePlugin;
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
-        app.register_required_components::<Projectile, CollisionShape>()
+        app.register_type::<Damage>()
+            .register_required_components::<Projectile, CollisionShape>()
             .register_required_components_with::<Projectile, Transform>(|| {
                 Transform::from_scale(Vec3::splat(1.5))
             })
@@ -133,15 +137,20 @@ fn check_planet_collisions(
 
 fn check_player_collisions(
     mut commands: Commands,
-    query: Query<(Entity, &Velocity, &Mass, &PlayerCollision), With<Projectile>>,
-    mut player_query: Query<(&mut Velocity, &Mass), Without<Projectile>>,
+    query: Query<(Entity, &Velocity, &Mass, &PlayerCollision, &Damage), With<Projectile>>,
+    mut player_query: Query<(&mut Velocity, &Mass, &mut Percentage), Without<Projectile>>,
 ) {
-    for (projectile, projectile_velocity, projectile_mass, player_collision) in query.iter() {
+    for (projectile, projectile_velocity, projectile_mass, player_collision, projectile_damage) in
+        query.iter()
+    {
         if player_collision.collides {
             if let Some(closest_player) = player_collision.closest
-                && let Ok((mut player_velocity, player_mass)) = player_query.get_mut(closest_player)
+                && let Ok((mut player_velocity, player_mass, mut player_percentage)) =
+                    player_query.get_mut(closest_player)
             {
-                let knockback_force = projectile_velocity.0 * projectile_mass.0 as f32;
+                player_percentage.0 += projectile_damage.0;
+                let knockback_force =
+                    (1.0 + player_percentage.0) * projectile_velocity.0 * projectile_mass.0 as f32;
                 player_velocity.0 += knockback_force / player_mass.0 as f32;
             }
 
