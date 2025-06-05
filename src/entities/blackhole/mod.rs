@@ -45,16 +45,16 @@ fn handle_blackhole_projectile_decay(
     mut events: EventReader<ProjectileDecayedEvent>,
 ) {
     for event in events.read() {
-        if let Some(r#type) = event.r#type {
-            if let Projectile::Blackhole = r#type {
-                commands
-                    .spawn((
-                        BlackHole,
-                        event.position.clone(),
-                        DecayTimer(Timer::from_seconds(BH_DECAY_TIME, TimerMode::Once)),
-                    ))
-                    .add_rollback();
-            }
+        if let Some(r#type) = event.r#type
+            && let Projectile::Blackhole = r#type
+        {
+            commands
+                .spawn((
+                    BlackHole,
+                    event.position.clone(),
+                    DecayTimer(Timer::from_seconds(BH_DECAY_TIME, TimerMode::Once)),
+                ))
+                .add_rollback();
         }
     }
 }
