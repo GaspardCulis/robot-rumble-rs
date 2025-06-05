@@ -41,6 +41,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
+            .rollback_component_with_clone::<player::Percentage>()
             .rollback_immutable_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
