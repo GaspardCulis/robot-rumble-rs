@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
-use crate::utils::math;
+use crate::{level::limit::MapLimit, utils::math};
 
 use super::physics::PhysicsSet;
 
@@ -23,6 +23,7 @@ fn camera_movement(
     mut camera: Query<&mut Transform, (With<Camera2d>, Without<CameraFollowTarget>)>,
     window: Query<&Window>,
     target: Query<&Transform, With<CameraFollowTarget>>,
+    limit: Option<Res<MapLimit>>,
     time: Res<Time>,
 ) -> Result {
     if target.is_empty() {
@@ -37,9 +38,22 @@ fn camera_movement(
     let screen_size = window.size();
     let cursor_position = window.cursor_position().unwrap_or(screen_size / 2.);
     let max_cursor_offset = screen_size * 0.2;
-    let offset = (cursor_position / screen_size - 0.5) * Vec2::new(1., -1.) * max_cursor_offset;
+    let mut offset = (cursor_position / screen_size - 0.5) * Vec2::new(1., -1.) * max_cursor_offset;
+    let player_pos = target_transform.translation.xy();
 
-    let dest = target_transform.translation.xy() + offset * camera_transform.scale.xy();
+    let mut dest = player_pos;
+
+    if let Some(limit) = limit {
+        // Clamp camera on rectangular bounds
+        let bounds = limit.radius + 200.0;
+        let min_bound = Vec2::new(-bounds, -bounds);
+        let max_bound = Vec2::new(bounds, bounds);
+        let half_screen = (screen_size * 0.5) * camera_transform.scale.xy();
+
+        dest = dest.clamp(min_bound + half_screen, max_bound - half_screen);
+    }
+
+    dest += offset;
 
     camera_transform.translation = math::lerp(
         camera_transform.translation,
