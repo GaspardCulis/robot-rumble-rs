@@ -1,10 +1,12 @@
-use bevy::prelude::*;
+use bevy::{math::FloatPow, prelude::*};
 use bevy_ggrs::GgrsSchedule;
 
 use crate::{level::limit::MapLimit, utils::math};
 
 use super::physics::PhysicsSet;
 
+const WORLD_PADDING: f32 = 0.65;
+const MAX_EXTRA_SPEED: f32 = 10.0;
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
@@ -43,14 +45,29 @@ fn camera_movement(
 
     let mut dest = player_pos;
 
+    let mut follow_speed = 5.0;
+
     if let Some(limit) = limit {
+        // Calculate player's bias to worlds's center
+        let world_center = Vec2::ZERO;
+        let dist_from_center = player_pos.distance(world_center);
+        let bias_factor = ((dist_from_center - WORLD_PADDING * limit.radius)
+            / ((1.0 - WORLD_PADDING) * limit.radius))
+            .clamp(0.0, 1.0)
+            .squared();
+        dest = dest.lerp(world_center, bias_factor * 0.3);
+
         // Clamp camera on rectangular bounds
         let bounds = limit.radius + 200.0;
         let min_bound = Vec2::new(-bounds, -bounds);
         let max_bound = Vec2::new(bounds, bounds);
         let half_screen = (screen_size * 0.5) * camera_transform.scale.xy();
 
+        offset *= 1.0 - bias_factor;
         dest = dest.clamp(min_bound + half_screen, max_bound - half_screen);
+
+        // Adjust follow speed on bounds
+        follow_speed += MAX_EXTRA_SPEED * bias_factor;
     }
 
     dest += offset;
@@ -58,7 +75,7 @@ fn camera_movement(
     camera_transform.translation = math::lerp(
         camera_transform.translation,
         Vec3::new(dest.x, dest.y, 0.),
-        time.delta_secs() * 5.,
+        time.delta_secs() * follow_speed,
     );
 
     Ok(())
