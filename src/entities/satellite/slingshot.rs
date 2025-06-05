@@ -151,7 +151,7 @@ fn detect_player_orbit_entry(
                 commands.entity(slingshot_entity).with_children(|parent| {
                     parent.spawn((
                         Sprite {
-                            image: asset_server.load("skins/satellite/slingshot/Corde_1.png"),
+                            image: asset_server.load("skins/satellite/slingshot/rope_1.png"),
                             ..default()
                         },
                         Transform {
@@ -321,10 +321,10 @@ fn update_orbit_cooldowns(
 
 fn load_slingcord_frames(asset_server: Res<AssetServer>, mut commands: Commands) {
     let frames = vec![
-        asset_server.load("skins/satellite/slingshot/Corde_1.png"),
-        asset_server.load("skins/satellite/slingshot/Corde_2.png"),
-        asset_server.load("skins/satellite/slingshot/Corde_3.png"),
-        asset_server.load("skins/satellite/slingshot/Corde_4.png"),
+        asset_server.load("skins/satellite/slingshot/rope_1.png"),
+        asset_server.load("skins/satellite/slingshot/rope_2.png"),
+        asset_server.load("skins/satellite/slingshot/rope_3.png"),
+        asset_server.load("skins/satellite/slingshot/rope_4.png"),
     ];
     commands.insert_resource(SlingshotCordFrames(frames));
 }
