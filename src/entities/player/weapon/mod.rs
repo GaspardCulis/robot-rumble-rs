@@ -67,7 +67,7 @@ impl Plugin for WeaponPlugin {
 }
 
 fn load_weapons_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let weapons_config = WeaponsConfigHandle(asset_server.load("config/weapons.ron"));
+    let weapons_config = WeaponsConfigHandle(asset_server.load("config/config.weapons.ron"));
     commands.insert_resource(weapons_config);
 }
 

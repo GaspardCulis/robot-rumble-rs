@@ -82,7 +82,8 @@ impl Plugin for ProjectilePlugin {
 }
 
 fn load_projectiles_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let projectiles_config = ProjectilesConfigHandle(asset_server.load("config/projectiles.ron"));
+    let projectiles_config =
+        ProjectilesConfigHandle(asset_server.load("config/config.projectiles.ron"));
     commands.insert_resource(projectiles_config);
 }
 

@@ -68,7 +68,7 @@ impl Plugin for SkinPlugin {
 
 fn load_skin_config(mut commands: Commands, asset_server: Res<AssetServer>) {
     info!("Loading skins config");
-    let skin_config: Handle<SkinsConfig> = asset_server.load("config/skins.ron");
+    let skin_config: Handle<SkinsConfig> = asset_server.load("config/config.skins.ron");
     commands.insert_resource(SkinConfigHandle(skin_config));
 }
 

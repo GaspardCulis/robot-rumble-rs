@@ -3,7 +3,7 @@ use bevy_asset_loader::prelude::*;
 
 #[derive(AssetCollection, Resource)]
 pub struct SatelliteAssets {
-    #[asset(path = "config/satellites.ron")]
+    #[asset(path = "config/config.satellites.ron")]
     pub config: Handle<SatelliteConfig>,
     #[asset(path = "img/satellites/working_graviton.png")]
     pub working_graviton: Handle<Image>,
