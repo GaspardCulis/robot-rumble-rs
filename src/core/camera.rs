@@ -5,8 +5,14 @@ use crate::{level::limit::MapLimit, utils::math};
 
 use super::physics::PhysicsSet;
 
-const WORLD_PADDING: f32 = 0.65;
+/// Start biasing camera toward center past this world radius fraction
+const EDGE_BIAS_THRESHOLD: f32 = 0.65;
+/// Extra space so camera sees world edges without clipping
+const EDGE_PADDING: f32 = 200.0;
+/// Camera translation speed increase
 const MAX_EXTRA_SPEED: f32 = 10.0;
+/// How strongly the camera biases toward center near the edge
+const BIAS_STRENGTH_FACTOR: f32 = 0.3;
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
@@ -51,14 +57,14 @@ fn camera_movement(
         // Calculate player's bias to worlds's center
         let world_center = Vec2::ZERO;
         let dist_from_center = player_pos.distance(world_center);
-        let bias_factor = ((dist_from_center - WORLD_PADDING * limit.radius)
-            / ((1.0 - WORLD_PADDING) * limit.radius))
+        let bias_factor = ((dist_from_center - EDGE_BIAS_THRESHOLD * limit.radius)
+            / ((1.0 - EDGE_BIAS_THRESHOLD) * limit.radius))
             .clamp(0.0, 1.0)
             .squared();
-        dest = dest.lerp(world_center, bias_factor * 0.3);
+        dest = dest.lerp(world_center, bias_factor * BIAS_STRENGTH_FACTOR);
 
         // Clamp camera on rectangular bounds
-        let bounds = limit.radius + 200.0;
+        let bounds = limit.radius + EDGE_PADDING;
         let min_bound = Vec2::new(-bounds, -bounds);
         let max_bound = Vec2::new(bounds, bounds);
         let half_screen = (screen_size * 0.5) * camera_transform.scale.xy();
