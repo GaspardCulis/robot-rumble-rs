@@ -39,7 +39,7 @@ type PlanetCollision = CollisionState<Player, planet::Planet>;
     CollisionShape::Circle(PLAYER_RADIUS),
     PlayerSkin("laika".into()),
     Name::new("Player"),
-    Percentage,
+    Percentage::default(),
 )]
 pub struct Player {
     pub handle: usize,
