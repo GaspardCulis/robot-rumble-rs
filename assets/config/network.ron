@@ -1,6 +1,6 @@
 NetworkConfig (
-    input_delay: 2,
-    session_fps: 24,
+    input_delay: 6,
+    session_fps: 60,
     schedule_fps: 60,
     check_distance: 2,
     max_prediction_window: 32,
