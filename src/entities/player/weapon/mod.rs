@@ -74,9 +74,7 @@ fn add_stats_component(
     config_handle: Res<WeaponsConfigHandle>,
     config_assets: Res<Assets<config::WeaponsConfig>>,
 ) {
-    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
-        c
-    } else {
+    let Some(config) = config_assets.get(config_handle.0.id()) else {
         warn!("Couldn't load WeaponsConfig");
         return;
     };
@@ -104,9 +102,7 @@ fn add_sprite(
     config_assets: Res<Assets<config::WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
-        c
-    } else {
+    let Some(config) = config_assets.get(config_handle.0.id()) else {
         warn!("Couldn't load WeaponsConfig");
         return;
     };
@@ -161,20 +157,15 @@ fn fire_weapon_system(
     projectile_config_assets: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    let projectile_config =
-        if let Some(c) = projectile_config_assets.get(projectile_config_handle.0.id()) {
-            c
-        } else {
-            warn!("Couldn't load ProjectileConfig");
-            return;
-        };
+    let Some(projectile_config) = projectile_config_assets.get(projectile_config_handle.0.id())
+    else {
+        warn!("Couldn't load ProjectileConfig");
+        return;
+    };
 
     for (mut state, mut mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut()
     {
-        if (*mode == WeaponMode::Triggered)
-            && state.cooldown_timer.finished()
-            && state.current_ammo > 0
-        {
+        if *mode == WeaponMode::Triggered && state.can_fire() {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
@@ -214,6 +205,12 @@ fn fire_weapon_system(
                 owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
             }
         }
+    }
+}
+
+impl WeaponState {
+    pub fn can_fire(&self) -> bool {
+        self.cooldown_timer.finished() && self.current_ammo > 0
     }
 }
 
