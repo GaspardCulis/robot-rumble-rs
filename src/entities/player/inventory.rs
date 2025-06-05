@@ -7,7 +7,7 @@ use crate::core::physics;
 use super::{Player, PlayerAction, Weapon, weapon};
 
 const DEFAULT_ARSENAL: [weapon::WeaponType; 3] = [
-    weapon::WeaponType::Pistol,
+    weapon::WeaponType::BlackholeGun,
     weapon::WeaponType::Shotgun,
     weapon::WeaponType::Rifle,
 ];
