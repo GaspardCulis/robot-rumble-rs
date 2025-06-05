@@ -6,7 +6,7 @@ ProjectilesConfig({
             radius: 1.0,
         ),
         skin: (
-            sprite: "projectiles/bullet.png",
+            sprite: "img/projectiles/bullet.png",
             scale: 3.0,
         ),
     ),
@@ -17,7 +17,7 @@ ProjectilesConfig({
             radius: 10.0,
         ),
         skin: (
-            sprite: "projectiles/explosive.png",
+            sprite: "img/projectiles/explosive.png",
             scale: 4.0,
         ),
     ),
@@ -28,7 +28,7 @@ ProjectilesConfig({
             radius: 5.0,
         ),
         skin: (
-            sprite: "projectiles/laser.png",
+            sprite: "img/projectiles/laser.png",
             scale: 4.0,
         ),
     ),
