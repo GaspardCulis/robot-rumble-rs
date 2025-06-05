@@ -83,6 +83,7 @@ impl Plugin for PlayerPlugin {
             .register_type::<PlayerInputVelocity>()
             .register_type::<PlayerSkin>()
             .register_type::<Weapon>()
+            .register_type::<Percentage>()
             .add_plugins(CollisionPlugin::<Player, planet::Planet>::new())
             .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(animation::PlayerAnimationPlugin)
