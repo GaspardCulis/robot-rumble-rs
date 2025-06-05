@@ -3,6 +3,8 @@ use bevy::prelude::*;
 #[serde_with::serde_as]
 #[derive(Asset, TypePath, serde::Deserialize)]
 pub struct NetworkConfig {
+    /// The domain/IP of the Matchbox signaling server.
+    pub matchbox_host: String,
     /// Amount of frames GGRS will delay the inputs for local players.
     pub input_delay: usize,
     // TODO: Figure out what it does
@@ -38,6 +40,8 @@ impl Default for NetworkConfig {
     /// Matching bevy_ggrs defaults
     fn default() -> Self {
         Self {
+            matchbox_host: "matchbox.gasdev.fr".into(),
+
             input_delay: 0,
             session_fps: 60,
             schedule_fps: 60,

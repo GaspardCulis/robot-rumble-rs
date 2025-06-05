@@ -1,4 +1,6 @@
 NetworkConfig (
+    matchbox_host: "matchbox.gasdev.fr",
+    
     input_delay: 6,
     session_fps: 60,
     schedule_fps: 60,

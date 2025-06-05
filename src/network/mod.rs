@@ -56,12 +56,14 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
-            .checksum_component::<physics::Position>(checksum_position)
-            .add_systems(Startup, config::load_network_config)
+            .checksum_component::<physics::Position>(checksum_position);
+
+        app.add_systems(Startup, config::load_network_config)
             .add_systems(
                 OnEnter(GameState::MatchMaking),
                 (
-                    start_matchbox_socket.run_if(p2p_mode),
+                    start_matchbox_socket
+                        .run_if(p2p_mode.and(resource_exists::<config::NetworkConfigHandle>)),
                     start_synctest_session.run_if(synctest_mode),
                 ),
             )
@@ -78,7 +80,11 @@ impl Plugin for NetworkPlugin {
             .add_systems(
                 Update,
                 (
-                    wait_for_players.run_if(in_state(GameState::MatchMaking).and(p2p_mode)),
+                    wait_for_players.run_if(
+                        in_state(GameState::MatchMaking)
+                            .and(resource_exists::<MatchboxSocket>)
+                            .and(p2p_mode),
+                    ),
                     wait_start_match.run_if(in_state(GameState::WorldGen).and(p2p_mode)),
                     handle_ggrs_events.run_if(in_state(GameState::InGame)),
                 ),
@@ -86,13 +92,24 @@ impl Plugin for NetworkPlugin {
     }
 }
 
-fn start_matchbox_socket(mut commands: Commands, args: Res<crate::Args>) {
+fn start_matchbox_socket(
+    mut commands: Commands,
+    args: Res<crate::Args>,
+    config_handle: Res<config::NetworkConfigHandle>,
+    config_assets: Res<Assets<config::NetworkConfig>>,
+) -> Result {
+    let config = config_assets
+        .get(config_handle.0.id())
+        .ok_or(BevyError::from("Couldn't get NetworkConfig"))?;
+
     let room_url = format!(
-        "wss://matchbox.gasdev.fr/extreme_bevy?next={}",
-        args.players
+        "wss://{}/robot_rumble?next={}",
+        config.matchbox_host, args.players
     );
     info!("connecting to matchbox server: {room_url}");
     commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
+
+    Ok(())
 }
 
 fn wait_for_players(
