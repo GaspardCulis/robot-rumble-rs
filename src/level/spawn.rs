@@ -7,7 +7,7 @@ use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
     entities::{
         planet::{Planet, Radius},
-        player::{PLAYER_RADIUS, Percentage, Player},
+        player::{PLAYER_RADIUS, Player},
     },
     network::SessionSeed,
 };
@@ -53,7 +53,6 @@ fn spawn_players(
             Position(position),
             Velocity::default(),
             Rotation::default(), // TODO: Align properly
-            Percentage::default(),
         ));
     }
 }
