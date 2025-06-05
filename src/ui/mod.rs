@@ -1,7 +1,7 @@
-use bevy::{prelude::*, ui::widget::NodeImageMode};
+use bevy::{prelude::*, ui::{widget::NodeImageMode}};
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::{entities::player::{weapon, PlayerAction}, GameState};
+use crate::{entities::player::{weapon::{self, WeaponState, WeaponStats}, Player, PlayerAction, Weapon}, GameState};
 
 
 const WEAPON_SLOTS: [weapon::WeaponType; 3] = [
@@ -16,6 +16,9 @@ struct WeaponSlotUI {
 }
 
 #[derive(Component)]
+struct AmmoText;
+
+#[derive(Component)]
 struct SelectedWeaponSlot;
 
 pub struct UiPlugin;
@@ -27,7 +30,8 @@ impl Plugin for UiPlugin {
         )
         .add_systems(
             Update,
-            update_weapon_slot_ui.run_if(in_state(GameState::InGame)),
+            (update_weapon_slot_ui.run_if(in_state(GameState::InGame)),
+            update_ammo_text.run_if(in_state(GameState::InGame))),
         );
     }
 }
@@ -173,6 +177,32 @@ fn spawn_arsenal_hud(
                     }
                 });
         });
+        commands
+            .spawn(Node {
+                position_type: PositionType::Absolute,
+                display: Display::Flex,
+                flex_direction: FlexDirection::Row,
+                bottom: Val::Px(350.0),
+                right: Val::Px(16.0),
+                padding: UiRect::all(Val::Px(8.0)),
+                ..default()
+            })
+            .with_children(|builder| {
+                builder.spawn((
+                    Text::new("Ammo: 0 / 0"),
+                    TextFont {
+                        font_size: 24.0,
+                        ..default()
+                    },
+                    TextColor(Color::WHITE),
+                    TextLayout {
+                        justify: JustifyText::Left,
+                        ..default()
+                    },
+                    AmmoText,
+                ));
+            });
+
 }
 
 fn update_weapon_slot_ui(
@@ -206,6 +236,20 @@ fn update_weapon_slot_ui(
                     commands.entity(entity).remove::<SelectedWeaponSlot>();
                 }
                 *border_color = BorderColor(Color::srgba(1.0, 1.0, 1.0, 0.1));
+            }
+        }
+    }
+}
+
+fn update_ammo_text(
+    weapon_query: Query<&Weapon, With<Player>>,
+    weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
+    mut text_query: Query<&mut Text, With<AmmoText>>,
+) {
+    if let Ok(weapon) = weapon_query.single() {
+        if let Ok((state, stats)) = weapon_state_query.get(weapon.0) {
+            if let Ok(mut text) = text_query.single_mut() {
+                text.0 = format!("Ammo: {} / {}", state.current_ammo, stats.magazine_size);
             }
         }
     }
