@@ -29,7 +29,7 @@ impl Plugin for WorldgenPlugin {
 }
 
 fn load_worldgen_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let config: Handle<WorldgenConfig> = asset_server.load("config/worldgen.ron");
+    let config: Handle<WorldgenConfig> = asset_server.load("config/config.worldgen.ron");
     commands.insert_resource(WorldgenConfigHandle(config));
 }
 
