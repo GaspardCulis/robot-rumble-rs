@@ -61,7 +61,7 @@ fn main() {
     .add_plugins(level::LevelPlugins)
     .add_plugins(misc::MiscPlugins)
     .add_plugins(network::NetworkPlugin)
-    .add_plugins(ui::UiPlugin)
+    .add_plugins(ui::UiPlugins)
     .init_state::<GameState>()
     .insert_resource(args);
 
