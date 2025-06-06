@@ -10,7 +10,7 @@
     min_planet_surface_distance: 200,
 
     edge_radius: 3000,
-    edge_margin: 800,
+    edge_margin: 1000,
 
     min_satellites: 5,
     max_satellites: 10,
