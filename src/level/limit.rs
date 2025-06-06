@@ -7,13 +7,13 @@ use crate::{
         physics::{PhysicsSet, Position},
         worldgen,
     },
-    entities::player::{Player, weapon::WeaponType},
+    entities::player::{Player, weapon::config::WeaponType},
 };
 
 #[derive(Resource, Reflect)]
-struct MapLimit {
+pub struct MapLimit {
     // TODO: Reconsider using existing Radius component
-    radius: f32,
+    pub radius: f32,
     /// Precomputed for performance optimizations
     radius_squared: f32,
 }
@@ -30,7 +30,7 @@ impl Plugin for MapLimitPlugin {
             .add_event::<DeathEvent>()
             .add_systems(
                 Update,
-                setup.run_if(resource_added::<worldgen::WorldgenConfigHandle>),
+                setup.run_if(resource_added::<worldgen::WorldgenAssets>),
             )
             .add_systems(
                 GgrsSchedule,
@@ -45,10 +45,10 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
-    config_handle: Res<worldgen::WorldgenConfigHandle>,
-    configs: Res<Assets<worldgen::WorldgenConfig>>,
+    worldgen_assets: Res<worldgen::WorldgenAssets>,
+    worldgen_configs: Res<Assets<worldgen::WorldgenConfig>>,
 ) {
-    let Some(worldgen_config) = configs.get(&config_handle.0) else {
+    let Some(worldgen_config) = worldgen_configs.get(&worldgen_assets.config) else {
         warn!("Worldgen config not loaded yet");
         return;
     };

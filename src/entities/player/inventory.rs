@@ -4,16 +4,16 @@ use leafwing_input_manager::prelude::ActionState;
 
 use crate::core::physics;
 
-use super::{Player, PlayerAction, Weapon, weapon};
+use super::{Player, PlayerAction, Weapon, weapon::config::WeaponType};
 
-const DEFAULT_ARSENAL: [weapon::WeaponType; 3] = [
-    weapon::WeaponType::Pistol,
-    weapon::WeaponType::Shotgun,
-    weapon::WeaponType::Rifle,
+const DEFAULT_ARSENAL: [WeaponType; 3] = [
+    WeaponType::BlackholeGun,
+    WeaponType::Shotgun,
+    WeaponType::Rifle,
 ];
 
 #[derive(Component, Debug, Reflect)]
-pub struct Arsenal(pub Vec<(weapon::WeaponType, Entity)>);
+pub struct Arsenal(pub Vec<(WeaponType, Entity)>);
 
 pub struct InventoryPlugin;
 impl Plugin for InventoryPlugin {
