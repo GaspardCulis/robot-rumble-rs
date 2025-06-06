@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
@@ -22,7 +21,7 @@ use synctest::{
     start_synctest_session, synctest_mode,
 };
 
-mod config;
+pub mod config;
 pub mod inputs;
 mod synctest;
 
@@ -38,7 +37,6 @@ pub struct NetworkPlugin;
 impl Plugin for NetworkPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(GgrsPlugin::<SessionConfig>::default())
-            .add_plugins(RonAssetPlugin::<config::NetworkConfig>::new(&[]))
             .add_plugins(inputs::NetworkInputsPlugin)
             .rollback_component_with_clone::<physics::Position>()
             .rollback_component_with_clone::<physics::Rotation>()
@@ -63,48 +61,46 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
             .checksum_component::<physics::Position>(checksum_position);
 
-        app.add_systems(Startup, config::load_network_config)
-            .add_systems(
-                OnEnter(GameState::MatchMaking),
-                (
-                    start_matchbox_socket
-                        .run_if(p2p_mode.and(resource_exists::<config::NetworkConfigHandle>)),
-                    start_synctest_session.run_if(synctest_mode),
+        app.add_systems(
+            OnEnter(GameState::MatchMaking),
+            (
+                start_matchbox_socket.run_if(p2p_mode),
+                start_synctest_session.run_if(synctest_mode),
+            ),
+        )
+        .add_systems(
+            OnEnter(GameState::WorldGen),
+            (generate_world, spawn_synctest_players.run_if(synctest_mode)).chain(),
+        )
+        .add_systems(
+            OnEnter(GameState::InGame),
+            (spawn_players, add_local_player_components)
+                .chain()
+                .run_if(p2p_mode),
+        )
+        .add_systems(
+            Update,
+            (
+                wait_for_players.run_if(
+                    in_state(GameState::MatchMaking)
+                        .and(resource_exists::<MatchboxSocket>)
+                        .and(p2p_mode),
                 ),
-            )
-            .add_systems(
-                OnEnter(GameState::WorldGen),
-                (generate_world, spawn_synctest_players.run_if(synctest_mode)).chain(),
-            )
-            .add_systems(
-                OnEnter(GameState::InGame),
-                (spawn_players, add_local_player_components)
-                    .chain()
-                    .run_if(p2p_mode),
-            )
-            .add_systems(
-                Update,
-                (
-                    wait_for_players.run_if(
-                        in_state(GameState::MatchMaking)
-                            .and(resource_exists::<MatchboxSocket>)
-                            .and(p2p_mode),
-                    ),
-                    wait_start_match.run_if(in_state(GameState::WorldGen).and(p2p_mode)),
-                    handle_ggrs_events.run_if(in_state(GameState::InGame)),
-                ),
-            );
+                wait_start_match.run_if(in_state(GameState::WorldGen).and(p2p_mode)),
+                handle_ggrs_events.run_if(in_state(GameState::InGame)),
+            ),
+        );
     }
 }
 
 fn start_matchbox_socket(
     mut commands: Commands,
     args: Res<crate::Args>,
-    config_handle: Res<config::NetworkConfigHandle>,
-    config_assets: Res<Assets<config::NetworkConfig>>,
+    assets: Res<config::NetworkAssets>,
+    configs: Res<Assets<config::NetworkConfig>>,
 ) -> Result {
-    let config = config_assets
-        .get(config_handle.0.id())
+    let config = configs
+        .get(&assets.config)
         .ok_or(BevyError::from("Couldn't get NetworkConfig"))?;
 
     let room_url = format!(
@@ -160,8 +156,8 @@ fn wait_start_match(
     mut socket: ResMut<MatchboxSocket>,
     mut next_state: ResMut<NextState<GameState>>,
     mut timeout: ResMut<StartMatchDelay>,
-    config_handle: Res<config::NetworkConfigHandle>,
-    config_assets: Res<Assets<config::NetworkConfig>>,
+    assets: Res<config::NetworkAssets>,
+    configs: Res<Assets<config::NetworkConfig>>,
     args: Res<crate::Args>,
     time: Res<Time>,
 ) -> Result {
@@ -170,8 +166,8 @@ fn wait_start_match(
         return Ok(());
     }
 
-    let config = config_assets
-        .get(config_handle.0.id())
+    let config = configs
+        .get(&assets.config)
         .ok_or(BevyError::from("Couldn't get NetworkConfig"))?;
 
     let players = socket.players();

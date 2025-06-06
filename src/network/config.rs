@@ -1,4 +1,11 @@
 use bevy::prelude::*;
+use bevy_asset_loader::asset_collection::AssetCollection;
+
+#[derive(AssetCollection, Resource)]
+pub struct NetworkAssets {
+    #[asset(path = "config/config.network.ron")]
+    pub config: Handle<NetworkConfig>,
+}
 
 #[serde_with::serde_as]
 #[derive(Asset, TypePath, serde::Deserialize)]
@@ -26,14 +33,6 @@ pub struct NetworkConfig {
 pub enum DesyncDetectionConfig {
     On { interval: u32 },
     Off,
-}
-
-#[derive(Resource)]
-pub struct NetworkConfigHandle(pub Handle<NetworkConfig>);
-
-pub fn load_network_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let network_config = NetworkConfigHandle(asset_server.load("config/network.ron"));
-    commands.insert_resource(network_config);
 }
 
 impl Default for NetworkConfig {
