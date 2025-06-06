@@ -1,0 +1,26 @@
+SkinConfig (
+    idle: (
+        rows: 1,
+        columns: 6,
+        spritesheet: "img/player_skins/laika/idle.png",
+        frame_duration: 0.1,
+    ),
+    run: (
+        rows: 1,
+        columns: 8,
+        spritesheet: "img/player_skins/laika/run.png",
+        frame_duration: 0.0625,
+    ),
+    jump: (
+        rows: 1,
+        columns: 3,
+        spritesheet: "img/player_skins/laika/jump.png",
+        frame_duration: 0.04,
+    ),
+    fall: (
+        rows: 1,
+        columns: 6,
+        spritesheet: "img/player_skins/laika/fall.png",
+        frame_duration: 0.125,
+    ),
+)

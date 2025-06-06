@@ -1,6 +1,6 @@
 use super::{
     PlanetCollision, Player, PlayerAction,
-    skin::{PLAYER_SKIN_SCALE, SkinAnimationsHandle},
+    skin::{PLAYER_SKIN_SCALE, Skin, SkinHandle},
 };
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
@@ -44,20 +44,25 @@ fn update_sprite_texture(
     mut query: Query<
         (
             &PlayerAnimationState,
-            &SkinAnimationsHandle,
+            &SkinHandle,
             &mut Sprite,
             &mut spritesheet::AnimationIndices,
             &mut spritesheet::AnimationTimer,
         ),
         Changed<PlayerAnimationState>,
     >,
-) {
-    for (state, animations, mut sprite, mut indices, mut timer) in query.iter_mut() {
+    skins: Res<Assets<Skin>>,
+) -> Result {
+    for (state, skin_handle, mut sprite, mut indices, mut timer) in query.iter_mut() {
+        let skin = skins
+            .get(&skin_handle.0)
+            .ok_or(BevyError::from("Failed to get Skin from SkinHandle"))?;
+
         let anim_handle = match state {
-            PlayerAnimationState::Idle => &animations.idle,
-            PlayerAnimationState::Run => &animations.run,
-            PlayerAnimationState::Jump(_) => &animations.jump,
-            PlayerAnimationState::Fall => &animations.fall,
+            PlayerAnimationState::Idle => &skin.idle,
+            PlayerAnimationState::Run => &skin.run,
+            PlayerAnimationState::Jump(_) => &skin.jump,
+            PlayerAnimationState::Fall => &skin.fall,
         };
         sprite.image = anim_handle.texture.clone();
         *indices = anim_handle.indices.clone();
@@ -69,21 +74,28 @@ fn update_sprite_texture(
             warn!("No atlas attached to sprite");
         }
     }
+
+    Ok(())
 }
 
 fn update_animation_state(
     mut query: Query<
         (
             &mut PlayerAnimationState,
-            &SkinAnimationsHandle,
+            &SkinHandle,
             &ActionState<PlayerAction>,
             &PlanetCollision,
         ),
         With<Player>,
     >,
+    skins: Res<Assets<Skin>>,
     time: Res<Time>,
-) {
-    for (mut state, anims, inputs, planet_collision) in query.iter_mut() {
+) -> Result {
+    for (mut state, skin_handle, inputs, planet_collision) in query.iter_mut() {
+        let skin = skins
+            .get(&skin_handle.0)
+            .ok_or(BevyError::from("Failed to get Skin from SkinHandle"))?;
+
         if let PlayerAnimationState::Jump(timer) = state.bypass_change_detection() {
             timer.tick(time.delta());
             if !timer.just_finished() {
@@ -95,7 +107,7 @@ fn update_animation_state(
         let new_state = if !planet_collision.collides {
             PlayerAnimationState::Fall
         } else if inputs.just_pressed(&PlayerAction::Jump) {
-            let timer = Timer::new(anims.jump.duration, TimerMode::Once);
+            let timer = Timer::new(skin.jump.duration, TimerMode::Once);
             PlayerAnimationState::Jump(timer)
         } else if inputs.pressed(&PlayerAction::Right) || inputs.pressed(&PlayerAction::Left) {
             PlayerAnimationState::Run
@@ -107,6 +119,8 @@ fn update_animation_state(
             *state = new_state;
         }
     }
+
+    Ok(())
 }
 
 fn update_orientation(mut query: Query<(&mut Transform, &ActionState<PlayerAction>)>) {

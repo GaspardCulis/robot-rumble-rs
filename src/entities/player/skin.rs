@@ -1,6 +1,6 @@
-use bevy::prelude::*;
-use bevy_common_assets::ron::RonAssetPlugin;
-use std::{collections::HashMap, time::Duration};
+use bevy::{ecs::system::SystemState, platform::collections::HashMap, prelude::*};
+use bevy_asset_loader::prelude::*;
+use std::time::Duration;
 
 use crate::{core::physics::Position, utils::spritesheet};
 
@@ -9,38 +9,49 @@ use super::{Player, PlayerSkin};
 pub const PLAYER_SKIN_SCALE: f32 = 2.4;
 pub const PLAYER_SKIN_ZINDEX: f32 = 10.0;
 
-#[derive(serde::Deserialize, Asset, TypePath, Deref)]
-struct SkinsConfig(HashMap<String, AnimationsConfig>);
-
-#[derive(serde::Deserialize)]
-struct AnimationsConfig {
-    idle: Animation,
-    run: Animation,
-    jump: Animation,
-    fall: Animation,
+#[derive(AssetCollection, Resource, Clone)]
+/// Temporary assets holding skin config only
+pub struct SkinConfigAssets {
+    #[asset(path = "config/skins", collection(mapped, typed))]
+    skins: HashMap<AssetFileStem, Handle<SkinConfig>>,
 }
 
-#[derive(serde::Deserialize)]
-struct Animation {
-    rows: u32,
-    columns: u32,
-    spritesheet: String,
-    frame_duration: f32,
+#[derive(serde::Deserialize, Asset, TypePath, Clone, Debug)]
+/// Skin config format
+pub struct SkinConfig {
+    pub idle: AnimationConfig,
+    pub run: AnimationConfig,
+    pub jump: AnimationConfig,
+    pub fall: AnimationConfig,
 }
 
-#[derive(Resource)]
-struct SkinConfigHandle(pub Handle<SkinsConfig>);
+#[derive(serde::Deserialize, Reflect, Clone, Debug)]
+/// Config format for a specific Skin state
+pub struct AnimationConfig {
+    pub rows: u32,
+    pub columns: u32,
+    pub spritesheet: String,
+    pub frame_duration: f32,
+}
 
-#[derive(Component, Reflect)]
-pub struct SkinAnimationsHandle {
-    pub idle: AnimationHandle,
-    pub run: AnimationHandle,
-    pub jump: AnimationHandle,
-    pub fall: AnimationHandle,
+#[derive(Resource, Reflect)]
+/// The actual loaded skin assets. Key is the skin file name stem.
+pub struct SkinAssets {
+    skins: HashMap<String, Handle<Skin>>,
+}
+
+#[derive(Asset, Reflect)]
+/// The asset holding all the skin informations
+pub struct Skin {
+    pub idle: SkinAnimation,
+    pub run: SkinAnimation,
+    pub jump: SkinAnimation,
+    pub fall: SkinAnimation,
 }
 
 #[derive(Reflect)]
-pub struct AnimationHandle {
+/// Holds a specific skin state informations
+pub struct SkinAnimation {
     pub texture: Handle<Image>,
     pub atlas_layout: Handle<TextureAtlasLayout>,
     pub indices: spritesheet::AnimationIndices,
@@ -48,17 +59,19 @@ pub struct AnimationHandle {
     pub duration: Duration,
 }
 
+#[derive(Component, Debug, Reflect)]
+/// Component holding a reference to a specific Skin asset
+pub struct SkinHandle(pub Handle<Skin>);
+
 pub struct SkinPlugin;
 impl Plugin for SkinPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<SkinAnimationsHandle>()
-            .add_plugins(RonAssetPlugin::<SkinsConfig>::new(&[]))
+        app.register_type::<Skin>()
             .add_plugins(spritesheet::AnimatedSpritePlugin)
-            .add_systems(Startup, load_skin_config)
             .add_systems(
                 Update,
                 (
-                    load_skin_on_player,
+                    load_skin_on_player.run_if(resource_exists::<SkinAssets>),
                     #[cfg(feature = "dev_tools")]
                     handle_config_reload,
                 ),
@@ -66,39 +79,17 @@ impl Plugin for SkinPlugin {
     }
 }
 
-fn load_skin_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    info!("Loading skins config");
-    let skin_config: Handle<SkinsConfig> = asset_server.load("config/skins.ron");
-    commands.insert_resource(SkinConfigHandle(skin_config));
-}
-
 fn load_skin_on_player(
     mut commands: Commands,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     query: Query<(Entity, &PlayerSkin, &Position), (With<Player>, Without<Sprite>)>,
-    config_handle: Res<SkinConfigHandle>,
-    skins_config: Res<Assets<SkinsConfig>>,
-    asset_server: Res<AssetServer>,
+    assets: Res<SkinAssets>,
+    skins: Res<Assets<Skin>>,
 ) {
     for (player_entity, player_skin, player_position) in query.iter() {
         info!("Loading skin animations for {:?}", player_entity);
-        if let Some(skin_config) = skins_config.get(config_handle.0.id()) {
-            if let Some(skin) = skin_config.get(&player_skin.0) {
-                let animations_handle = SkinAnimationsHandle {
-                    idle: skin
-                        .idle
-                        .build_handle(&asset_server, &mut texture_atlas_layouts),
-                    run: skin
-                        .run
-                        .build_handle(&asset_server, &mut texture_atlas_layouts),
-                    jump: skin
-                        .jump
-                        .build_handle(&asset_server, &mut texture_atlas_layouts),
-                    fall: skin
-                        .fall
-                        .build_handle(&asset_server, &mut texture_atlas_layouts),
-                };
-                let default_anim = &animations_handle.idle;
+        if let Some(skin_handle) = assets.skins.get(&player_skin.0) {
+            if let Some(skin) = skins.get(skin_handle) {
+                let default_anim = &skin.idle;
 
                 commands.entity(player_entity).insert((
                     Sprite::from_atlas_image(
@@ -111,15 +102,15 @@ fn load_skin_on_player(
                     Transform::from_scale(Vec3::splat(PLAYER_SKIN_SCALE)).with_translation(
                         Vec3::new(player_position.0.x, player_position.0.y, PLAYER_SKIN_ZINDEX),
                     ),
+                    SkinHandle(skin_handle.clone()),
                     default_anim.indices.clone(),
                     default_anim.timer.clone(),
-                    animations_handle,
                 ));
             } else {
-                warn!("Received invalid player skin id: {}", player_skin.0);
+                error!("Skin config not loaded yet, should not happen!");
             };
         } else {
-            warn!("Skin config not loaded yet");
+            warn!("Received invalid player skin id: {}", player_skin.0);
         }
     }
 }
@@ -127,7 +118,7 @@ fn load_skin_on_player(
 #[cfg(feature = "dev_tools")]
 fn handle_config_reload(
     mut commands: Commands,
-    mut events: EventReader<AssetEvent<SkinsConfig>>,
+    mut events: EventReader<AssetEvent<Skin>>,
     players: Query<Entity, (With<Player>, With<PlayerSkin>, With<Sprite>)>,
 ) {
     for event in events.read() {
@@ -139,13 +130,44 @@ fn handle_config_reload(
     }
 }
 
-impl Animation {
-    fn build_handle(
+impl FromWorld for SkinAssets {
+    fn from_world(world: &mut World) -> Self {
+        let mut system_state = SystemState::<(
+            ResMut<Assets<TextureAtlasLayout>>,
+            Res<Assets<SkinConfig>>,
+            Res<SkinConfigAssets>,
+            Res<AssetServer>,
+        )>::new(world);
+        let (mut layouts, configs, assets, asset_server) = system_state.get_mut(world);
+
+        let skins = assets
+            .skins
+            .iter()
+            .map(|(name, skin)| {
+                let config = configs.get(skin).unwrap();
+
+                let skin = Skin {
+                    idle: config.idle.build(&asset_server, &mut layouts),
+                    run: config.run.build(&asset_server, &mut layouts),
+                    jump: config.jump.build(&asset_server, &mut layouts),
+                    fall: config.fall.build(&asset_server, &mut layouts),
+                };
+
+                (name.clone().into(), asset_server.add(skin))
+            })
+            .collect();
+
+        Self { skins }
+    }
+}
+
+impl AnimationConfig {
+    fn build(
         &self,
         asset_server: &Res<AssetServer>,
         texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
-    ) -> AnimationHandle {
-        let texture = asset_server.load(self.spritesheet.clone());
+    ) -> SkinAnimation {
+        let texture = asset_server.load(&self.spritesheet);
         let layout =
             TextureAtlasLayout::from_grid(UVec2::splat(32), self.columns, self.rows, None, None);
         let atlas_layout = texture_atlas_layouts.add(layout);
@@ -160,7 +182,7 @@ impl Animation {
         let duration =
             Duration::from_secs_f32(self.frame_duration * (self.columns * self.rows) as f32);
 
-        AnimationHandle {
+        SkinAnimation {
             texture,
             atlas_layout,
             indices,

@@ -33,6 +33,7 @@ fn main() {
             })
             .build(),
     )
+    .add_plugins(assets::AssetsPlugin)
     .add_plugins(core::CorePlugins)
     .add_plugins(entities::EntitiesPlugins)
     .add_plugins(level::LevelPlugins)

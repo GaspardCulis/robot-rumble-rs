@@ -1,11 +1,19 @@
 use bevy::{platform::collections::HashMap, prelude::*};
-
-#[derive(serde::Deserialize, Asset, TypePath)]
-pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
+use bevy_asset_loader::asset_collection::AssetCollection;
 
 // TODO: add a config file
 pub static BLACKHOLE_RADIUS: u32 = 60;
 pub static BH_BULLET_DECAY_TIME: f32 = 0.5;
+
+#[derive(AssetCollection, Resource)]
+pub struct ProjectilesAssets {
+    #[asset(path = "config/config.projectiles.ron")]
+    pub config: Handle<ProjectilesConfig>,
+}
+
+#[derive(serde::Deserialize, Asset, TypePath)]
+pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
+
 #[derive(
     Component, Default, Reflect, Clone, Copy, Debug, Hash, PartialEq, Eq, serde::Deserialize,
 )]

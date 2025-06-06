@@ -1,11 +1,3 @@
-use bevy::prelude::*;
-use bevy_common_assets::ron::RonAssetPlugin;
-use bevy_ggrs::GgrsSchedule;
-pub mod config;
-pub use config::{Projectile, ProjectilesConfig};
-#[derive(Resource)]
-pub struct ProjectilesConfigHandle(pub Handle<config::ProjectilesConfig>);
-
 use super::{planet::Planet, player::Player};
 use crate::{
     core::{
@@ -15,6 +7,12 @@ use crate::{
     },
     entities::player::Percentage,
 };
+use bevy::prelude::*;
+use bevy_ggrs::GgrsSchedule;
+
+pub mod config;
+use config::ProjectilesAssets;
+pub use config::{Projectile, ProjectilesConfig};
 
 type PlanetCollision = CollisionState<Projectile, Planet>;
 type PlayerCollision = CollisionState<Projectile, Player>;
@@ -50,20 +48,13 @@ impl Plugin for ProjectilePlugin {
             .register_required_components_with::<Projectile, Passive>(|| Passive)
             .register_required_components_with::<Projectile, Name>(|| Name::new("Projectile"))
             .add_event::<ProjectileDecayedEvent>()
-            .add_plugins(RonAssetPlugin::<config::ProjectilesConfig>::new(&[]))
             .add_plugins(CollisionPlugin::<Projectile, Planet>::new())
             .add_plugins(CollisionPlugin::<Projectile, Player>::new())
-            .add_systems(Startup, load_projectiles_config)
             .add_systems(
                 Update,
-                (
-                    #[cfg(feature = "dev_tools")]
-                    handle_config_reload,
-                    add_sprite,
-                    rotate_sprite,
-                )
+                (add_sprite, rotate_sprite)
                     .chain()
-                    .run_if(resource_exists::<ProjectilesConfigHandle>),
+                    .run_if(resource_exists::<ProjectilesAssets>),
             )
             .add_systems(
                 GgrsSchedule,
@@ -81,20 +72,13 @@ impl Plugin for ProjectilePlugin {
     }
 }
 
-fn load_projectiles_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let projectiles_config = ProjectilesConfigHandle(asset_server.load("config/projectiles.ron"));
-    commands.insert_resource(projectiles_config);
-}
-
 fn add_physical_properties(
     mut commands: Commands,
     query: Query<(Entity, &Projectile), Without<Mass>>,
-    config_handle: Res<ProjectilesConfigHandle>,
-    config_assets: Res<Assets<ProjectilesConfig>>,
+    assets: Res<ProjectilesAssets>,
+    configs: Res<Assets<ProjectilesConfig>>,
 ) {
-    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
-        c
-    } else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Couldn't load ProjectileConfig");
         return;
     };
@@ -113,14 +97,12 @@ fn add_physical_properties(
 fn add_sprite(
     mut commands: Commands,
     query: Query<(Entity, &Projectile), Without<Sprite>>,
-    config_handle: Res<ProjectilesConfigHandle>,
-    config_assets: Res<Assets<config::ProjectilesConfig>>,
+    assets: Res<ProjectilesAssets>,
+    configs: Res<Assets<ProjectilesConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
-        c
-    } else {
-        warn!("Couldn't load ProjectilesConfig");
+    let Some(config) = configs.get(&assets.config) else {
+        warn!("Couldn't load ProjectileConfig");
         return;
     };
 
@@ -214,22 +196,5 @@ fn check_player_collisions(
         }
 
         commands.entity(projectile).despawn();
-    }
-}
-
-#[cfg(feature = "dev_tools")]
-fn handle_config_reload(
-    mut commands: Commands,
-    mut events: EventReader<AssetEvent<config::ProjectilesConfig>>,
-    projectiles: Query<Entity, With<Sprite>>,
-) {
-    for event in events.read() {
-        if let AssetEvent::Modified { id: _ } = event {
-            for projectile in projectiles.iter() {
-                commands.entity(projectile).remove::<Sprite>();
-                commands.entity(projectile).remove::<Mass>();
-                commands.entity(projectile).remove::<Damage>();
-            }
-        };
     }
 }
