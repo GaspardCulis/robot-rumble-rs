@@ -7,13 +7,14 @@ use rand::Rng as _;
 
 use crate::{
     GameState,
-    core::{camera::CameraFollowTarget, collision, physics, worldgen},
+    core::{camera::CameraFollowTarget, collision, gravity, physics, worldgen},
     entities::{
-        planet,
+        blackhole, planet,
         player::{self, Player, PlayerAction, weapon},
         projectile,
         satellite::{grabber, graviton},
     },
+    level::save,
 };
 use synctest::{
     checksum_position, handle_ggrs_events, p2p_mode, spawn_synctest_players,
@@ -39,14 +40,19 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Position>()
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
+            .rollback_component_with_clone::<gravity::Mass>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
+            .rollback_component_with_clone::<player::Percentage>()
             .rollback_immutable_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
+            .rollback_component_with_clone::<projectile::Damage>()
             .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
             .rollback_component_with_clone::<graviton::Orbited>()
+            .rollback_component_with_clone::<projectile::DecayTimer>()
+            .rollback_component_with_copy::<blackhole::BlackHole>()
             // Collisions
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
@@ -182,9 +188,17 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
 
 fn generate_world(
     mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>,
+    mut load_level_save_events: EventWriter<save::LoadLevelSaveEvent>,
+    args: Res<crate::Args>,
     seed: Res<SessionSeed>,
 ) {
-    worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
+    if let Some(level_path) = &args.level_path {
+        load_level_save_events.write(save::LoadLevelSaveEvent {
+            path: level_path.clone(),
+        });
+    } else {
+        worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
+    }
 }
 
 fn add_local_player_components(

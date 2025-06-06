@@ -3,12 +3,16 @@ use bevy::{platform::collections::HashMap, prelude::*};
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
 
+// TODO: add a config file
+pub static BLACKHOLE_RADIUS: u32 = 60;
+pub static BH_BULLET_DECAY_TIME: f32 = 0.5;
 #[derive(
     Component, Default, Reflect, Clone, Copy, Debug, Hash, PartialEq, Eq, serde::Deserialize,
 )]
 pub enum Projectile {
     #[default]
     Bullet,
+    Blackhole,
     Rocket,
     Laser,
     ShockWave,

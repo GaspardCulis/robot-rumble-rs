@@ -165,6 +165,7 @@ fn handle_genworld_event(
                 if far_from_planets && far_from_satellites {
                     satellite_spawn_events.write(SpawnSatelliteEvent {
                         position: position.clone(),
+                        // FIX: Config file or constant, will be done when we have better sprites
                         scale: 0.7,
                         kind,
                     });
