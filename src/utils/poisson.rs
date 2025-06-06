@@ -2,7 +2,25 @@ use bevy::{log::warn, math::Vec2};
 use fast_poisson::Poisson;
 use rand_xoshiro::Xoshiro256PlusPlus;
 
-pub fn poisson_disk_sampling_circle(
+/// Generates `n` Poisson Disk points within a square bounding box of size `bounding_radius * 2`.
+///
+/// Points will be at least `min_distance` apart. Up to `max_attempts` are performed.
+///
+/// # Note
+/// The resulting points are **not automatically centered around (0, 0)**.
+///
+/// # Arguments
+/// * `bounding_radius` - Half of the box size; after centering, points will be in [-bounding_radius, +bounding_radius].
+/// * `min_distance` - Minimum distance between points.
+/// * `max_attempts` - Maximum number of sampling attempts.
+/// * `seed` - Random seed for deterministic generation.
+/// * `n` - Number of points to generate.
+///
+/// # Returns
+/// A `Vec<Vec2>` of up to `n` valid points
+///
+///
+pub fn poisson_box_sampling(
     bounding_radius: f32,
     min_distance: f32,
     max_attempts: u32,

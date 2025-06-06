@@ -94,13 +94,8 @@ fn handle_genworld_event(
         let num_planets: usize = rng.random_range(config.min_planets..config.max_planets) as usize;
         let effective_radius = (config.edge_radius - config.edge_margin) as f32;
         // Pick cluster centers using Poisson sampling
-        let mut positions = utils::poisson::poisson_disk_sampling_circle(
-            effective_radius,
-            1200.,
-            100,
-            *seed,
-            num_planets,
-        );
+        let mut positions =
+            utils::poisson::poisson_box_sampling(effective_radius, 1200., 100, *seed, num_planets);
         // Translate positions to world coordinates
         positions = positions
             .iter()
