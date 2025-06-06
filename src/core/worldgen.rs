@@ -1,5 +1,3 @@
-use std::f32::consts::PI;
-
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use rand::Rng;
@@ -8,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
+use crate::utils;
 
 use super::physics::Position;
 
@@ -92,38 +91,34 @@ fn handle_genworld_event(
             seed: rng.random(),
         });
 
-        let num_planets: u32 = rng.random_range(config.min_planets..config.max_planets);
-        for i in 0..num_planets {
-            info!("Generating planet [{}/{}]", i + 1, num_planets);
+        let num_planets: usize = rng.random_range(config.min_planets..config.max_planets) as usize;
+        let effective_radius = (config.edge_radius - config.edge_margin) as f32;
+        // Pick cluster centers using Poisson sampling
+        let mut positions = utils::poisson::poisson_disk_sampling_circle(
+            effective_radius,
+            1200.,
+            100,
+            *seed,
+            num_planets,
+        );
+        // Translate positions to world coordinates
+        positions = positions
+            .iter()
+            .map(|pos| *pos - Vec2::splat(effective_radius))
+            // Remove those overlapping with Sun's cluster
+            // TODO: fix this by resampling directly
+            .filter(|pos| pos.length() >= (config.central_star_radius as f32 + 300.))
+            .collect();
 
-            loop {
-                let random_direction = Vec2::from_angle(rng.random_range(-PI..PI));
-                let radius = rng.random_range(config.min_planet_radius..config.max_planet_radius);
-
-                let min_distance_from_center = config.central_star_radius + radius;
-                let max_distance_from_center = config.edge_radius - config.edge_margin - radius;
-
-                let distance = rng.random_range(min_distance_from_center..max_distance_from_center);
-                let position = random_direction * distance as f32;
-
-                let valid = planets.iter().fold(true, |acc, planet| {
-                    let distance_respected = planet.position.0.distance(position)
-                        > (planet.radius.0 + radius + config.min_planet_surface_distance) as f32;
-
-                    acc && distance_respected
-                });
-
-                if valid {
-                    planets.push(SpawnPlanetEvent {
-                        position: Position(position),
-                        radius: Radius(radius),
-                        r#type: PlanetType::Planet,
-                        seed: rng.random(),
-                    });
-
-                    break;
-                }
-            }
+        for position in positions {
+            info!("Generating planet at ({},{})", position.x, position.y);
+            let radius = rng.random_range(config.min_planet_radius..config.max_planet_radius);
+            planets.push(SpawnPlanetEvent {
+                position: Position(position),
+                radius: Radius(radius),
+                r#type: PlanetType::Planet,
+                seed: rng.random(),
+            });
         }
 
         // Générer un certain nombre de satellites
