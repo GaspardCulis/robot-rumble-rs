@@ -52,12 +52,7 @@ impl Plugin for ProjectilePlugin {
             .add_plugins(CollisionPlugin::<Projectile, Player>::new())
             .add_systems(
                 Update,
-                (
-                    #[cfg(feature = "dev_tools")]
-                    handle_config_reload,
-                    add_sprite,
-                    rotate_sprite,
-                )
+                (add_sprite, rotate_sprite)
                     .chain()
                     .run_if(resource_exists::<ProjectilesAssets>),
             )
@@ -201,22 +196,5 @@ fn check_player_collisions(
         }
 
         commands.entity(projectile).despawn();
-    }
-}
-
-#[cfg(feature = "dev_tools")]
-fn handle_config_reload(
-    mut commands: Commands,
-    mut events: EventReader<AssetEvent<config::ProjectilesConfig>>,
-    projectiles: Query<Entity, With<Sprite>>,
-) {
-    for event in events.read() {
-        if let AssetEvent::Modified { id: _ } = event {
-            for projectile in projectiles.iter() {
-                commands.entity(projectile).remove::<Sprite>();
-                commands.entity(projectile).remove::<Mass>();
-                commands.entity(projectile).remove::<Damage>();
-            }
-        };
     }
 }
