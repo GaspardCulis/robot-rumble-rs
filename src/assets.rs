@@ -4,7 +4,11 @@ use bevy_common_assets::ron::RonAssetPlugin;
 
 use crate::{
     core::worldgen,
-    entities::{planet, player::weapon::config as weapon, satellite::assets as satellite},
+    entities::{
+        planet,
+        player::{skin as player_skin, weapon::config as weapon},
+        satellite::assets as satellite,
+    },
 };
 
 /// Responsible for loading all crate's assets, and registering their asset loaders.
@@ -17,6 +21,10 @@ impl Plugin for AssetsPlugin {
         .add_plugins(RonAssetPlugin::<planet::PlanetsConfig>::new(&[
             "planets.ron",
         ]))
+        .init_asset::<player_skin::Skin>()
+        .add_plugins(RonAssetPlugin::<player_skin::SkinConfig>::new(&[
+            "skin.ron",
+        ]))
         .add_plugins(RonAssetPlugin::<weapon::WeaponsConfig>::new(&[
             "weapons.ron",
         ]))
@@ -28,6 +36,8 @@ impl Plugin for AssetsPlugin {
                 .continue_to_state(crate::GameState::MatchMaking)
                 .load_collection::<worldgen::WorldgenAssets>()
                 .load_collection::<planet::PlanetAssets>()
+                .load_collection::<player_skin::SkinConfigAssets>()
+                .finally_init_resource::<player_skin::SkinAssets>()
                 .load_collection::<weapon::WeaponsAssets>()
                 .load_collection::<satellite::SatelliteAssets>(),
         );
