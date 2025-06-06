@@ -210,7 +210,7 @@ fn update_orbiting_players(
 
             let direction = (orbited.center - orbited.entry_pos).normalize_or_zero();
             velocity.0 = direction * orbited.initial_speed * (1.0 - orbited.elapsed);
-        }else{
+        } else {
             position.0 = orbited.center;
             velocity.0 = Vec2::ZERO;
         }
@@ -226,7 +226,7 @@ fn update_orbiting_players(
 
         let angular_speed = std::f32::consts::PI;
         orbited.angle += direction * angular_speed * delta;
-        orbited.angle = orbited.angle.rem_euclid(2.0 * std::f32::consts::PI);        
+        orbited.angle = orbited.angle.rem_euclid(2.0 * std::f32::consts::PI);
 
         // Ejection une fois que le temps est écoulé
         if orbited.time_left <= 0.0 {
