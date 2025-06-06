@@ -7,6 +7,7 @@ use crate::{
     entities::{
         planet,
         player::{skin as player_skin, weapon::config as weapon},
+        projectile::config as projectiles,
         satellite::assets as satellite,
     },
 };
@@ -28,6 +29,9 @@ impl Plugin for AssetsPlugin {
         .add_plugins(RonAssetPlugin::<weapon::WeaponsConfig>::new(&[
             "weapons.ron",
         ]))
+        .add_plugins(RonAssetPlugin::<projectiles::ProjectilesConfig>::new(&[
+            "projectiles.ron",
+        ]))
         .add_plugins(RonAssetPlugin::<satellite::SatelliteConfig>::new(&[
             "satellites.ron",
         ]))
@@ -39,6 +43,7 @@ impl Plugin for AssetsPlugin {
                 .load_collection::<player_skin::SkinConfigAssets>()
                 .finally_init_resource::<player_skin::SkinAssets>()
                 .load_collection::<weapon::WeaponsAssets>()
+                .load_collection::<projectiles::ProjectilesAssets>()
                 .load_collection::<satellite::SatelliteAssets>(),
         );
     }

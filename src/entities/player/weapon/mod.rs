@@ -1,8 +1,8 @@
 use crate::{
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
     entities::projectile::{
-        Damage, DecayTimer, Projectile, ProjectilesConfigHandle, config::BH_BULLET_DECAY_TIME,
-        config::ProjectilesConfig,
+        Damage, DecayTimer, Projectile,
+        config::{BH_BULLET_DECAY_TIME, ProjectilesAssets, ProjectilesConfig},
     },
 };
 use bevy::{math::ops::cos, prelude::*};
@@ -150,17 +150,14 @@ fn fire_weapon_system(
         With<WeaponType>,
     >,
     mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
-    projectile_config_handle: Res<ProjectilesConfigHandle>,
-    projectile_config_assets: Res<Assets<ProjectilesConfig>>,
+    projectiles_assets: Res<ProjectilesAssets>,
+    projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
 ) {
-    let projectile_config =
-        if let Some(c) = projectile_config_assets.get(projectile_config_handle.0.id()) {
-            c
-        } else {
-            warn!("Couldn't load ProjectileConfig");
-            return;
-        };
+    let Some(projectiles_config) = projectiles_configs.get(&projectiles_assets.config) else {
+        warn!("Couldn't load ProjectileConfig");
+        return;
+    };
 
     for (mut state, mut mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut()
     {
@@ -171,7 +168,7 @@ fn fire_weapon_system(
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
-                if let Some(projectile_config) = projectile_config.0.get(&stats.projectile) {
+                if let Some(projectile_config) = projectiles_config.0.get(&stats.projectile) {
                     let projectile_stats = &projectile_config.stats;
                     let random_angle = rng.random_range(-stats.spread..stats.spread);
 
