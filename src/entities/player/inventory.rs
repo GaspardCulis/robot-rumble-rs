@@ -6,8 +6,11 @@ use crate::core::physics;
 
 use super::{Player, PlayerAction, Weapon, weapon::config::WeaponType};
 
-const DEFAULT_ARSENAL: [WeaponType; 3] =
-    [WeaponType::Pistol, WeaponType::Shotgun, WeaponType::Rifle];
+const DEFAULT_ARSENAL: [WeaponType; 3] = [
+    WeaponType::BlackholeGun,
+    WeaponType::Shotgun,
+    WeaponType::Rifle,
+];
 
 #[derive(Component, Debug, Reflect)]
 pub struct Arsenal(pub Vec<(WeaponType, Entity)>);

@@ -5,13 +5,13 @@ use bevy_asset_loader::prelude::*;
 pub struct SatelliteAssets {
     #[asset(path = "config/config.satellites.ron")]
     pub config: Handle<SatelliteConfig>,
-    #[asset(path = "skins/satellite/working_graviton.png")]
+    #[asset(path = "img/satellites/working_graviton.png")]
     pub working_graviton: Handle<Image>,
-    #[asset(path = "skins/satellite/destroyed_graviton.png")]
+    #[asset(path = "img/satellites/destroyed_graviton.png")]
     pub destroyed_graviton: Handle<Image>,
-    #[asset(path = "skins/satellite/working_bumper.png")]
+    #[asset(path = "img/satellites/working_bumper.png")]
     pub working_bumper: Handle<Image>,
-    #[asset(path = "skins/satellite/working_grabber.png")]
+    #[asset(path = "img/satellites/working_grabber.png")]
     pub working_grabber: Handle<Image>,
 }
 

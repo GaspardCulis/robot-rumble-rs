@@ -10,7 +10,7 @@ use rand::{SeedableRng, seq::IndexedRandom as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 mod config;
-mod materials;
+pub mod materials;
 
 pub use config::*;
 use materials::*;

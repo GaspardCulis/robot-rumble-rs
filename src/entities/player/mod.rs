@@ -39,10 +39,14 @@ type PlanetCollision = CollisionState<Player, planet::Planet>;
     CollisionShape::Circle(PLAYER_RADIUS),
     PlayerSkin("laika".into()),
     Name::new("Player"),
+    Percentage::default(),
 )]
 pub struct Player {
     pub handle: usize,
 }
+
+#[derive(Component, Clone, Debug, Default, Reflect)]
+pub struct Percentage(pub f32);
 
 #[derive(Component, Clone, Debug, Default, PartialEq, Reflect, Deref)]
 pub struct PlayerInputVelocity(Vec2);
@@ -79,6 +83,7 @@ impl Plugin for PlayerPlugin {
             .register_type::<PlayerInputVelocity>()
             .register_type::<PlayerSkin>()
             .register_type::<Weapon>()
+            .register_type::<Percentage>()
             .add_plugins(CollisionPlugin::<Player, planet::Planet>::new())
             .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(animation::PlayerAnimationPlugin)

@@ -11,9 +11,9 @@ use crate::{
 };
 
 #[derive(Resource, Reflect)]
-struct MapLimit {
+pub struct MapLimit {
     // TODO: Reconsider using existing Radius component
-    radius: f32,
+    pub radius: f32,
     /// Precomputed for performance optimizations
     radius_squared: f32,
 }
