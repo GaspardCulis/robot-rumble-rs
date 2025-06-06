@@ -218,7 +218,7 @@ fn fire_weapon_system(
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<config::WeaponsConfig>>,
-    weapons: Query<Entity, Or<(With<WeaponStats>, With<Sprite>)>>,
+    weapons: Query<Entity, (With<WeaponStats>, With<Sprite>)>,
 ) {
     for event in events.read() {
         if let AssetEvent::Modified { id: _ } = event {
