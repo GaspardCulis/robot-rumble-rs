@@ -354,7 +354,7 @@ fn trigger_reload_animation(
         };
         let to = 1.0;
 
-        let duration = stats.reload_time; // ou stats.reload_time selon ton modèle
+        let duration = stats.reload_time; 
 
         commands.entity(entity).insert(AmmoReloadAnimation {
             from,
@@ -371,6 +371,9 @@ fn animate_ammo_reload(
     mut query: Query<(&mut AmmoReloadAnimation, &mut Node, Entity), With<AmmoBackground>>,
     mut black_bar_query: Query<&mut Node, (With<BlackBar>, Without<AmmoBackground>)>,
     mut commands: Commands,
+    input_query: Query<&ActionState<PlayerAction>>,
+    weapon_query: Query<&Weapon, With<Player>>,
+    weapon_state_query: Query<&WeaponState>,
 ) {
     for (mut anim, mut node, entity) in query.iter_mut() {
 
@@ -384,7 +387,22 @@ fn animate_ammo_reload(
             black_bar.height = Val::Percent((1.0 - percent) * 100.0);
         }
 
-        // Optionally, remove the animation component when done
+        let Ok(input) = input_query.single() else { return; };
+
+        let shoot_pressed = input.just_pressed(&PlayerAction::Shoot);
+
+        // Check ammo remaining
+        let mut ammo_nonzero = false;
+        if let Ok(weapon) = weapon_query.single() {
+            if let Ok(state) = weapon_state_query.get(weapon.0) {
+                ammo_nonzero = state.current_ammo != 0;
+            }
+        }
+
+        if shoot_pressed && ammo_nonzero {
+            commands.entity(entity).remove::<AmmoReloadAnimation>();
+        }
+
         if anim.timer.finished() {
             node.height = Val::Percent(anim.to * 100.0);
             if let Ok(mut black_bar) = black_bar_query.single_mut() {
