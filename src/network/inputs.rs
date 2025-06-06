@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::{
     core::physics::PhysicsSet,
     entities::player::{Player, PlayerAction},
@@ -11,8 +13,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub struct NetworkInputs {
     keys: u32, // FIX: Make smaller when https://github.com/gschup/bevy_ggrs#119 is fixed
-    pointer_direction: Vec2,
+    pointer_direction: AlwaysEqWrapper<Vec2>,
 }
+
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, Deref, DerefMut)]
+pub struct AlwaysEqWrapper<T>(T);
 
 const INPUT_UP: u32 = 1 << 0;
 const INPUT_DOWN: u32 = 1 << 1;
@@ -103,12 +108,7 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
 
         NetworkInputs {
             keys,
-            // Avoids rollbacks for other peers as pointer_direction cannot be predicted
-            pointer_direction: if keys & INPUT_SHOOT != 0 {
-                self.axis_pair(&PlayerAction::PointerDirection)
-            } else {
-                Vec2::ZERO
-            },
+            pointer_direction: self.axis_pair(&PlayerAction::PointerDirection).into(),
         }
     }
 
@@ -154,7 +154,10 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
             action_state.press(&PlayerAction::RopeRetract);
         }
 
-        action_state.set_axis_pair(&PlayerAction::PointerDirection, input.pointer_direction);
+        action_state.set_axis_pair(
+            &PlayerAction::PointerDirection,
+            *input.pointer_direction.deref(),
+        );
 
         action_state
     }
@@ -186,4 +189,17 @@ fn update_local_pointer_direction(
     }
 
     Ok(())
+}
+
+impl<T> PartialEq for AlwaysEqWrapper<T> {
+    /// Tiny hack to not rollback certain kind of inputs even if different
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+
+impl<T> From<T> for AlwaysEqWrapper<T> {
+    fn from(value: T) -> Self {
+        Self(value)
+    }
 }
