@@ -1,6 +1,6 @@
 use crate::{
     core::physics::PhysicsSet,
-    entities::player::{Player, PlayerAction, Weapon, weapon},
+    entities::player::{Player, PlayerAction},
     network::SessionConfig,
 };
 use bevy::{platform::collections::HashMap, prelude::*};
@@ -43,28 +43,19 @@ impl Plugin for NetworkInputsPlugin {
 
 fn read_local_inputs(
     mut commands: Commands,
-    query: Query<(&Player, &ActionState<PlayerAction>, &Weapon)>,
-    weapon_query: Query<&weapon::WeaponState>,
+    query: Query<(&Player, &ActionState<PlayerAction>)>,
     local_players: Res<LocalPlayers>,
 ) {
     let mut local_inputs = HashMap::new();
 
-    for (player, action_state, weapon) in query.iter() {
+    for (player, action_state) in query.iter() {
         let handle = player.handle;
 
         if !local_players.0.contains(&handle) {
             continue;
         }
 
-        let mut input = action_state.as_ggrs_session_input();
-
-        // Avoids rollbacks for other peers as pointer_direction cannot be predicted
-        if let Some(weapon_state) = weapon_query.get(weapon.0).ok() {
-            if !(weapon_state.can_fire() && action_state.pressed(&PlayerAction::Shoot)) {
-                input.keys = input.keys & !INPUT_SHOOT;
-                input.pointer_direction = Vec2::ZERO;
-            }
-        }
+        let input = action_state.as_ggrs_session_input();
 
         local_inputs.insert(handle, input);
     }
@@ -112,7 +103,12 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
 
         NetworkInputs {
             keys,
-            pointer_direction: self.axis_pair(&PlayerAction::PointerDirection),
+            // Avoids rollbacks for other peers as pointer_direction cannot be predicted
+            pointer_direction: if keys & INPUT_SHOOT != 0 {
+                self.axis_pair(&PlayerAction::PointerDirection)
+            } else {
+                Vec2::ZERO
+            },
         }
     }
 
