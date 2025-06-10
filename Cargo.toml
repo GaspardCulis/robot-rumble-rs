@@ -55,6 +55,9 @@ features = [
   "async_executor",
   "configurable_error_handler",
 
+  "android-native-activity",
+  "android_shared_stdcxx",
+
   "multi_threaded",
   "bevy_asset",
   "bevy_audio",
