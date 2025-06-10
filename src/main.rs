@@ -9,6 +9,8 @@ use clap::Parser as _;
 
 use robot_rumble::*;
 
+// The `bevy_main` proc_macro generates the required boilerplate for Android
+#[bevy_main]
 fn main() {
     let args = Args::parse();
     let mut app = App::new();
