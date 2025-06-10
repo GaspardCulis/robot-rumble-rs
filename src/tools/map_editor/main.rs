@@ -11,6 +11,7 @@ mod model;
 mod utils;
 mod view;
 
+#[bevy_main]
 fn main() {
     // Avoid some crashes/hangups when EGui context is `get_mut` when window closes
     GLOBAL_ERROR_HANDLER
