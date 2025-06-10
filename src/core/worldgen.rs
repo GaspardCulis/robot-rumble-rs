@@ -4,6 +4,7 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
+use crate::core::voronoi::{VoronoiGeneratedEvent, build_voronoi_diagram};
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
 use crate::utils;
@@ -73,6 +74,7 @@ fn handle_genworld_event(
     mut events: EventReader<GenerateWorldEvent>,
     mut planet_spawn_events: EventWriter<SpawnPlanetEvent>,
     mut satellite_spawn_events: EventWriter<SpawnSatelliteEvent>,
+    mut voronoi_drawing_event: EventWriter<VoronoiGeneratedEvent>,
     config_handle: Res<WorldgenConfigHandle>,
     configs: Res<Assets<WorldgenConfig>>,
 ) {
@@ -108,6 +110,18 @@ fn handle_genworld_event(
             // Remove those overlapping with Sun's cluster
             // TODO: fix this by resampling directly
             .filter(|pos| pos.length() >= (config.central_star_radius as f32 + 300.))
+            .collect();
+        // Build a Voronoi diagram
+        let diagram = build_voronoi_diagram(positions, 2.0 * config.edge_radius as f64, 10);
+        voronoi_drawing_event.write(VoronoiGeneratedEvent {
+            diagram: diagram.clone(),
+        });
+
+        // updated moved centers:
+        positions = diagram
+            .sites()
+            .iter()
+            .map(|site| Vec2::new(site.x as f32, site.y as f32))
             .collect();
 
         for position in positions {

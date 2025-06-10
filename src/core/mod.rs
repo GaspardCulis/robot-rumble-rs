@@ -5,6 +5,7 @@ pub mod camera;
 pub mod collision;
 pub mod gravity;
 pub mod physics;
+pub mod voronoi;
 pub mod worldgen;
 
 pub struct CorePlugins;
@@ -14,6 +15,7 @@ impl Plugin for CorePlugins {
             .add_plugins(camera::CameraPlugin)
             .add_plugins(gravity::GravityPlugin)
             .add_plugins(physics::PhysicsPlugin)
-            .add_plugins(worldgen::WorldgenPlugin);
+            .add_plugins(worldgen::WorldgenPlugin)
+            .add_plugins(voronoi::VoronoPlugin);
     }
 }
