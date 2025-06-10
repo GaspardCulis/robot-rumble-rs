@@ -112,6 +112,8 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
     .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN)
     // Gamepad
     .with_multiple([
+        (PlayerAction::Right, GamepadButton::DPadRight),
+        (PlayerAction::Left, GamepadButton::DPadLeft),
         (PlayerAction::Jump, GamepadButton::South),
         (PlayerAction::Reload, GamepadButton::West),
         (PlayerAction::Interact, GamepadButton::East),
