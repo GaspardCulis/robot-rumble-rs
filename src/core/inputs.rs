@@ -1,0 +1,115 @@
+use bevy::prelude::*;
+use bevy_ggrs::LocalPlayers;
+use leafwing_input_manager::prelude::*;
+
+use crate::entities::player::Player;
+
+pub type PlayerActionState = ActionState<PlayerAction>;
+
+#[derive(Actionlike, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
+pub enum PlayerAction {
+    Jump,
+    Sneak,
+    Left,
+    Right,
+    Shoot,
+    Slot1,
+    Slot2,
+    Slot3,
+    #[actionlike(DualAxis)]
+    PointerDirection,
+    Reload,
+    Interact,
+    RopeExtend,
+    RopeRetract,
+}
+
+pub struct InputsPlugin;
+impl Plugin for InputsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
+            .add_systems(
+                Update,
+                (
+                    update_gamepad_shoot_input, // Running it before `ulpd` ensures it only affects shoot input if a gamepad acts on `ShootDirection`
+                    update_local_pointer_direction,
+                )
+                    .chain(),
+            );
+    }
+}
+
+fn update_local_pointer_direction(
+    mut player_query: Query<(&Player, &GlobalTransform, &mut PlayerActionState)>,
+    windows: Query<&Window>,
+    query_view: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
+    local_players: Res<LocalPlayers>,
+) -> Result {
+    let window = windows.single()?;
+    let (camera, view) = query_view.single()?;
+    if let Some(world_position) = window
+        .cursor_position()
+        .map(|cursor| camera.viewport_to_world_2d(view, cursor).unwrap())
+    {
+        for (_, player_world_pos, mut action_state) in
+            player_query.iter_mut().filter(|(player, _, action)| {
+                local_players.0.contains(&player.handle)
+                    && action.axis_pair(&PlayerAction::PointerDirection) == Vec2::ZERO
+            })
+        {
+            let pointer_direction =
+                (world_position - player_world_pos.translation().xy()).normalize();
+
+            action_state.set_axis_pair(&PlayerAction::PointerDirection, pointer_direction);
+        }
+    } else {
+        // Not an error pointer could be out of window
+    }
+
+    Ok(())
+}
+
+fn update_gamepad_shoot_input(mut query: Query<&mut PlayerActionState>) {
+    for mut action_state in query.iter_mut() {
+        if action_state
+            .axis_pair(&PlayerAction::PointerDirection)
+            .length()
+            > 0.6
+        {
+            action_state.set_button_value(&PlayerAction::Shoot, 1.0);
+        }
+    }
+}
+
+pub fn default_input_map() -> InputMap<PlayerAction> {
+    InputMap::new([
+        // Jump
+        (PlayerAction::Jump, KeyCode::Space),
+        (PlayerAction::Jump, KeyCode::KeyW),
+        // Sneak
+        (PlayerAction::Sneak, KeyCode::ShiftLeft),
+        (PlayerAction::Sneak, KeyCode::KeyS),
+        // Directions
+        (PlayerAction::Right, KeyCode::KeyD),
+        (PlayerAction::Left, KeyCode::KeyA),
+        // Slot selection
+        (PlayerAction::Slot1, KeyCode::Digit1),
+        (PlayerAction::Slot2, KeyCode::Digit2),
+        (PlayerAction::Slot3, KeyCode::Digit3),
+        // Reload
+        (PlayerAction::Reload, KeyCode::KeyR),
+        // Interaction
+        (PlayerAction::Interact, KeyCode::KeyE),
+    ])
+    // Mouse
+    .with(PlayerAction::Shoot, MouseButton::Left)
+    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
+    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN)
+    // Gamepad
+    .with_multiple([
+        (PlayerAction::Jump, GamepadButton::South),
+        (PlayerAction::Reload, GamepadButton::West),
+        (PlayerAction::Interact, GamepadButton::East),
+    ])
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
+}
