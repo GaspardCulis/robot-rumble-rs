@@ -25,10 +25,12 @@ const INPUT_SHOOT: u32 = 1 << 4;
 const INPUT_SLOT1: u32 = 1 << 5;
 const INPUT_SLOT2: u32 = 1 << 6;
 const INPUT_SLOT3: u32 = 1 << 7;
-const INPUT_INTERACT: u32 = 1 << 8;
-const INPUT_ROPE_EXTEND: u32 = 1 << 9;
-const INPUT_ROPE_RETRACT: u32 = 1 << 10;
-const INPUT_RELOAD: u32 = 1 << 11;
+const INPUT_SLOT_NEXT: u32 = 1 << 8;
+const INPUT_SLOT_PREV: u32 = 1 << 9;
+const INPUT_INTERACT: u32 = 1 << 10;
+const INPUT_ROPE_EXTEND: u32 = 1 << 11;
+const INPUT_ROPE_RETRACT: u32 = 1 << 12;
+const INPUT_RELOAD: u32 = 1 << 13;
 
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
@@ -92,6 +94,8 @@ impl GgrsSessionInput for PlayerActionState {
                 PlayerAction::Slot1 => INPUT_SLOT1,
                 PlayerAction::Slot2 => INPUT_SLOT2,
                 PlayerAction::Slot3 => INPUT_SLOT3,
+                PlayerAction::SlotNext => INPUT_SLOT_NEXT,
+                PlayerAction::SlotPrev => INPUT_SLOT_PREV,
                 PlayerAction::Reload => INPUT_RELOAD,
                 PlayerAction::PointerDirection => unimplemented!("Should not get called"),
                 PlayerAction::Interact => INPUT_INTERACT,
@@ -139,6 +143,12 @@ impl GgrsSessionInput for PlayerActionState {
         }
         if keys & INPUT_SLOT3 != 0 {
             action_state.press(&PlayerAction::Slot3);
+        }
+        if keys & INPUT_SLOT_NEXT != 0 {
+            action_state.press(&PlayerAction::SlotNext);
+        }
+        if keys & INPUT_SLOT_PREV != 0 {
+            action_state.press(&PlayerAction::SlotPrev);
         }
         if keys & INPUT_RELOAD != 0 {
             action_state.press(&PlayerAction::Reload);

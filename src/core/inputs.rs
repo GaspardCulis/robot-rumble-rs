@@ -16,6 +16,8 @@ pub enum PlayerAction {
     Slot1,
     Slot2,
     Slot3,
+    SlotNext,
+    SlotPrev,
     #[actionlike(DualAxis)]
     PointerDirection,
     Reload,
@@ -96,6 +98,7 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
         (PlayerAction::Slot1, KeyCode::Digit1),
         (PlayerAction::Slot2, KeyCode::Digit2),
         (PlayerAction::Slot3, KeyCode::Digit3),
+        (PlayerAction::SlotNext, KeyCode::Tab),
         // Reload
         (PlayerAction::Reload, KeyCode::KeyR),
         // Interaction
@@ -103,6 +106,8 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
     ])
     // Mouse
     .with(PlayerAction::Shoot, MouseButton::Left)
+    .with(PlayerAction::SlotNext, MouseScrollDirection::UP)
+    .with(PlayerAction::SlotPrev, MouseScrollDirection::DOWN)
     .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
     .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN)
     // Gamepad
@@ -110,6 +115,8 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
         (PlayerAction::Jump, GamepadButton::South),
         (PlayerAction::Reload, GamepadButton::West),
         (PlayerAction::Interact, GamepadButton::East),
+        (PlayerAction::SlotNext, GamepadButton::RightTrigger),
+        (PlayerAction::SlotPrev, GamepadButton::LeftTrigger),
     ])
     .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
 }
