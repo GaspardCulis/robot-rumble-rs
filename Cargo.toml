@@ -61,6 +61,7 @@ features = [
   "bevy_winit",
   "bevy_render",
   "bevy_sprite",
+  "bevy_state",
   "bevy_ui",
   "default_font",
 
