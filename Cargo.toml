@@ -93,4 +93,18 @@ opt-level = "z"
 strip = "symbols"
 panic = 'abort'
 
-[profile.wasm-release.package.bevy]
+# Android metadata
+
+[package.metadata.android]
+package = "org.gasdev.robotrumble"
+apk_name = "robot-rumble"
+strip = "strip"
+# see https://github.com/rust-mobile/cargo-apk
+assets = "assets"
+build_targets = ["aarch64-linux-android", "armv7-linux-androideabi"]
+
+[package.metadata.android.sdk]
+target_sdk_version = 35
+
+[package.metadata.android.application]
+label = "Robot Rumble"
