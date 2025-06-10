@@ -4,7 +4,7 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
-use crate::core::voronoi::{VoronoiGeneratedEvent, build_voronoi_diagram};
+use crate::core::voronoi::{VoronoiGeneratedEvent, build_voronoi};
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
 use crate::utils;
@@ -102,28 +102,28 @@ fn handle_genworld_event(
             100,
             *seed,
             num_planets,
-        );
-        // Translate positions to world coordinates
-        positions = positions
-            .iter()
-            .map(|pos| *pos - Vec2::splat(effective_radius))
-            // Remove those overlapping with Sun's cluster
-            // TODO: fix this by resampling directly
-            .filter(|pos| pos.length() >= (config.central_star_radius as f32 + 300.))
-            .collect();
+        )
+        // Translate to world's coordinate system
+        .iter()
+        .map(|pos| *pos - Vec2::splat(effective_radius))
+        // Remove those overlapping with Sun's cluster
+        // TODO: maybe fix this by resampling directly
+        .filter(|pos| pos.length() >= (config.central_star_radius as f32 + 300.))
+        .collect();
+
         // Build a Voronoi diagram
-        let diagram = build_voronoi_diagram(positions, 2.0 * config.edge_radius as f64, 10);
+        let diagram = build_voronoi(positions, 2.0 * config.edge_radius as f64, 10);
         voronoi_drawing_event.write(VoronoiGeneratedEvent {
-            diagram: diagram.clone(),
+            voronoi: diagram.clone(),
         });
 
-        // updated moved centers:
+        // Building a diagram moves centers to build centroids:
         positions = diagram
             .sites()
             .iter()
             .map(|site| Vec2::new(site.x as f32, site.y as f32))
             .collect();
-
+        
         for position in positions {
             info!("Generating planet at ({},{})", position.x, position.y);
             let radius = rng.random_range(config.min_planet_radius..config.max_planet_radius);

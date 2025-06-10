@@ -1,21 +1,33 @@
 use bevy::prelude::*;
 use voronoice::*;
 
+// Passing diagram as is for the moment
 #[derive(Event)]
 pub struct VoronoiGeneratedEvent {
-    pub diagram: Voronoi,
+    pub voronoi: Voronoi,
 }
 
 pub struct VoronoPlugin;
 impl Plugin for VoronoPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<VoronoiGeneratedEvent>()
-            .add_systems(Update, draw_voronoi_diagram);
+            .add_systems(Update, draw_voronoi);
     }
 }
 
-// For the moment it returns Voronoi as is, since it stocks useful information, maybe change for polygons vertices later
-pub fn build_voronoi_diagram(sites: Vec<Vec2>, bounding_side: f64, relaxation: usize) -> Voronoi {
+/// Builds a Voronoi diagram from given sites within a centered square bounding box.
+/// Applies the specified number of Lloyd relaxation iterations to produce a more
+/// centroidal, regular cell distribution.
+///
+/// # Parameters
+/// - `sites`: Points to generate the Voronoi diagram for.
+/// - `bounding_side`: Side length of the square bounding box.
+/// - `relaxation`: Number of Lloyd relaxation iterations.
+///
+/// # Returns
+/// The computed `Voronoi` diagram.
+/// **TODO: after fixes swap to polygons instead.**
+pub fn build_voronoi(sites: Vec<Vec2>, bounding_side: f64, relaxation: usize) -> Voronoi {
     let voronoi_graph = VoronoiBuilder::default()
         .set_sites(
             sites
@@ -33,14 +45,14 @@ pub fn build_voronoi_diagram(sites: Vec<Vec2>, bounding_side: f64, relaxation: u
     return voronoi_graph;
 }
 
-fn draw_voronoi_diagram(
+fn draw_voronoi(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
     mut events: EventReader<VoronoiGeneratedEvent>,
 ) {
-    for VoronoiGeneratedEvent { diagram } in events.read() {
-        // iterate over each cell of the diagram
+    for VoronoiGeneratedEvent { voronoi: diagram } in events.read() {
+        // iterate over each cell of the generated diagram
         diagram.iter_cells().for_each(|cell| {
             // convert to bevy's format of points
             let vertices: Vec<Vec2> = cell
@@ -48,22 +60,20 @@ fn draw_voronoi_diagram(
                 .map(|p| Vec2::new(p.x as f32, p.y as f32))
                 .collect();
 
-            // Triangulate the mesh
-            let center = cell.site_position();
-            let center_vec2 = Vec2::new(center.x as f32, center.y as f32);
-            let card_vertices = vertices.len();
-
-            // use the same color for current cell
+            // use the same random color for current cell to separate zones
             let hue = rand::random::<f32>() * 360.0;
             let cell_color = Color::hsla(hue, 0.7, 0.5, 0.1);
 
+            // Triangulate the mesh over the cell's center
+            let center = cell.site_position();
+            let center_vec2 = Vec2::new(center.x as f32, center.y as f32);
+            let card_vertices = vertices.len();
             for i in 0..card_vertices {
                 let v0 = Vec2::new(vertices[i].x as f32, vertices[i].y as f32);
                 let v1 = Vec2::new(
                     vertices[(i + 1) % card_vertices].x as f32,
                     vertices[(i + 1) % card_vertices].y as f32,
                 );
-
                 let triangle_mesh = Triangle2d::new(center_vec2, v0, v1);
                 commands.spawn((
                     Mesh2d(meshes.add(triangle_mesh)),
