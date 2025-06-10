@@ -12,6 +12,7 @@ dev_tools = [
   "dep:bevy-inspector-egui",
   "bevy/file_watcher",
   "bevy/bevy_dev_tools",
+  "bevy/bevy_mesh_picking_backend",
 ]
 embedded_assets = ["dep:bevy_embedded_assets"]
 discord_presence = ["dep:discord-presence"]
