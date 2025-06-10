@@ -32,7 +32,12 @@ impl Plugin for NetworkInputsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             ReadInputs,
-            (update_local_pointer_direction, read_local_inputs).chain(),
+            (
+                update_gamepad_shoot_input, // Running it before `ulpd` ensures it only affects shoot input if a gamepad acts on `ShootDirection`
+                update_local_pointer_direction,
+                read_local_inputs,
+            )
+                .chain(),
         )
         .add_systems(
             GgrsSchedule,
@@ -172,9 +177,13 @@ fn update_local_pointer_direction(
         .cursor_position()
         .map(|cursor| camera.viewport_to_world_2d(view, cursor).unwrap())
     {
-        for (_, player_world_pos, mut action_state) in player_query
-            .iter_mut()
-            .filter(|(player, _, _)| local_players.0.contains(&player.handle))
+        for (_, player_world_pos, mut action_state) in
+            player_query.iter_mut().filter(|(player, _, action)| {
+                local_players.0.contains(&player.handle)
+                    && action
+                        .dual_axis_data(&PlayerAction::PointerDirection)
+                        .is_none()
+            })
         {
             let pointer_direction =
                 (world_position - player_world_pos.translation().xy()).normalize();
@@ -186,4 +195,16 @@ fn update_local_pointer_direction(
     }
 
     Ok(())
+}
+
+fn update_gamepad_shoot_input(mut query: Query<&mut ActionState<PlayerAction>>) {
+    for mut action_state in query.iter_mut() {
+        if action_state
+            .axis_pair(&PlayerAction::PointerDirection)
+            .length()
+            > 0.6
+        {
+            action_state.set_button_value(&PlayerAction::Shoot, 1.0);
+        }
+    }
 }
