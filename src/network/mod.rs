@@ -231,10 +231,17 @@ fn add_local_player_components(
         // Interaction
         (PlayerAction::Interact, KeyCode::KeyE),
     ])
+    // Mouse
     .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
     .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
-    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
+    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN)
+    // Gamepad
+    .with_multiple([
+        (PlayerAction::Jump, GamepadButton::South),
+        (PlayerAction::Reload, GamepadButton::West),
+        (PlayerAction::Interact, GamepadButton::East),
+    ])
+    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT);
 
     let local_players_query = query
         .iter()
