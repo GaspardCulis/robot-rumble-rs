@@ -86,6 +86,7 @@ fn spawn_arsenal_hud(
             position_type: PositionType::Relative,
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
+            bottom: Val::Px(28.0),
             align_items: AlignItems::End,
             justify_content: JustifyContent::End,
             ..default()
@@ -97,7 +98,7 @@ fn spawn_arsenal_hud(
                     display: Display::Flex,
                     flex_direction: FlexDirection::Row,
                     width: Val::Px(381.0),
-                    height: Val::Px(150.0),
+                    height: Val::Px(122.0),
                     ..default()
                 })
                 .with_children(|background| {
@@ -131,7 +132,7 @@ fn spawn_arsenal_hud(
                     justify_content: JustifyContent::Center,
                     width: Val::Px(350.0),
                     height: Val::Px(150.0),
-                    bottom: Val::Px(0.0),
+                    bottom: Val::Px(-28.0),
                     right: Val::Px(50.0),
                     padding: UiRect::all(Val::Px(8.0)),
                     ..default()
@@ -217,6 +218,7 @@ fn spawn_arsenal_hud(
                                     } else {
                                         Color::srgba(0.0, 0.0, 0.0, 0.6)
                                     }),
+                                
                                     WeaponNameBoxUI { index: i },
                                 ))
                                 .with_children(|name_box| {
