@@ -8,6 +8,8 @@ pub struct VoronoiGeneratedEvent {
     pub centroids: Vec<Vec2>,
 }
 
+#[derive(Component)]
+pub struct ClusterCell;
 pub struct VoronoPlugin;
 impl Plugin for VoronoPlugin {
     fn build(&self, app: &mut App) {
@@ -113,6 +115,7 @@ fn draw_voronoi(
                 );
                 let triangle_mesh = Triangle2d::new(*centroid, v0, v1);
                 commands.spawn((
+                    ClusterCell,
                     Mesh2d(meshes.add(triangle_mesh)),
                     MeshMaterial2d(color_materials.add(ColorMaterial::from_color(cell_color))),
                     Transform::default(),

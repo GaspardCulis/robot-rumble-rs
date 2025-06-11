@@ -4,6 +4,8 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "dev_tools")]
+use crate::core::voronoi::ClusterCell;
 use crate::core::voronoi::{VoronoiGeneratedEvent, adjust_to_circle, build_voronoi};
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
@@ -210,7 +212,7 @@ fn handle_config_reload(
         Or<(
             With<crate::entities::planet::Planet>,
             With<crate::entities::satellite::Satellite>,
-            With<
+            With<ClusterCell>,
         )>,
     >,
     seed: Res<crate::network::SessionSeed>,
