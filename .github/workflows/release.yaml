@@ -31,6 +31,7 @@ env:
   build_for_linux: true
   build_for_windows: true
   build_for_macos: true
+  build_for_android: true
 
   # Whether to upload the packages produced by this workflow to a GitHub release.
   upload_to_github: true
@@ -138,6 +139,14 @@ jobs:
             package_ext: .dmg
             runner: macos-latest
             features: embedded_assets
+
+          - platform: android
+            targets: aarch64-linux-android armv7-linux-androideabi
+            app_suffix: .apk
+            package_ext: .zip
+            runner: ubuntu-latest
+            features: embedded_assets
+
     runs-on: ${{ matrix.runner }}
     permissions:
       # Required to create a GitHub release: <https://docs.github.com/en/rest/releases/releases#create-a-release>.
@@ -220,8 +229,15 @@ jobs:
           bevy build --locked --release --no-default-features true --features='${{ matrix.features }}' --yes web --bundle
           mv 'target/bevy_web/web-release/${{ env.cargo_build_binary_name }}' '${{ env.app }}'
 
-      - name: Build and add binaries to app (non-Web)
-        if: ${{ env.is_platform_enabled == 'true' && matrix.platform != 'web' }}
+      - name: Build and add web bundle to app (Android)
+        if: ${{ env.is_platform_enabled == 'true' && matrix.platform == 'android' }}
+        run: |
+          cargo binstall --locked --no-confirm --force cargo-apk
+          cargo apk build --release --no-default-features true --features='${{ matrix.features }}'
+          mv 'target/aarch64-linux-android/release/${{ env.cargo_build_binary_name }}' '${{ env.app }}'
+
+      - name: Build and add binaries to app (non-Web & non-android)
+        if: ${{ env.is_platform_enabled == 'true' && matrix.platform != 'web' && matrix.platform != 'android' }}
         run: |
           for target in ${{ matrix.targets }}; do
             bevy build --locked --release --target="${target}" --no-default-features true --features='${{ matrix.features }}'
