@@ -13,7 +13,10 @@ wasm-build:
     cargo build --profile wasm-release --target wasm32-unknown-unknown --no-default-features --features embedded_assets
     @echo "Generating website template to `./web`"
     wasm-bindgen --no-typescript --target web --out-dir ./web --out-name "robot-rumble" target/wasm32-unknown-unknown/wasm-release/robot-rumble-client.wasm
-    
+
+android-build:
+    cargo apk build --release --no-default-features
+
 check:
     @echo "Checking code formatting (rustfmt)"
     cargo fmt --all --check
