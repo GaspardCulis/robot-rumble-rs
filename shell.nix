@@ -41,6 +41,7 @@ let
   sdk_root = "${androidsdk}/libexec/android-sdk";
   ndk_root = "${sdk_root}/ndk-bundle";
   ndk_path = "${ndk_root}/toolchains/llvm/prebuilt/linux-x86_64/bin";
+  java = pkgs.openjdk17-bootstrap;
 in
   pkgs.mkShell rec {
     packages = with pkgs; [
@@ -69,10 +70,12 @@ in
       xorg.libXrandr # To use the x11 feature
       libxkbcommon
       wayland # To use the wayland feature
+      # Android
+      java
     ];
     LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
-    JAVA_HOME = pkgs.openjdk17-bootstrap;
-    JRE_HOME = pkgs.openjdk17-bootstrap;
+    JAVA_HOME = java;
+    JRE_HOME = java;
 
     # https://github.com/katyo/oboe-rs/blob/7ea2b9b3bc9cdfa9ed4cbfeafdcafb47b3fac4e7/default.nix#L4
     ANDROID_HOME = "${sdk_root}";
