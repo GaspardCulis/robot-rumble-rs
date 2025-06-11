@@ -37,12 +37,13 @@ fn load_worldgen_config(mut commands: Commands, asset_server: Res<AssetServer>) 
 pub struct WorldgenConfig {
     pub central_star_radius: u32,
 
-    pub min_planets: u32,
-    pub max_planets: u32,
+    pub min_clusters: u32,
+    pub max_clusters: u32,
 
-    pub min_planet_radius: u32,
-    pub max_planet_radius: u32,
+    pub min_cluster_planet_radius: u32,
+    pub max_cluster_planet_radius: u32,
 
+    pub cluster_relaxation: usize,
     pub min_planet_surface_distance: u32,
 
     pub edge_radius: u32,
@@ -93,7 +94,8 @@ fn handle_genworld_event(
             seed: rng.random(),
         });
 
-        let num_planets: usize = rng.random_range(config.min_planets..config.max_planets) as usize;
+        let num_planets: usize =
+            rng.random_range(config.min_clusters..config.max_clusters) as usize;
         let effective_radius = (config.edge_radius - config.edge_margin) as f32;
         // Pick cluster centers using Poisson sampling
         let mut positions: Vec<Vec2> = utils::poisson::poisson_box_sampling(
@@ -106,16 +108,17 @@ fn handle_genworld_event(
         // Translate to world's coordinate system
         .iter()
         .map(|pos| *pos - Vec2::splat(effective_radius))
-        // Remove those overlapping with Sun's cluster
-        // TODO: maybe fix this by resampling directly
-        .filter(|pos| pos.length() >= (config.central_star_radius as f32 + 300.))
         .collect();
 
         // Add Sun before building
         positions.push(Vec2::ZERO);
 
         // Build a Voronoi diagram
-        let diagram = build_voronoi(positions, 2.0 * config.edge_radius as f64, 10);
+        let diagram = build_voronoi(
+            positions,
+            2.0 * config.edge_radius as f64,
+            config.cluster_relaxation,
+        );
         let (polygons, centroids) = adjust_to_circle(diagram, config.edge_radius as f32);
         voronoi_drawing_event.write(VoronoiGeneratedEvent {
             polygons,
@@ -123,7 +126,8 @@ fn handle_genworld_event(
         });
 
         for position in centroids {
-            let radius = rng.random_range(config.min_planet_radius..config.max_planet_radius);
+            let radius = rng
+                .random_range(config.min_cluster_planet_radius..config.max_cluster_planet_radius);
             info!("Generating planet at ({},{})", position.x, position.y);
             let distance = position.distance(Vec2::ZERO);
             if distance < (radius + config.central_star_radius) as f32 {
@@ -206,6 +210,7 @@ fn handle_config_reload(
         Or<(
             With<crate::entities::planet::Planet>,
             With<crate::entities::satellite::Satellite>,
+            With<
         )>,
     >,
     seed: Res<crate::network::SessionSeed>,

@@ -1,11 +1,13 @@
 (
     central_star_radius: 400,
 
-    min_planets: 10,
-    max_planets: 12,
+    min_clusters: 5,
+    max_clusters: 10,
 
-    min_planet_radius: 80,
-    max_planet_radius: 400,
+    min_cluster_planet_radius: 150,
+    max_cluster_planet_radius: 400,
+
+    cluster_relaxation: 6,
 
     min_planet_surface_distance: 200,
 
