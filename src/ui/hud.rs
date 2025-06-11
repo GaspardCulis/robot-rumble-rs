@@ -52,11 +52,6 @@ struct WeaponSpriteUI {
     index: usize,
 }
 
-#[derive(Resource)]
-pub struct CurrentWeaponSlot(pub usize);
-
-
-
 pub struct HudPlugin;
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
@@ -70,8 +65,7 @@ impl Plugin for HudPlugin {
                     trigger_reload_animation,
                     animate_ammo_reload,
                 ).run_if(in_state(GameState::InGame)),
-            )
-            .insert_resource(CurrentWeaponSlot(0));
+            );
     }
 }
 
@@ -306,7 +300,6 @@ fn update_weapon_slot_ui(
     query_input: Query<&ActionState<PlayerAction>>,
     mut name_boxes: Query<(&mut BackgroundColor, &WeaponNameBoxUI)>,
     mut weapon_sprites: Query<(&mut Node, &WeaponSpriteUI)>,
-    mut current_slot: ResMut<CurrentWeaponSlot>,
 ) {
     let Some(input) = query_input.iter().next() else {
         return;
@@ -323,7 +316,6 @@ fn update_weapon_slot_ui(
     };
 
     if let Some(new_selected) = selected_index {
-        current_slot.0 = new_selected;
         // Mise à jour de la bordure pour les slots
         for (entity, slot_ui, selected_marker, mut border_color) in query_ui.iter_mut() {
             if slot_ui.index == new_selected {
