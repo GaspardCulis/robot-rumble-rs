@@ -46,28 +46,33 @@ pub fn build_voronoi(sites: Vec<Vec2>, bounding_side: f64, relaxation: usize) ->
     return voronoi_graph;
 }
 
-/// Converts a Voronoi diagram to polygons clamping them to a circle.
+/// Clamps a Voronoi diagram to fit within a bounding circle.
+///
+/// For each cell in the diagram, its vertices are clamped to the given radius if they exceed it.
+/// Returns the adjusted polygons and their barycenters (centroids).
+///
 /// # Returns
-/// Adjusted olygons with new barycenters.
+/// A tuple containing:
+/// - `Vec<Vec<Vec2>>`: Clamped polygon vertices for each cell.
+/// - `Vec<Vec2>`: Barycenters of the clamped polygons.
 pub fn adjust_to_circle(voronoi: Voronoi, bounding_radius: f32) -> (Vec<Vec<Vec2>>, Vec<Vec2>) {
-    // iterate over each cell of the generated diagram
     let mut centroids = Vec::new();
     let mut clamped_cells = Vec::new();
-    // iterate over each cell of the generated diagram
 
     voronoi.iter_cells().for_each(|cell| {
-        // convert to bevy's format of points
         let mut barycenter = Vec2::ZERO;
         let mut vert_cnt = 0;
         let vertices: Vec<Vec2> = cell
             .iter_vertices()
             .map(|p| {
+                // Convert to bevy's format of points
                 let mut v = Vec2::new(p.x as f32, p.y as f32);
                 let dist = v.length();
-                // clamp to radius
+                // Clamp to radius
                 if dist > bounding_radius {
                     v = Vec2::ZERO + v.normalize() * bounding_radius;
                 }
+                // Compute the new barycenter simultaniously
                 barycenter += v;
                 vert_cnt += 1;
                 v
