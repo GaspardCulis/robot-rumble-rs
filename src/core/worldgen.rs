@@ -112,9 +112,10 @@ fn handle_genworld_event(
         .collect();
 
         // Build a Voronoi diagram
-        let diagram = build_voronoi(positions, 2.0 * config.edge_radius as f64, 10);
+        let diagram = build_voronoi(positions, 2.0 * config.edge_radius as f64, 8);
         voronoi_drawing_event.write(VoronoiGeneratedEvent {
             voronoi: diagram.clone(),
+            bounding_radius: config.edge_radius as f32,
         });
 
         // Building a diagram moves centers to build centroids:
@@ -123,7 +124,7 @@ fn handle_genworld_event(
             .iter()
             .map(|site| Vec2::new(site.x as f32, site.y as f32))
             .collect();
-        
+
         for position in positions {
             info!("Generating planet at ({},{})", position.x, position.y);
             let radius = rng.random_range(config.min_planet_radius..config.max_planet_radius);

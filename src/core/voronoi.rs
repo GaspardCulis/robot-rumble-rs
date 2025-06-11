@@ -5,6 +5,7 @@ use voronoice::*;
 #[derive(Event)]
 pub struct VoronoiGeneratedEvent {
     pub voronoi: Voronoi,
+    pub bounding_radius: f32,
 }
 
 pub struct VoronoPlugin;
@@ -45,19 +46,33 @@ pub fn build_voronoi(sites: Vec<Vec2>, bounding_side: f64, relaxation: usize) ->
     return voronoi_graph;
 }
 
+// Clamp polygons to circle:
+
 fn draw_voronoi(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
     mut events: EventReader<VoronoiGeneratedEvent>,
 ) {
-    for VoronoiGeneratedEvent { voronoi: diagram } in events.read() {
+    for VoronoiGeneratedEvent {
+        voronoi,
+        bounding_radius,
+    } in events.read()
+    {
         // iterate over each cell of the generated diagram
-        diagram.iter_cells().for_each(|cell| {
+        voronoi.iter_cells().for_each(|cell| {
             // convert to bevy's format of points
             let vertices: Vec<Vec2> = cell
                 .iter_vertices()
-                .map(|p| Vec2::new(p.x as f32, p.y as f32))
+                .map(|p| {
+                    let mut v = Vec2::new(p.x as f32, p.y as f32);
+                    let dist = v.length();
+                    // clamp to radius
+                    if dist > *bounding_radius {
+                        v = Vec2::ZERO + v.normalize() * bounding_radius;
+                    }
+                    v
+                })
                 .collect();
 
             // use the same random color for current cell to separate zones
