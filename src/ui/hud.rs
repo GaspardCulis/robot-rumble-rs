@@ -37,6 +37,8 @@ pub struct AmmoReloadAnimation {
     pub from: f32,
     pub to: f32,
     pub timer: Timer,
+    pub original_weapon_entity: Entity,
+
 }
 
 
@@ -49,6 +51,10 @@ struct WeaponNameBoxUI {
 struct WeaponSpriteUI {
     index: usize,
 }
+
+#[derive(Resource)]
+pub struct CurrentWeaponSlot(pub usize);
+
 
 
 pub struct HudPlugin;
@@ -64,7 +70,8 @@ impl Plugin for HudPlugin {
                     trigger_reload_animation,
                     animate_ammo_reload,
                 ).run_if(in_state(GameState::InGame)),
-            );
+            )
+            .insert_resource(CurrentWeaponSlot(0));
     }
 }
 
@@ -299,6 +306,7 @@ fn update_weapon_slot_ui(
     query_input: Query<&ActionState<PlayerAction>>,
     mut name_boxes: Query<(&mut BackgroundColor, &WeaponNameBoxUI)>,
     mut weapon_sprites: Query<(&mut Node, &WeaponSpriteUI)>,
+    mut current_slot: ResMut<CurrentWeaponSlot>,
 ) {
     let Some(input) = query_input.iter().next() else {
         return;
@@ -315,7 +323,7 @@ fn update_weapon_slot_ui(
     };
 
     if let Some(new_selected) = selected_index {
-
+        current_slot.0 = new_selected;
         // Mise à jour de la bordure pour les slots
         for (entity, slot_ui, selected_marker, mut border_color) in query_ui.iter_mut() {
             if slot_ui.index == new_selected {
@@ -372,7 +380,7 @@ fn update_ammo_background(
     weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
     mut background_query: Query<(Entity, &mut Node), (With<AmmoBackground>, Without<BlackBar>)>,
     mut black_bar_query: Query<&mut Node, (With<BlackBar>, Without<AmmoBackground>)>,
-    reload_anim_query: Query<&AmmoReloadAnimation>, // Ajouté ici
+    reload_anim_query: Query<&AmmoReloadAnimation>,
 ) {
     let Ok(weapon) = weapon_query.single() else { return; };
     let Ok((state, stats)) = weapon_state_query.get(weapon.0) else { return; };
@@ -434,6 +442,7 @@ fn trigger_reload_animation(
             from,
             to,
             timer: Timer::from_seconds(duration.as_secs_f32(), TimerMode::Once),
+            original_weapon_entity: weapon.0, 
         });
 
     }
@@ -450,7 +459,6 @@ fn animate_ammo_reload(
     weapon_state_query: Query<&WeaponState>,
 ) {
     for (mut anim, mut node, entity) in query.iter_mut() {
-
         anim.timer.tick(time.delta());
         let progress = (anim.timer.elapsed_secs() / anim.timer.duration().as_secs_f32()).clamp(0.0, 1.0);
         let percent = anim.from + (anim.to - anim.from) * progress;
@@ -463,7 +471,15 @@ fn animate_ammo_reload(
 
         let Ok(input) = input_query.single() else { return; };
 
-        let shoot_pressed = input.just_pressed(&PlayerAction::Shoot);
+        // Determine current selected slot
+       let Ok(weapon) = weapon_query.single() else { return; };
+
+        if weapon.0 != anim.original_weapon_entity {
+            // L’arme a changé, on stoppe l’animation
+            commands.entity(entity).remove::<AmmoReloadAnimation>();
+            continue;
+        }
+        
 
         // Check ammo remaining
         let mut ammo_nonzero = false;
@@ -472,6 +488,8 @@ fn animate_ammo_reload(
                 ammo_nonzero = state.current_ammo != 0;
             }
         }
+
+        let shoot_pressed = input.just_pressed(&PlayerAction::Shoot);
 
         if shoot_pressed && ammo_nonzero {
             commands.entity(entity).remove::<AmmoReloadAnimation>();
