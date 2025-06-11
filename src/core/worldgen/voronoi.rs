@@ -10,8 +10,8 @@ pub struct VoronoiGeneratedEvent {
 
 #[derive(Component)]
 pub struct ClusterCell;
-pub struct VoronoPlugin;
-impl Plugin for VoronoPlugin {
+pub struct VoronoiPlugin;
+impl Plugin for VoronoiPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<VoronoiGeneratedEvent>()
             .add_systems(Update, draw_voronoi);

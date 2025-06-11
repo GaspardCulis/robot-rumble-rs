@@ -4,19 +4,20 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
+use crate::core::worldgen::voronoi::*;
 #[cfg(feature = "dev_tools")]
-use crate::core::voronoi::ClusterCell;
-use crate::core::voronoi::{VoronoiGeneratedEvent, adjust_to_circle, build_voronoi};
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
 use crate::utils;
 
 use super::physics::Position;
+mod voronoi;
 
 pub struct WorldgenPlugin;
 impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(RonAssetPlugin::<WorldgenConfig>::new(&[]))
+            .add_plugins(voronoi::VoronoiPlugin)
             .add_event::<GenerateWorldEvent>()
             .add_systems(Startup, load_worldgen_config)
             .add_systems(
@@ -96,8 +97,8 @@ fn handle_genworld_event(
             seed: rng.random(),
         });
 
-        let num_planets: usize =
-            rng.random_range(config.min_clusters..config.max_clusters) as usize;
+        let num_planets: usize = 8;
+        //rng.random_range(config.min_clusters..config.max_clusters) as usize;
         let effective_radius = (config.edge_radius - config.edge_margin) as f32;
         // Pick cluster centers using Poisson sampling
         let mut positions: Vec<Vec2> = utils::poisson::poisson_box_sampling(
