@@ -27,7 +27,7 @@ let
     platformVersions = [
       "35"
     ];
-    systemImageTypes = ["google_apis_playstore"];
+    systemImageTypes = ["default"];
     abiVersions = [
       "armeabi-v7a"
       "arm64-v8a"
@@ -37,13 +37,17 @@ let
       "extras;google;auto"
     ];
   };
+  androidsdk = androidComposition.androidsdk;
+  sdk_root = "${androidsdk}/libexec/android-sdk";
+  ndk_root = "${sdk_root}/ndk-bundle";
+  ndk_path = "${ndk_root}/toolchains/llvm/prebuilt/linux-x86_64/bin";
 in
   pkgs.mkShell rec {
     packages = with pkgs; [
       just
       tracy
       cargo-apk
-      cargo-xbuild
+      cargo-ndk
     ];
     nativeBuildInputs = with pkgs; [
       rust
@@ -69,10 +73,14 @@ in
     LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
     JAVA_HOME = pkgs.openjdk17-bootstrap;
     JRE_HOME = pkgs.openjdk17-bootstrap;
-    ANDROID_HOME = "${androidComposition.androidsdk}/libexec/android-sdk";
-    ANDROID_NDK_ROOT = "${ANDROID_HOME}/ndk-bundle";
+
+    # https://github.com/katyo/oboe-rs/blob/7ea2b9b3bc9cdfa9ed4cbfeafdcafb47b3fac4e7/default.nix#L4
+    ANDROID_HOME = "${sdk_root}";
+    ANDROID_NDK_ROOT = "${ndk_root}";
+    NDK_HOME = "${ndk_root}";
 
     shellHook = ''
       export PATH="$HOME/.cargo/bin:$PATH"
+      export PATH="${ndk_path}:${androidsdk}/bin:$PATH";
     '';
   }
