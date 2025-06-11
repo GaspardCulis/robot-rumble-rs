@@ -1,11 +1,10 @@
-use bevy::math::VectorSpace;
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
-use crate::core::voronoi::{VoronoiGeneratedEvent, build_voronoi};
+use crate::core::voronoi::{VoronoiGeneratedEvent, adjust_to_circle, build_voronoi};
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
 use crate::utils;
@@ -117,24 +116,18 @@ fn handle_genworld_event(
 
         // Build a Voronoi diagram
         let diagram = build_voronoi(positions, 2.0 * config.edge_radius as f64, 10);
+        let (polygons, centroids) = adjust_to_circle(diagram, config.edge_radius as f32);
         voronoi_drawing_event.write(VoronoiGeneratedEvent {
-            voronoi: diagram.clone(),
-            bounding_radius: config.edge_radius as f32,
+            polygons,
+            centroids: centroids.clone(),
         });
 
-        // Building a diagram moves barycenters by Lloyds transforms:
-        positions = diagram
-            .sites()
-            .iter()
-            .map(|site| Vec2::new(site.x as f32, site.y as f32))
-            .collect();
-
-        for position in positions {
+        for position in centroids {
             let radius = rng.random_range(config.min_planet_radius..config.max_planet_radius);
             info!("Generating planet at ({},{})", position.x, position.y);
             let distance = position.distance(Vec2::ZERO);
             if distance < (radius + config.central_star_radius) as f32 {
-                // This is the Sun's cluster then
+                // This is a part of the Sun's cluster then
                 info!("Sun's cluster, skipping");
                 continue;
             }
