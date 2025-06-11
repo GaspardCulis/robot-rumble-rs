@@ -1,3 +1,4 @@
+use bevy::math::VectorSpace;
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use rand::Rng;
@@ -96,7 +97,7 @@ fn handle_genworld_event(
         let num_planets: usize = rng.random_range(config.min_planets..config.max_planets) as usize;
         let effective_radius = (config.edge_radius - config.edge_margin) as f32;
         // Pick cluster centers using Poisson sampling
-        let mut positions = utils::poisson::poisson_box_sampling(
+        let mut positions: Vec<Vec2> = utils::poisson::poisson_box_sampling(
             2.0 * effective_radius,
             1200.,
             100,
@@ -111,14 +112,17 @@ fn handle_genworld_event(
         .filter(|pos| pos.length() >= (config.central_star_radius as f32 + 300.))
         .collect();
 
+        // Add Sun before building
+        positions.push(Vec2::ZERO);
+
         // Build a Voronoi diagram
-        let diagram = build_voronoi(positions, 2.0 * config.edge_radius as f64, 8);
+        let diagram = build_voronoi(positions, 2.0 * config.edge_radius as f64, 10);
         voronoi_drawing_event.write(VoronoiGeneratedEvent {
             voronoi: diagram.clone(),
             bounding_radius: config.edge_radius as f32,
         });
 
-        // Building a diagram moves centers to build centroids:
+        // Building a diagram moves barycenters by Lloyds transforms:
         positions = diagram
             .sites()
             .iter()
@@ -126,8 +130,15 @@ fn handle_genworld_event(
             .collect();
 
         for position in positions {
-            info!("Generating planet at ({},{})", position.x, position.y);
             let radius = rng.random_range(config.min_planet_radius..config.max_planet_radius);
+            info!("Generating planet at ({},{})", position.x, position.y);
+            let distance = position.distance(Vec2::ZERO);
+            if distance < (radius + config.central_star_radius) as f32 {
+                // This is the Sun's cluster then
+                info!("Sun's cluster, skipping");
+                continue;
+            }
+
             planets.push(SpawnPlanetEvent {
                 position: Position(position),
                 radius: Radius(radius),
