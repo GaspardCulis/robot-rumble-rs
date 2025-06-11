@@ -113,6 +113,7 @@ build_targets = ["aarch64-linux-android", "armv7-linux-androideabi"]
 
 [package.metadata.android.sdk]
 target_sdk_version = 35
+min_sdk_version = 30
 
 [package.metadata.android.application]
 label = "Robot Rumble"
