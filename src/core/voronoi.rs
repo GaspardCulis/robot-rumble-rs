@@ -97,10 +97,11 @@ fn draw_voronoi(
         centroids,
     } in events.read()
     {
-        for (polygon, centroid) in polygons.iter().zip(centroids.iter()) {
-            // use the same random color for current polygon to separate zones
-            let hue = rand::random::<f32>() * 360.0;
-            let cell_color = Color::hsla(hue, 0.7, 0.5, 0.1);
+        let zone_count = polygons.iter().count();
+        for (i, (polygon, centroid)) in polygons.iter().zip(centroids.iter()).enumerate() {
+            // use color for current polygon to separate zones
+            let hue = (i as f32 / zone_count as f32) * 360.0;
+            let cell_color = Color::hsla(hue, 0.5, 0.5, 0.15);
 
             // Triangulate the mesh over the cell's barycenter
             let card_vertices = polygon.len();
