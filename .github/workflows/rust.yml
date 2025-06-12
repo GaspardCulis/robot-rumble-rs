@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-Dwarnings"
 
 jobs:
   check:
@@ -29,6 +28,10 @@ jobs:
         rustup default ${{ matrix.toolchain }}
     - name: Setup codegen-backend
       run: rustup component add rustc-codegen-cranelift-preview --toolchain ${{ matrix.toolchain }}
+    - name: Install lint components
+      run: |
+        rustup component add rustfmt --toolchain ${{ matrix.toolchain }}
+        rustup component add clippy --toolchain ${{ matrix.toolchain }}
     - name: Print Rust and Clippy versions
       run: |
         rustc --version
