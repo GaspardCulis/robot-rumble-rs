@@ -25,7 +25,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
     - name: Install nix env
       run: |
-        nix-shell --pure --command "echo Installed Nix env"
+        nix-shell --pure --command "which cargo"
     - name: Lint (rustfmt)
       run: nix-shell --pure --command "cargo fmt --all --check"
     - name: Lint (clippy)
