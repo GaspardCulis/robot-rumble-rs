@@ -8,8 +8,8 @@ pub mod entities;
 pub mod level;
 pub mod misc;
 pub mod network;
-pub mod utils;
 pub mod ui;
+pub mod utils;
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
 pub enum GameState {
