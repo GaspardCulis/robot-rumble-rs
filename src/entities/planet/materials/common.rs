@@ -1,5 +1,6 @@
 use bevy::{asset::Asset, math::Vec2, reflect::Reflect, render::render_resource::ShaderType};
 
+#[allow(dead_code)] // Temp fix for clippy being a dumbass
 #[derive(serde::Deserialize, Asset, ShaderType, Debug, Clone, Reflect)]
 pub struct CommonMaterial {
     pub pixels: f32,
