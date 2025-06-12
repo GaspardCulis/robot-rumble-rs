@@ -352,30 +352,27 @@ fn update_weapon_slot_ui(
         }
 
         // Relancer l’animation si l’arme sélectionnée est en cours de rechargement
-        if let Ok(weapon) = weapon_query.single() {
-            if let Ok((state, stats)) = weapon_state_query.get(weapon.0) {
-                if state.reload_timer.remaining_secs() > 0.0 {
-                    if let Ok((entity, _)) = background_query.single_mut() {
-                        if reload_anim_query.get(entity).ok().flatten().is_none() {
-                            let reload_duration = stats.reload_time.as_secs_f32();
-                            let remaining_secs = state
-                                .reload_timer
-                                .remaining_secs()
-                                .clamp(0.0, reload_duration);
-                            let elapsed_ratio = 1.0 - (remaining_secs / reload_duration);
-                            let ammo_ratio = state.current_ammo as f32 / stats.magazine_size as f32;
-                            let from = ammo_ratio.max(elapsed_ratio);
+        if let Ok(weapon) = weapon_query.single()
+            && let Ok((state, stats)) = weapon_state_query.get(weapon.0)
+            && state.reload_timer.remaining_secs() > 0.0
+            && let Ok((entity, _)) = background_query.single_mut()
+            && reload_anim_query.get(entity).ok().flatten().is_none()
+        {
+            let reload_duration = stats.reload_time.as_secs_f32();
+            let remaining_secs = state
+                .reload_timer
+                .remaining_secs()
+                .clamp(0.0, reload_duration);
+            let elapsed_ratio = 1.0 - (remaining_secs / reload_duration);
+            let ammo_ratio = state.current_ammo as f32 / stats.magazine_size as f32;
+            let from = ammo_ratio.max(elapsed_ratio);
 
-                            commands.entity(entity).insert(AmmoReloadAnimation {
-                                from,
-                                to: 1.0,
-                                timer: Timer::from_seconds(remaining_secs, TimerMode::Once),
-                                original_weapon_entity: weapon.0,
-                            });
-                        }
-                    }
-                }
-            }
+            commands.entity(entity).insert(AmmoReloadAnimation {
+                from,
+                to: 1.0,
+                timer: Timer::from_seconds(remaining_secs, TimerMode::Once),
+                original_weapon_entity: weapon.0,
+            });
         }
     }
 }
