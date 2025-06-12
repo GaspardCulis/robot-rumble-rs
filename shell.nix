@@ -8,6 +8,7 @@ let
   rustToolchain = (pkgs.lib.importTOML ./rust-toolchain.toml).toolchain.channel;
   rust = pkgs.rust-bin.${rustToolchain}.${rustVersion}.default.override {
     extensions = [
+      "rustfmt"
       "rust-src" # for rust-analyzer
       "rust-analyzer"
       "rustc-codegen-cranelift" # Fast compile times
