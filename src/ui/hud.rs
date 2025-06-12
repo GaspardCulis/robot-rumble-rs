@@ -1,9 +1,12 @@
 use bevy::{prelude::*, ui::widget::NodeImageMode};
 
 use crate::{
-    core::inputs::{PlayerAction, PlayerActionState}, entities::player::{
-        weapon::{self, WeaponState, WeaponStats}, Player, Weapon
-    }, GameState
+    GameState,
+    core::inputs::{PlayerAction, PlayerActionState},
+    entities::player::{
+        Player, Weapon,
+        weapon::{self, WeaponState, WeaponStats},
+    },
 };
 
 const WEAPON_SLOTS: [weapon::WeaponType; 3] = [
