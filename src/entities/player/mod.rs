@@ -16,7 +16,7 @@ use crate::entities::satellite::graviton::Orbited;
 
 mod animation;
 mod inventory;
-mod skin;
+pub mod skin;
 pub mod weapon;
 
 // TODO: Move to config file
@@ -38,7 +38,7 @@ type PlanetCollision = CollisionState<Player, planet::Planet>;
     ActionState<PlayerAction>,
     Mass(PLAYER_MASS),
     CollisionShape::Circle(PLAYER_RADIUS),
-    PlayerSkin("laika".into()),
+    PlayerSkin("laika.skin".into()),
     Name::new("Player"),
     Percentage::default(),
 )]

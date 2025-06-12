@@ -6,7 +6,8 @@ use crate::entities::player::Player;
 
 use bevy_ggrs::GgrsSchedule;
 
-use super::{SatelliteConfig, SatelliteConfigHandle, SatelliteSet};
+use super::SatelliteSet;
+use super::assets::{SatelliteAssets, SatelliteConfig};
 
 #[derive(Component, Debug, Reflect, Clone)]
 #[reflect(Component)]
@@ -53,10 +54,10 @@ fn detect_player_orbit_entry(
     mut commands: Commands,
     graviton_query: Query<(&Position, Option<&OrbitCooldown>), With<Graviton>>,
     mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
-    config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
+    assets: Res<SatelliteAssets>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
@@ -101,11 +102,11 @@ fn update_orbiting_players(
         Without<Graviton>,
     >,
     graviton_query: Query<(Entity, &Position), With<Graviton>>,
-    config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
+    assets: Res<SatelliteAssets>,
     time: Res<Time>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
