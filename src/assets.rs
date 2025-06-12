@@ -36,8 +36,8 @@ impl Plugin for AssetsPlugin {
             "satellites.ron",
         ]))
         .add_loading_state(
-            LoadingState::new(crate::GameState::AssetLoading)
-                .continue_to_state(crate::GameState::MatchMaking)
+            LoadingState::new(crate::ui::Screen::AssetLoading)
+                .continue_to_state(crate::ui::Screen::Home)
                 .load_collection::<worldgen::WorldgenAssets>()
                 .load_collection::<planet::PlanetAssets>()
                 .load_collection::<player_skin::SkinConfigAssets>()
