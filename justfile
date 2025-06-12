@@ -12,7 +12,7 @@ wasm-build:
     @echo "Building WASM release target"
     cargo build --bin robot-rumble --profile wasm-release --target wasm32-unknown-unknown --no-default-features --features embedded_assets
     @echo "In order to build the website template run:"
-    # wasm-bindgen --no-typescript --target web --out-dir <OUT_DIR_PATH> --out-name "robot-rumble" target/wasm32-unknown-unknown/wasm-release/robot-rumble-client.wasm
+    @echo "wasm-bindgen --no-typescript --target web --out-dir <OUT_DIR_PATH> --out-name \"robot-rumble\" target/wasm32-unknown-unknown/wasm-release/robot-rumble-client.wasm"
     
 check:
     @echo "Checking code formatting (rustfmt)"
