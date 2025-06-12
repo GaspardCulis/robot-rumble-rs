@@ -5,15 +5,14 @@ use crate::{
     core::inputs::{PlayerAction, PlayerActionState},
     entities::player::{
         Player, Weapon,
-        weapon::{self, WeaponState, WeaponStats},
+        weapon::{
+            WeaponState,
+            config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig},
+        },
     },
 };
 
-const WEAPON_SLOTS: [weapon::WeaponType; 3] = [
-    weapon::WeaponType::Pistol,
-    weapon::WeaponType::Shotgun,
-    weapon::WeaponType::Rifle,
-];
+const WEAPON_SLOTS: [WeaponType; 3] = [WeaponType::Pistol, WeaponType::Shotgun, WeaponType::Rifle];
 
 #[derive(Component)]
 struct WeaponSlotUI {
@@ -70,11 +69,11 @@ impl Plugin for HudPlugin {
 
 fn spawn_arsenal_hud(
     mut commands: Commands,
-    config_handle: Res<weapon::WeaponsConfigHandle>,
-    config_assets: Res<Assets<weapon::config::WeaponsConfig>>,
+    weapon_assets: Res<WeaponsAssets>,
+    config_assets: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    let weapons_config = if let Some(c) = config_assets.get(config_handle.0.id()) {
+    let weapons_config = if let Some(c) = config_assets.get(&weapon_assets.config) {
         c
     } else {
         warn!("Couldn't load WeaponsConfig");

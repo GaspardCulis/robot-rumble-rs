@@ -5,14 +5,14 @@ use crate::core::{
     worldgen::{self, GenerationSeed},
 };
 use bevy::prelude::*;
-use bevy_common_assets::ron::RonAssetPlugin;
+use bevy_asset_loader::asset_collection::AssetCollection;
 use rand::{SeedableRng, seq::IndexedRandom as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 mod config;
 pub mod materials;
 
-use config::*;
+pub use config::*;
 use materials::*;
 
 #[derive(Component, Debug, Reflect, Clone, PartialEq)]
@@ -36,6 +36,12 @@ pub struct SpawnPlanetEvent {
     pub radius: Radius,
     pub r#type: PlanetType,
     pub seed: u64,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct PlanetAssets {
+    #[asset(path = "config/config.planets.ron")]
+    pub config: Handle<PlanetsConfig>,
 }
 
 #[derive(Bundle)]
@@ -68,25 +74,18 @@ impl Plugin for PlanetPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Radius>()
             .register_type::<PlanetType>()
-            .add_plugins(RonAssetPlugin::<PlanetsConfig>::new(&[]))
             .add_plugins(materials::PlanetMaterialsPlugin)
             .add_event::<SpawnPlanetEvent>()
-            .add_systems(Startup, load_planets_config)
             .add_systems(
                 Update,
                 (
                     handle_spawn_planet_event,
-                    spawn_config_layers,
+                    spawn_config_layers.run_if(resource_exists::<PlanetAssets>),
                     #[cfg(feature = "dev_tools")]
                     handle_config_reload,
                 ),
             );
     }
-}
-
-fn load_planets_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let planets_config = PlanetsConfigHandle(asset_server.load("config/planet_kinds.ron"));
-    commands.insert_resource(planets_config);
 }
 
 fn handle_spawn_planet_event(mut events: EventReader<SpawnPlanetEvent>, mut commands: Commands) {
@@ -100,8 +99,8 @@ fn handle_spawn_planet_event(mut events: EventReader<SpawnPlanetEvent>, mut comm
 
 fn spawn_config_layers(
     mut commands: Commands,
-    planet_config: Res<PlanetsConfigHandle>,
-    planet_configs: Res<Assets<PlanetsConfig>>,
+    assets: Res<PlanetAssets>,
+    configs: Res<Assets<PlanetsConfig>>,
     query: Query<
         (Entity, &PlanetType, Option<&worldgen::GenerationSeed>),
         (With<Planet>, Without<Children>),
@@ -115,7 +114,7 @@ fn spawn_config_layers(
         };
 
         // Get config
-        if let Some(config) = planet_configs.get(planet_config.0.id()) {
+        if let Some(config) = configs.get(&assets.config) {
             if let Some(kind) = config
                 .0
                 .iter()
@@ -232,9 +231,6 @@ fn handle_config_reload(
         };
     }
 }
-
-#[derive(Resource)]
-struct PlanetsConfigHandle(Handle<PlanetsConfig>);
 
 fn radius_to_mass(radius: Radius) -> u32 {
     (std::f64::consts::PI * radius.0.pow(2) as f64) as u32

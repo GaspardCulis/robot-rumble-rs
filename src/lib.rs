@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use bevy::prelude::{Resource, States};
 use clap::Parser;
 
+pub mod assets;
 pub mod core;
 pub mod entities;
 pub mod level;
@@ -14,6 +15,7 @@ pub mod utils;
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
 pub enum GameState {
     #[default]
+    AssetLoading,
     MatchMaking,
     WorldGen,
     InGame,
