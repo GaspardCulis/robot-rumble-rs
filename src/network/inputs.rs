@@ -1,6 +1,9 @@
 use crate::{
-    core::physics::PhysicsSet,
-    entities::player::{Player, PlayerAction},
+    core::{
+        inputs::{PlayerAction, PlayerActionState},
+        physics::PhysicsSet,
+    },
+    entities::player::Player,
     network::SessionConfig,
 };
 use bevy::{platform::collections::HashMap, prelude::*};
@@ -22,19 +25,17 @@ const INPUT_SHOOT: u32 = 1 << 4;
 const INPUT_SLOT1: u32 = 1 << 5;
 const INPUT_SLOT2: u32 = 1 << 6;
 const INPUT_SLOT3: u32 = 1 << 7;
-const INPUT_INTERACT: u32 = 1 << 8;
-const INPUT_ROPE_EXTEND: u32 = 1 << 9;
-const INPUT_ROPE_RETRACT: u32 = 1 << 10;
-const INPUT_RELOAD: u32 = 1 << 11;
+const INPUT_SLOT_NEXT: u32 = 1 << 8;
+const INPUT_SLOT_PREV: u32 = 1 << 9;
+const INPUT_INTERACT: u32 = 1 << 10;
+const INPUT_ROPE_EXTEND: u32 = 1 << 11;
+const INPUT_ROPE_RETRACT: u32 = 1 << 12;
+const INPUT_RELOAD: u32 = 1 << 13;
 
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            ReadInputs,
-            (update_local_pointer_direction, read_local_inputs).chain(),
-        )
-        .add_systems(
+        app.add_systems(ReadInputs, read_local_inputs).add_systems(
             GgrsSchedule,
             update_remote_inputs.before(PhysicsSet::Player),
         );
@@ -43,7 +44,7 @@ impl Plugin for NetworkInputsPlugin {
 
 fn read_local_inputs(
     mut commands: Commands,
-    query: Query<(&Player, &ActionState<PlayerAction>)>,
+    query: Query<(&Player, &PlayerActionState)>,
     local_players: Res<LocalPlayers>,
 ) {
     let mut local_inputs = HashMap::new();
@@ -64,12 +65,12 @@ fn read_local_inputs(
 }
 
 fn update_remote_inputs(
-    mut query: Query<(&Player, &mut ActionState<PlayerAction>)>, // Don't filter out LocalPlayer as we don't want his outputs to fire early
+    mut query: Query<(&Player, &mut PlayerActionState)>, // Don't filter out LocalPlayer as we don't want his outputs to fire early
     inputs: Res<PlayerInputs<SessionConfig>>,
 ) {
     for (player, mut action_state) in query.iter_mut() {
         let (input, _) = inputs[player.handle];
-        *action_state = ActionState::<PlayerAction>::from_ggrs_session_input(input);
+        *action_state = PlayerActionState::from_ggrs_session_input(input);
     }
 }
 
@@ -79,7 +80,7 @@ pub trait GgrsSessionInput {
     fn from_ggrs_session_input(input: NetworkInputs) -> Self;
 }
 
-impl GgrsSessionInput for ActionState<PlayerAction> {
+impl GgrsSessionInput for PlayerActionState {
     fn as_ggrs_session_input(&self) -> NetworkInputs {
         let mut keys = 0;
 
@@ -93,6 +94,8 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
                 PlayerAction::Slot1 => INPUT_SLOT1,
                 PlayerAction::Slot2 => INPUT_SLOT2,
                 PlayerAction::Slot3 => INPUT_SLOT3,
+                PlayerAction::SlotNext => INPUT_SLOT_NEXT,
+                PlayerAction::SlotPrev => INPUT_SLOT_PREV,
                 PlayerAction::Reload => INPUT_RELOAD,
                 PlayerAction::PointerDirection => unimplemented!("Should not get called"),
                 PlayerAction::Interact => INPUT_INTERACT,
@@ -141,6 +144,12 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
         if keys & INPUT_SLOT3 != 0 {
             action_state.press(&PlayerAction::Slot3);
         }
+        if keys & INPUT_SLOT_NEXT != 0 {
+            action_state.press(&PlayerAction::SlotNext);
+        }
+        if keys & INPUT_SLOT_PREV != 0 {
+            action_state.press(&PlayerAction::SlotPrev);
+        }
         if keys & INPUT_RELOAD != 0 {
             action_state.press(&PlayerAction::Reload);
         }
@@ -158,32 +167,4 @@ impl GgrsSessionInput for ActionState<PlayerAction> {
 
         action_state
     }
-}
-
-fn update_local_pointer_direction(
-    mut player_query: Query<(&Player, &GlobalTransform, &mut ActionState<PlayerAction>)>,
-    windows: Query<&Window>,
-    query_view: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
-    local_players: Res<LocalPlayers>,
-) -> Result {
-    let window = windows.single()?;
-    let (camera, view) = query_view.single()?;
-    if let Some(world_position) = window
-        .cursor_position()
-        .map(|cursor| camera.viewport_to_world_2d(view, cursor).unwrap())
-    {
-        for (_, player_world_pos, mut action_state) in player_query
-            .iter_mut()
-            .filter(|(player, _, _)| local_players.0.contains(&player.handle))
-        {
-            let pointer_direction =
-                (world_position - player_world_pos.translation().xy()).normalize();
-
-            action_state.set_axis_pair(&PlayerAction::PointerDirection, pointer_direction);
-        }
-    } else {
-        // Not an error pointer could be out of window
-    }
-
-    Ok(())
 }
