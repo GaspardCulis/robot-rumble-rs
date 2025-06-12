@@ -301,7 +301,11 @@ fn update_weapon_slot_ui(
     )>,
     query_input: Query<&ActionState<PlayerAction>>,
     mut name_boxes: Query<(&mut BackgroundColor, &WeaponNameBoxUI)>,
-    mut weapon_sprites: Query<(&mut Node, &WeaponSpriteUI)>,
+    mut weapon_sprites: Query<(&mut Node, &WeaponSpriteUI), Without<AmmoBackground>>,
+    weapon_query: Query<&Weapon, With<Player>>,
+    weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
+    mut background_query: Query<(Entity, &mut Node), With<AmmoBackground>>,
+    reload_anim_query: Query<Option<&AmmoReloadAnimation>>,
 ) {
     let Some(input) = query_input.iter().next() else {
         return;
@@ -318,7 +322,6 @@ fn update_weapon_slot_ui(
     };
 
     if let Some(new_selected) = selected_index {
-        // Mise à jour de la bordure pour les slots
         for (entity, slot_ui, selected_marker, mut border_color) in query_ui.iter_mut() {
             if slot_ui.index == new_selected {
                 if selected_marker.is_none() {
@@ -333,20 +336,45 @@ fn update_weapon_slot_ui(
             }
         }
 
-        // Mise à jour de l'apparence des boîtes de noms d'armes
         for (mut bg_color, name_slot) in name_boxes.iter_mut() {
             if name_slot.index == new_selected {
-                *bg_color = BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.2)); // Couleur claire pour le nom de l'arme sélectionnée
+                *bg_color = BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.2));
             } else {
-                *bg_color = BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6)); // Couleur sombre pour les autres noms
+                *bg_color = BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6));
             }
         }
 
         for (mut node, sprite_ui) in weapon_sprites.iter_mut() {
-            if sprite_ui.index == new_selected {
-                node.display = Display::Flex; // Afficher l’image
+            node.display = if sprite_ui.index == new_selected {
+                Display::Flex
             } else {
-                node.display = Display::None; // Cacher les autres
+                Display::None
+            };
+        }
+
+        // Relancer l’animation si l’arme sélectionnée est en cours de rechargement
+        if let Ok(weapon) = weapon_query.single() {
+            if let Ok((state, stats)) = weapon_state_query.get(weapon.0) {
+                if state.reload_timer.remaining_secs() > 0.0 {
+                    if let Ok((entity, _)) = background_query.single_mut() {
+                        if reload_anim_query.get(entity).ok().flatten().is_none() {
+                            let reload_duration = stats.reload_time.as_secs_f32();
+                            let remaining_secs =
+                                state.reload_timer.remaining_secs().clamp(0.0, reload_duration);
+                            let elapsed_ratio = 1.0 - (remaining_secs / reload_duration);
+                            let ammo_ratio =
+                                state.current_ammo as f32 / stats.magazine_size as f32;
+                            let from = ammo_ratio.max(elapsed_ratio);
+
+                            commands.entity(entity).insert(AmmoReloadAnimation {
+                                from,
+                                to: 1.0,
+                                timer: Timer::from_seconds(remaining_secs, TimerMode::Once),
+                                original_weapon_entity: weapon.0,
+                            });
+                        }
+                    }
+                }
             }
         }
     }
@@ -433,18 +461,20 @@ fn trigger_reload_animation(
 
     // Trigger reload animation if player presses reload OR has 0 ammo
     if reload_pressed || state.current_ammo == 0 {
-        let from = match node.width {
-            Val::Percent(p) => p / 100.0,
-            _ => 0.0,
-        };
-        let to = 1.0;
+        let reload_duration = stats.reload_time.as_secs_f32();
+        let remaining_secs = state.reload_timer.remaining_secs().clamp(0.0, reload_duration);
 
-        let duration = stats.reload_time;
+        let elapsed_ratio = 1.0 - (remaining_secs / reload_duration);
+        let ammo_ratio = state.current_ammo as f32 / stats.magazine_size as f32;
+
+        // On utilise le plus grand des deux : l’avancée visuelle ne doit jamais être en retard par rapport aux munitions
+        let from = ammo_ratio.max(elapsed_ratio);
+        let to = 1.0;
 
         commands.entity(entity).insert(AmmoReloadAnimation {
             from,
             to,
-            timer: Timer::from_seconds(duration.as_secs_f32(), TimerMode::Once),
+            timer: Timer::from_seconds(remaining_secs, TimerMode::Once),
             original_weapon_entity: weapon.0,
         });
     }
