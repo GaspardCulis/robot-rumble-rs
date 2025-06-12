@@ -23,6 +23,10 @@ jobs:
     - uses: cachix/install-nix-action@v25
       with:
           nix_path: nixpkgs=channel:nixos-unstable
+    - name: Print Rust and Clippy versions
+      run: |
+        nix-shell --command "rustc --version"
+        nix-shell --command "cargo clippy --version"
     - name: Lint (rustfmt)
       run: nix-shell --command "cargo fmt --all --check"
     - name: Lint (clippy)
