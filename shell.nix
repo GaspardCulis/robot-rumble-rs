@@ -72,6 +72,7 @@ in
       wayland # To use the wayland feature
       # Android
       java
+      gradle
     ];
     LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
     JAVA_HOME = java;
