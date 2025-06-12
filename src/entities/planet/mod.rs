@@ -10,7 +10,7 @@ use rand::{SeedableRng, seq::IndexedRandom as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 mod config;
-mod materials;
+pub mod materials;
 
 use config::*;
 use materials::*;
@@ -22,7 +22,9 @@ pub struct Planet;
 #[derive(Component, Debug, Reflect, Copy, Clone, PartialEq)]
 pub struct Radius(pub u32);
 
-#[derive(Component, Debug, Reflect, Copy, Clone, PartialEq, serde::Deserialize)]
+#[derive(
+    Component, Debug, Reflect, Copy, Clone, PartialEq, serde::Deserialize, serde::Serialize,
+)]
 pub enum PlanetType {
     Planet,
     Star,

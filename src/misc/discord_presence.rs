@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 use discord_presence::Client;
 
@@ -17,7 +19,7 @@ impl Plugin for DiscordPresencePlugin {
 }
 
 fn setup(mut commands: Commands) {
-    let mut drpc = Client::new(APPLICATION_ID);
+    let mut drpc = Client::with_error_config(APPLICATION_ID, Duration::from_secs(15), None);
     drpc.on_ready(|_ctx| {
         info!("Discord presence ready");
     })
