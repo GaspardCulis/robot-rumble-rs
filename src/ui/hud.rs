@@ -218,7 +218,6 @@ fn spawn_arsenal_hud(
                                     } else {
                                         Color::srgba(0.0, 0.0, 0.0, 0.6)
                                     }),
-                                
                                     WeaponNameBoxUI { index: i },
                                 ))
                                 .with_children(|name_box| {
@@ -359,11 +358,12 @@ fn update_weapon_slot_ui(
                     if let Ok((entity, _)) = background_query.single_mut() {
                         if reload_anim_query.get(entity).ok().flatten().is_none() {
                             let reload_duration = stats.reload_time.as_secs_f32();
-                            let remaining_secs =
-                                state.reload_timer.remaining_secs().clamp(0.0, reload_duration);
+                            let remaining_secs = state
+                                .reload_timer
+                                .remaining_secs()
+                                .clamp(0.0, reload_duration);
                             let elapsed_ratio = 1.0 - (remaining_secs / reload_duration);
-                            let ammo_ratio =
-                                state.current_ammo as f32 / stats.magazine_size as f32;
+                            let ammo_ratio = state.current_ammo as f32 / stats.magazine_size as f32;
                             let from = ammo_ratio.max(elapsed_ratio);
 
                             commands.entity(entity).insert(AmmoReloadAnimation {
@@ -433,7 +433,7 @@ fn update_ammo_background(
 fn trigger_reload_animation(
     weapon_query: Query<&Weapon, With<Player>>,
     weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
-    mut background_query: Query<(Entity, &mut Node), With<AmmoBackground>>,
+    mut background_query: Query<Entity, With<AmmoBackground>>,
     input_query: Query<&ActionState<PlayerAction>>,
     mut commands: Commands,
     reload_anim_query: Query<&AmmoReloadAnimation>,
@@ -444,7 +444,7 @@ fn trigger_reload_animation(
     let Ok((state, stats)) = weapon_state_query.get(weapon.0) else {
         return;
     };
-    let Ok((entity, node)) = background_query.single_mut() else {
+    let Ok(entity) = background_query.single_mut() else {
         return;
     };
 
@@ -462,7 +462,10 @@ fn trigger_reload_animation(
     // Trigger reload animation if player presses reload OR has 0 ammo
     if reload_pressed || state.current_ammo == 0 {
         let reload_duration = stats.reload_time.as_secs_f32();
-        let remaining_secs = state.reload_timer.remaining_secs().clamp(0.0, reload_duration);
+        let remaining_secs = state
+            .reload_timer
+            .remaining_secs()
+            .clamp(0.0, reload_duration);
 
         let elapsed_ratio = 1.0 - (remaining_secs / reload_duration);
         let ammo_ratio = state.current_ammo as f32 / stats.magazine_size as f32;
