@@ -2,19 +2,12 @@ use bevy::{asset::Asset, math::Vec2, reflect::Reflect, render::render_resource::
 
 #[derive(serde::Deserialize, Asset, ShaderType, Debug, Clone, Reflect)]
 pub struct CommonMaterial {
-    #[allow(dead_code)]
     pub pixels: f32,
-    #[allow(dead_code)]
     pub rotation: f32,
-    #[allow(dead_code)]
     pub size: f32,
-    #[allow(dead_code)]
     pub octaves: i32,
-    #[allow(dead_code)]
     pub seed: f32,
-    #[allow(dead_code)]
     pub time_speed: f32,
-    #[allow(dead_code)]
     pub light_origin: Vec2,
 }
 
