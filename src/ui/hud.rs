@@ -1,12 +1,9 @@
 use bevy::{prelude::*, ui::widget::NodeImageMode};
-use leafwing_input_manager::prelude::ActionState;
 
 use crate::{
-    GameState,
-    entities::player::{
-        Player, PlayerAction, Weapon,
-        weapon::{self, WeaponState, WeaponStats},
-    },
+    core::inputs::{PlayerAction, PlayerActionState}, entities::player::{
+        weapon::{self, WeaponState, WeaponStats}, Player, Weapon
+    }, GameState
 };
 
 const WEAPON_SLOTS: [weapon::WeaponType; 3] = [
@@ -298,7 +295,7 @@ fn update_weapon_slot_ui(
         Option<&SelectedWeaponSlot>,
         &mut BorderColor,
     )>,
-    query_input: Query<&ActionState<PlayerAction>>,
+    query_input: Query<&PlayerActionState>,
     mut name_boxes: Query<(&mut BackgroundColor, &WeaponNameBoxUI)>,
     mut weapon_sprites: Query<(&mut Node, &WeaponSpriteUI), Without<AmmoBackground>>,
     weapon_query: Query<&Weapon, With<Player>>,
@@ -434,7 +431,7 @@ fn trigger_reload_animation(
     weapon_query: Query<&Weapon, With<Player>>,
     weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
     mut background_query: Query<Entity, With<AmmoBackground>>,
-    input_query: Query<&ActionState<PlayerAction>>,
+    input_query: Query<&PlayerActionState>,
     mut commands: Commands,
     reload_anim_query: Query<&AmmoReloadAnimation>,
 ) {
@@ -488,7 +485,7 @@ fn animate_ammo_reload(
     mut query: Query<(&mut AmmoReloadAnimation, &mut Node, Entity), With<AmmoBackground>>,
     mut black_bar_query: Query<&mut Node, (With<BlackBar>, Without<AmmoBackground>)>,
     mut commands: Commands,
-    input_query: Query<&ActionState<PlayerAction>>,
+    input_query: Query<&PlayerActionState>,
     weapon_query: Query<&Weapon, With<Player>>,
     weapon_state_query: Query<&WeaponState>,
 ) {
