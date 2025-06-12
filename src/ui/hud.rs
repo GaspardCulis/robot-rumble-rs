@@ -382,12 +382,11 @@ fn update_ammo_text(
     weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
     mut text_query: Query<&mut Text, With<AmmoText>>,
 ) {
-    if let Ok(weapon) = weapon_query.single() {
-        if let Ok((state, stats)) = weapon_state_query.get(weapon.0) {
-            if let Ok(mut text) = text_query.single_mut() {
-                text.0 = format!("{} / {}", state.current_ammo, stats.magazine_size);
-            }
-        }
+    if let Ok(weapon) = weapon_query.single()
+        && let Ok((state, stats)) = weapon_state_query.get(weapon.0)
+        && let Ok(mut text) = text_query.single_mut()
+    {
+        text.0 = format!("{} / {}", state.current_ammo, stats.magazine_size);
     }
 }
 
@@ -518,10 +517,10 @@ fn animate_ammo_reload(
 
         // Check ammo remaining
         let mut ammo_nonzero = false;
-        if let Ok(weapon) = weapon_query.single() {
-            if let Ok(state) = weapon_state_query.get(weapon.0) {
-                ammo_nonzero = state.current_ammo != 0;
-            }
+        if let Ok(weapon) = weapon_query.single()
+            && let Ok(state) = weapon_state_query.get(weapon.0)
+        {
+            ammo_nonzero = state.current_ammo != 0;
         }
 
         let shoot_pressed = input.just_pressed(&PlayerAction::Shoot);
