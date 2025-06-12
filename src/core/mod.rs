@@ -4,6 +4,7 @@ pub mod background;
 pub mod camera;
 pub mod collision;
 pub mod gravity;
+pub mod inputs;
 pub mod physics;
 pub mod worldgen;
 
@@ -13,6 +14,7 @@ impl Plugin for CorePlugins {
         app.add_plugins(background::BackgroundPlugin)
             .add_plugins(camera::CameraPlugin)
             .add_plugins(gravity::GravityPlugin)
+            .add_plugins(inputs::InputsPlugin)
             .add_plugins(physics::PhysicsPlugin)
             .add_plugins(worldgen::WorldgenPlugin);
     }
