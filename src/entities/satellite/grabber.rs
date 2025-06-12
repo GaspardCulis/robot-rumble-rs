@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy::text::{JustifyText, Text2d, TextColor, TextFont, TextLayout};
 use bevy_ggrs::{GgrsSchedule, LocalPlayers};
-use leafwing_input_manager::prelude::ActionState;
 
 use super::SatelliteSet;
 use super::assets::{SatelliteAssets, SatelliteConfig};
@@ -120,7 +119,7 @@ fn display_interact_prompt(
     for (player_entity, player, prompt, nearby_grabber) in player_query.iter() {
         if local_players
             .as_ref()
-            .is_some_and(|local| local.0.contains(&player.handle))
+            .is_some_and(|local| !local.0.contains(&player.handle))
         {
             continue;
         }
@@ -245,11 +244,11 @@ fn update_grabbed_players(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Position, &mut Velocity, &GrabbedConstraint), With<Player>>,
     anchor_query: Query<&Position, (With<Grabber>, Without<Player>)>,
-    config_handle: Res<SatelliteConfigHandle>,
+    assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
 ) {
     for (entity, position, mut velocity, constraint) in query.iter_mut() {
-        let Some(config) = configs.get(&config_handle.0) else {
+        let Some(config) = configs.get(&assets.config) else {
             warn!("Satellite config not loaded yet");
             return;
         };

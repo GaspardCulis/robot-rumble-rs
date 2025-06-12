@@ -34,23 +34,6 @@ pub struct SpawnSatelliteEvent {
     pub kind: SatelliteKind,
 }
 
-#[derive(serde::Deserialize, Asset, TypePath)]
-pub struct SatelliteConfig {
-    pub orbit_radius: f32,
-    pub min_angular_speed: f32,
-    pub orbit_duration: f32,
-    pub orbit_cooldown: f32,
-    pub decay_rate: f32,
-    pub bump_radius: f32,
-    pub bump_multiplier: f32,
-    pub grabber_radius: f32,
-    pub grabber_entry_margin: f32,
-    pub max_grabber_speed: f32,
-}
-
-#[derive(Resource)]
-pub struct SatelliteConfigHandle(pub Handle<SatelliteConfig>);
-
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 enum SatelliteSet {
     Graviton,
