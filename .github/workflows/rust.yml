@@ -25,11 +25,11 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
     - name: Print Rust and Clippy versions
       run: |
-        nix-shell --ignore-environment --command "rustc --version"
-        nix-shell --ignore-environment --command "cargo clippy --version"
+        nix-shell --pure --command "rustc --version"
+        nix-shell --pure --command "cargo clippy --version"
     - name: Lint (rustfmt)
-      run: nix-shell --ignore-environment --command "cargo fmt --all --check"
+      run: nix-shell --pure --command "cargo fmt --all --check"
     - name: Lint (clippy)
-      run: nix-shell --ignore-environment --command "cargo clippy --all-targets --all-features -- -D warnings"
+      run: nix-shell --pure --command "cargo clippy --all-targets --all-features -- -D warnings"
     - name: Test (cargo)
-      run: nix-shell --ignore-environment --command "cargo test"
+      run: nix-shell --pure --command "cargo test"
