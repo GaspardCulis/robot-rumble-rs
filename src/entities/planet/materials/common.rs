@@ -1,6 +1,6 @@
 use bevy::{asset::Asset, math::Vec2, reflect::Reflect, render::render_resource::ShaderType};
 
-#[derive(serde::Deserialize, Asset, ShaderType, Debug, Clone, Reflect)]
+#[derive(Asset, ShaderType, Debug, Clone, Reflect)]
 pub struct CommonMaterial {
     pub pixels: f32,
     pub rotation: f32,
