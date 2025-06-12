@@ -25,6 +25,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
     - name: Print Rust and Clippy versions
       run: |
+        nix-shell --pure --command "echo installed Nix env"
         nix-shell --pure --command "rustc --version"
         nix-shell --pure --command "cargo clippy --version"
     - name: Lint (rustfmt)
