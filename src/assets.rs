@@ -10,6 +10,7 @@ use crate::{
         projectile::config as projectiles,
         satellite::assets as satellite,
     },
+    ui,
 };
 
 /// Responsible for loading all crate's assets, and registering their asset loaders.
@@ -44,7 +45,8 @@ impl Plugin for AssetsPlugin {
                 .finally_init_resource::<player_skin::SkinAssets>()
                 .load_collection::<weapon::WeaponsAssets>()
                 .load_collection::<projectiles::ProjectilesAssets>()
-                .load_collection::<satellite::SatelliteAssets>(),
+                .load_collection::<satellite::SatelliteAssets>()
+                .load_collection::<ui::UiAssets>(),
         );
     }
 }

@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::ui::UiAssets;
+
 use super::Screen;
 
 #[derive(Resource, Default)]
@@ -29,7 +31,7 @@ impl Plugin for HomeMenuPlugin {
     }
 }
 
-fn spawn_menu(mut commands: Commands) {
+fn spawn_menu(mut commands: Commands, assets: Res<UiAssets>) {
     info!("Loading Home menu UI");
     commands.init_resource::<UiState>();
     commands
@@ -74,6 +76,18 @@ fn spawn_menu(mut commands: Commands) {
                         exit.write(AppExit::Success);
                     },
                 );
+
+            spawner.spawn((
+                ImageNode::new(assets.background_image.clone()),
+                Node {
+                    min_width: Val::Percent(100.),
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(0.),
+                    left: Val::Px(0.),
+                    ..default()
+                },
+                ZIndex(-1),
+            ));
         });
 }
 
