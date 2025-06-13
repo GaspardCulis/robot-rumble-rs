@@ -8,6 +8,9 @@ use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::Player;
 
+// Use to give a initial boost to the player so he is not stuck in the grabber
+const TANGENTIAL_SPEED: f32 = 800.0;
+
 #[derive(Component)]
 #[require(Name::new("Grabber"))]
 pub struct Grabber;
@@ -201,13 +204,12 @@ fn handle_grabber_interaction(
 
                 // Appliquer une vélocité tangentielle pour commencer l'orbite
                 let tangent = Vec2::new(-offset.y, offset.x).normalize_or_zero();
-                let tangential_speed = 800.0; // Ajustable
                 let direction_sign = if velocity.0.dot(tangent) >= 0.0 {
                     1.0
                 } else {
                     -1.0
                 };
-                velocity.0 = tangent * tangential_speed * direction_sign;
+                velocity.0 = tangent * TANGENTIAL_SPEED * direction_sign;
 
                 commands
                     .entity(player_entity)
