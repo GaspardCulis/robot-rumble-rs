@@ -7,6 +7,7 @@ use weapon::{WeaponMode, WeaponState};
 
 use crate::core::collision::{CollisionPlugin, CollisionShape, CollisionState};
 use crate::core::gravity::{Mass, Passive};
+use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
 use crate::utils::math;
 
@@ -51,24 +52,6 @@ pub struct Percentage(pub f32);
 #[derive(Component, Clone, Debug, Default, PartialEq, Reflect, Deref)]
 pub struct PlayerInputVelocity(Vec2);
 
-#[derive(Actionlike, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
-pub enum PlayerAction {
-    Jump,
-    Sneak,
-    Left,
-    Right,
-    Shoot,
-    Slot1,
-    Slot2,
-    Slot3,
-    #[actionlike(DualAxis)]
-    PointerDirection,
-    Reload,
-    Interact,
-    RopeExtend,
-    RopeRetract,
-}
-
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 pub struct PlayerSkin(pub String);
 
@@ -85,7 +68,6 @@ impl Plugin for PlayerPlugin {
             .register_type::<Weapon>()
             .register_type::<Percentage>()
             .add_plugins(CollisionPlugin::<Player, planet::Planet>::new())
-            .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_plugins(inventory::InventoryPlugin)
             .add_plugins(skin::SkinPlugin)
@@ -102,7 +84,7 @@ impl Plugin for PlayerPlugin {
 fn player_movement(
     mut query: Query<
         (
-            &ActionState<PlayerAction>,
+            &PlayerActionState,
             &mut Velocity,
             &mut PlayerInputVelocity,
             &Rotation,

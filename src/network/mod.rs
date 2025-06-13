@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
-use leafwing_input_manager::prelude::*;
 use rand::Rng as _;
 
 use crate::{
@@ -10,7 +9,7 @@ use crate::{
     core::{camera::CameraFollowTarget, collision, gravity, physics, worldgen},
     entities::{
         blackhole, planet,
-        player::{self, Player, PlayerAction, weapon},
+        player::{self, Player, weapon},
         projectile,
         satellite::{grabber, graviton},
     },
@@ -243,29 +242,7 @@ fn add_local_player_components(
         _ => unimplemented!(),
     };
 
-    let input_map = InputMap::new([
-        // Jump
-        (PlayerAction::Jump, KeyCode::Space),
-        (PlayerAction::Jump, KeyCode::KeyW),
-        // Sneak
-        (PlayerAction::Sneak, KeyCode::ShiftLeft),
-        (PlayerAction::Sneak, KeyCode::KeyS),
-        // Directions
-        (PlayerAction::Right, KeyCode::KeyD),
-        (PlayerAction::Left, KeyCode::KeyA),
-        // Slot selection
-        (PlayerAction::Slot1, KeyCode::Digit1),
-        (PlayerAction::Slot2, KeyCode::Digit2),
-        (PlayerAction::Slot3, KeyCode::Digit3),
-        // Reload
-        (PlayerAction::Reload, KeyCode::KeyR),
-        // Interaction
-        (PlayerAction::Interact, KeyCode::KeyE),
-    ])
-    .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
-    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
-    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
+    let input_map = crate::core::inputs::default_input_map();
 
     let local_players_query = query
         .iter()

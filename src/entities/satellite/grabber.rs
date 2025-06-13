@@ -6,8 +6,9 @@ use leafwing_input_manager::prelude::ActionState;
 
 use super::SatelliteSet;
 use super::assets::{SatelliteAssets, SatelliteConfig};
+use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{Position, Velocity};
-use crate::entities::player::{Player, PlayerAction};
+use crate::entities::player::Player;
 
 const ROPE_MIN_LENGTH: f32 = 50.0;
 const ROPE_MAX_LENGTH: f32 = 275.0;
@@ -175,7 +176,7 @@ fn handle_grabber_interaction(
     mut player_query: Query<
         (
             Entity,
-            &ActionState<PlayerAction>,
+            &PlayerActionState,
             &Position,
             Option<&NearbyGrabber>,
             Option<&GrabbedBy>,
