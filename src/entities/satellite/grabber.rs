@@ -36,15 +36,10 @@ pub struct GrabberRope {
     pub grabber: Entity,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct GrabbedConstraint {
     pub anchor: Entity,
     pub distance: f32,
-}
-
-#[derive(Component)]
-pub struct GrabberCooldown {
-    pub timer: Timer,
 }
 
 pub struct GrabberPlugin;
@@ -58,7 +53,6 @@ impl Plugin for GrabberPlugin {
                 update_grabbed_players,
                 cleanup_grabber_ropes,
                 update_grabber_ropes,
-                tick_grabber_cooldown,
             )
                 .chain()
                 .in_set(SatelliteSet::Grabber),
@@ -175,17 +169,22 @@ fn handle_grabber_interaction(
             &Position,
             Option<&NearbyGrabber>,
             Option<&GrabbedBy>,
-            Option<&GrabberCooldown>,
             &mut Velocity,
         ),
         With<Player>,
     >,
     grabber_query: Query<&Position, With<Grabber>>,
+    assets: Res<SatelliteAssets>,
+    configs: Res<Assets<SatelliteConfig>>
 ) {
-    for (player_entity, actions, position, nearby, grabbed_by, grabber_cooldown, mut velocity) in
+    for (player_entity, actions, position, nearby, grabbed_by, mut velocity) in
         player_query.iter_mut()
     {
-        if grabber_cooldown.is_some() {
+        let Some(config) = configs.get(&assets.config) else {
+            warn!("Satellite config not loaded yet");
+            return;
+        };
+        if velocity.0.length() > config.max_grabber_speed {
             continue;
         }
 
@@ -256,10 +255,7 @@ fn update_grabbed_players(
             commands
                 .entity(entity)
                 .remove::<GrabbedBy>()
-                .remove::<GrabbedConstraint>()
-                .insert(GrabberCooldown {
-                    timer: Timer::from_seconds(1.0, TimerMode::Once),
-                });
+                .remove::<GrabbedConstraint>();
             continue;
         }
         if let Ok(anchor_pos) = anchor_query.get(constraint.anchor) {
@@ -274,16 +270,16 @@ fn update_grabbed_players(
             let target_position = anchor_pos.0 + direction * constraint.distance;
 
             let stiffness = 5.0;
-            let correction = (target_position - position.0) * stiffness;
-            velocity.0 += correction;
+            let mut correction = (target_position - position.0) * stiffness;
 
             let radial_speed = velocity.0.dot(direction);
-            velocity.0 -= direction * radial_speed * 0.2;
+            correction-= direction * radial_speed * 0.2;
 
             let tangent = Vec2::new(-direction.y, direction.x);
             let tangential_speed = velocity.0.dot(tangent);
             let orbit_boost = 0.05;
-            velocity.0 += tangent * tangential_speed.signum() * orbit_boost;
+            correction += tangent * tangential_speed.signum() * orbit_boost;
+            velocity.0 += correction;
         }
     }
 }
@@ -326,19 +322,6 @@ fn cleanup_grabber_ropes(
     for (entity, rope) in rope_query.iter() {
         if let Ok(None) = player_query.get(rope.player) {
             commands.entity(entity).despawn();
-        }
-    }
-}
-
-fn tick_grabber_cooldown(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut query: Query<(Entity, &mut GrabberCooldown)>,
-) {
-    for (entity, mut cooldown) in query.iter_mut() {
-        cooldown.timer.tick(time.delta());
-        if cooldown.timer.finished() {
-            commands.entity(entity).remove::<GrabberCooldown>();
         }
     }
 }
