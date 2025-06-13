@@ -55,13 +55,13 @@ fn spawn_menu(mut commands: Commands, assets: Res<UiAssets>) {
                 .observe(hover_in_observer)
                 .observe(hover_out_observer);
             spawner
-                .spawn(c_menu_entry("Settings", Screen::Settings))
+                .spawn(c_menu_entry("Settings", Screen::Home)) // Set to correct state when implemented
                 .observe(click_observer)
                 .observe(hover_in_observer)
                 .observe(hover_out_observer);
 
             spawner
-                .spawn(c_menu_entry("Credits", Screen::Credits))
+                .spawn(c_menu_entry("Credits", Screen::Home)) // Same
                 .observe(click_observer)
                 .observe(hover_in_observer)
                 .observe(hover_out_observer);
