@@ -63,6 +63,7 @@ features = [
   "default_font",
 
   "png",
+  "webp",
   "vorbis",
 
   "x11",
