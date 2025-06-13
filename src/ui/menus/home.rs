@@ -25,7 +25,7 @@ impl Plugin for HomeMenuPlugin {
         app.add_systems(OnEnter(Screen::Home), spawn_menu)
             .add_systems(
                 Update,
-                update_menu_entry_scale.run_if(in_state(Screen::Home)),
+                (update_menu_entry_scale, update_background_size).run_if(in_state(Screen::Home)),
             )
             .add_systems(OnExit(Screen::Home), despawn_menu);
     }
@@ -78,7 +78,8 @@ fn spawn_menu(mut commands: Commands, assets: Res<UiAssets>) {
                 );
 
             spawner.spawn((
-                ImageNode::new(assets.background_image.clone()),
+                ImageNode::new(assets.background_image.clone())
+                    .with_rect(Rect::new(0.0, 0.0, 2560.0, 1440.0)),
                 Node {
                     min_width: Val::Percent(100.),
                     position_type: PositionType::Absolute,
@@ -109,6 +110,29 @@ fn update_menu_entry_scale(
 
         transform.scale = transform.scale.lerp(target_scale, time.delta_secs() * 16.0);
     }
+}
+
+fn update_background_size(
+    mut images: Query<(&mut Node, &ImageNode)>,
+    window: Query<&Window>,
+) -> Result {
+    let window = window.single()?;
+    let window_ar = window.size().x / window.size().y;
+
+    for (mut node, image_node) in images.iter_mut() {
+        if let Some(rect) = image_node.rect {
+            let image_node_ar = rect.size().x / rect.size().y;
+            if image_node_ar > window_ar {
+                node.min_width = default();
+                node.min_height = Val::Percent(100.0);
+            } else {
+                node.min_width = Val::Percent(100.0);
+                node.min_height = default();
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn c_menu_entry(text: impl Into<String>, next_state_on_click: Screen) -> impl Bundle {
