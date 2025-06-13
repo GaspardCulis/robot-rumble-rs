@@ -36,7 +36,7 @@ pub struct GrabberRope {
     pub grabber: Entity,
 }
 
-#[derive(Component, Reflect)]
+#[derive(Component, Clone, Reflect)]
 pub struct GrabbedConstraint {
     pub anchor: Entity,
     pub distance: f32,
