@@ -4,6 +4,9 @@ use leafwing_input_manager::prelude::*;
 
 use crate::entities::player::Player;
 
+/// Threshold for stick inputs to be acknowledged
+const GAMEPAD_THRESHOLD: f32 = 0.5;
+
 pub type PlayerActionState = ActionState<PlayerAction>;
 
 #[derive(Actionlike, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
@@ -105,11 +108,11 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
     .with_multiple([
         (
             PlayerAction::Right,
-            GamepadControlDirection::LEFT_RIGHT.threshold(0.5),
+            GamepadControlDirection::LEFT_RIGHT.threshold(GAMEPAD_THRESHOLD),
         ),
         (
             PlayerAction::Left,
-            GamepadControlDirection::LEFT_LEFT.threshold(0.5),
+            GamepadControlDirection::LEFT_LEFT.threshold(GAMEPAD_THRESHOLD),
         ),
     ])
     .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
