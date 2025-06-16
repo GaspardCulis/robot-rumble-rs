@@ -30,14 +30,7 @@ pub struct InputsPlugin;
 impl Plugin for InputsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .add_systems(
-                Update,
-                (
-                    update_gamepad_shoot_input, // Running it before `ulpd` ensures it only affects shoot input if a gamepad acts on `ShootDirection`
-                    update_local_pointer_direction,
-                )
-                    .chain(),
-            );
+            .add_systems(Update, update_local_pointer_direction);
     }
 }
 
@@ -69,18 +62,6 @@ fn update_local_pointer_direction(
     }
 
     Ok(())
-}
-
-fn update_gamepad_shoot_input(mut query: Query<&mut PlayerActionState>) {
-    for mut action_state in query.iter_mut() {
-        if action_state
-            .axis_pair(&PlayerAction::PointerDirection)
-            .length()
-            > 0.6
-        {
-            action_state.set_button_value(&PlayerAction::Shoot, 1.0);
-        }
-    }
 }
 
 pub fn default_input_map() -> InputMap<PlayerAction> {
@@ -115,6 +96,7 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
         (PlayerAction::Right, GamepadButton::DPadRight),
         (PlayerAction::Left, GamepadButton::DPadLeft),
         (PlayerAction::Jump, GamepadButton::South),
+        (PlayerAction::Shoot, GamepadButton::RightTrigger2),
         (PlayerAction::Reload, GamepadButton::West),
         (PlayerAction::Interact, GamepadButton::East),
         (PlayerAction::SlotNext, GamepadButton::RightTrigger),
