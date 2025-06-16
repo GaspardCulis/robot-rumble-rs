@@ -96,8 +96,8 @@ fn start_matchbox_socket(mut commands: Commands, args: Res<crate::Args>) {
         .add_unreliable_channel()
         .ice_server(RtcIceServerConfig {
             urls: vec!["turn:gasdev.fr:3478".to_string()],
-            username: Some("".to_string()), // Fixes `ErrNoTurnCredentials`
-            credential: Some("".to_string()), // Same
+            username: Some("default".to_string()), // Fixes `ErrNoTurnCredentials`
+            credential: Some("default".to_string()), // Same
         });
     commands.insert_resource(MatchboxSocket::from(builder));
 }
