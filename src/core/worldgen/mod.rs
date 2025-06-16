@@ -97,7 +97,7 @@ fn handle_genworld_event(
             seed: rng.random(),
         });
 
-        let num_planets: usize = 8;
+        let num_planets = rng.random_range(config.min_clusters..config.max_clusters) as usize;
         //rng.random_range(config.min_clusters..config.max_clusters) as usize;
         let effective_radius = (config.edge_radius - config.edge_margin) as f32;
         // Pick cluster centers using Poisson sampling
@@ -114,11 +114,8 @@ fn handle_genworld_event(
         positions.push(Vec2::ZERO);
 
         // Build a Voronoi diagram
-        let diagram = build_voronoi(
-            positions,
-            2.0 * config.edge_radius as f64,
-            config.cluster_relaxation,
-        );
+        let relaxation = rng.random_range(0..config.cluster_relaxation) as usize;
+        let diagram = build_voronoi(positions, 2.0 * config.edge_radius as f64, relaxation);
         let (polygons, centroids) = adjust_to_circle(diagram, config.edge_radius as f32);
         voronoi_drawing_event.write(VoronoiGeneratedEvent {
             polygons: polygons.clone(),
