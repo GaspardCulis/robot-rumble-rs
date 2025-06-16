@@ -3,6 +3,7 @@ use bevy_asset_loader::asset_collection::AssetCollection;
 
 mod hud;
 mod menus;
+pub mod widgets;
 
 pub use menus::Screen;
 

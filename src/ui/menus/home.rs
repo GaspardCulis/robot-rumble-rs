@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::ui::UiAssets;
+use crate::ui::{UiAssets, widgets::*};
 
 use super::Screen;
 
@@ -15,9 +15,6 @@ struct HomeMenu;
 
 #[derive(Component)]
 struct MenuEntry;
-
-#[derive(Component)]
-struct NextStateOnClick(Screen);
 
 pub struct HomeMenuPlugin;
 impl Plugin for HomeMenuPlugin {
@@ -50,32 +47,42 @@ fn spawn_menu(mut commands: Commands, assets: Res<UiAssets>) {
         ))
         .with_children(|spawner| {
             spawner
-                .spawn(c_menu_entry("Play", Screen::MatchMaking))
-                .observe(click_observer)
+                .spawn((UIButton::default().with_text("Multiplayer"), MenuEntry))
+                .observe(
+                    |_: Trigger<Pointer<Click>>, mut menu: ResMut<NextState<Screen>>| {
+                        menu.set(Screen::MatchMaking);
+                    },
+                )
                 .observe(hover_in_observer)
                 .observe(hover_out_observer);
             spawner
-                .spawn(c_menu_entry("Settings", Screen::Home)) // Set to correct state when implemented
-                .observe(click_observer)
+                .spawn((UIButton::default().with_text("Settings"), MenuEntry))
+                .observe(
+                    |_: Trigger<Pointer<Click>>, mut menu: ResMut<NextState<Screen>>| {
+                        menu.set(Screen::Home);
+                    },
+                )
                 .observe(hover_in_observer)
                 .observe(hover_out_observer);
-
             spawner
-                .spawn(c_menu_entry("Credits", Screen::Home)) // Same
-                .observe(click_observer)
+                .spawn((UIButton::default().with_text("Credits"), MenuEntry))
+                .observe(
+                    |_: Trigger<Pointer<Click>>, mut menu: ResMut<NextState<Screen>>| {
+                        menu.set(Screen::Home);
+                    },
+                )
                 .observe(hover_in_observer)
                 .observe(hover_out_observer);
-
             spawner
-                .spawn(c_menu_entry("Quit", Screen::Home))
-                .observe(hover_in_observer)
-                .observe(hover_out_observer)
+                .spawn((UIButton::default().with_text("Quit"), MenuEntry))
                 .observe(
                     |_: Trigger<Pointer<Click>>, mut exit: EventWriter<AppExit>| {
                         // Close the app on click
                         exit.write(AppExit::Success);
                     },
-                );
+                )
+                .observe(hover_in_observer)
+                .observe(hover_out_observer);
 
             spawner.spawn((
                 ImageNode::new(assets.background_image.clone())
@@ -135,27 +142,6 @@ fn update_background_size(
     Ok(())
 }
 
-fn c_menu_entry(text: impl Into<String>, next_state_on_click: Screen) -> impl Bundle {
-    (
-        MenuEntry,
-        Node {
-            margin: UiRect::bottom(Val::Px(8.0)),
-            ..default()
-        },
-        Text::new(text),
-        TextFont {
-            font_size: 32.0,
-            ..default()
-        },
-        TextColor(Color::WHITE),
-        TextLayout {
-            justify: JustifyText::Center,
-            ..default()
-        },
-        NextStateOnClick(next_state_on_click),
-    )
-}
-
 fn despawn_menu(mut commands: Commands, query: Query<Entity, With<HomeMenu>>) -> Result {
     let menu = query.single()?;
     commands.entity(menu).despawn();
@@ -175,20 +161,4 @@ fn hover_out_observer(trigger: Trigger<Pointer<Out>>, mut ui_state: ResMut<UiSta
     {
         ui_state.selected_menu_entry = None;
     }
-}
-
-fn click_observer(
-    mut trigger: Trigger<Pointer<Click>>,
-    mut next_menus: ResMut<NextState<Screen>>,
-    query: Query<&NextStateOnClick>,
-) {
-    let event = trigger.event();
-
-    if event.button == PointerButton::Primary
-        && let Ok(next_state) = query.get(event.target)
-    {
-        next_menus.set(next_state.0.clone());
-    };
-
-    trigger.propagate(false);
 }
