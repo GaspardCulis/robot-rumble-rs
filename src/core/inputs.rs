@@ -33,7 +33,6 @@ impl Plugin for InputsPlugin {
             .add_systems(
                 Update,
                 (
-                    update_gamepad_direction_input,
                     update_gamepad_shoot_input, // Running it before `ulpd` ensures it only affects shoot input if a gamepad acts on `ShootDirection`
                     update_local_pointer_direction,
                 )
@@ -70,31 +69,6 @@ fn update_local_pointer_direction(
     }
 
     Ok(())
-}
-
-fn update_gamepad_direction_input(
-    gamepads: Query<&Gamepad>,
-    mut player_query: Query<(&Player, &mut PlayerActionState)>,
-    local_players: Res<LocalPlayers>,
-) {
-    let Some(gamepad) = gamepads.single().ok() else {
-        // Don't do anything if 0 gamepads.
-        // Maybe rework code if multiple ones
-        return;
-    };
-
-    for (_, mut action_state) in player_query.iter_mut().filter(|(player, action)| {
-        local_players.0.contains(&player.handle)
-            // Prioritize keyboard input
-            && !action.pressed(&PlayerAction::Right)
-            && !action.pressed(&PlayerAction::Left)
-    }) {
-        // Round so that only input strength > 0.5 is registered
-        // Maybe reconsider later if we want analog direction input
-        let stick_axis_value = gamepad.left_stick().x.round();
-        action_state.set_button_value(&PlayerAction::Right, stick_axis_value.clamp(0.0, 1.0));
-        action_state.set_button_value(&PlayerAction::Left, -stick_axis_value.clamp(-1.0, 0.0));
-    }
 }
 
 fn update_gamepad_shoot_input(mut query: Query<&mut PlayerActionState>) {
@@ -145,6 +119,16 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
         (PlayerAction::Interact, GamepadButton::East),
         (PlayerAction::SlotNext, GamepadButton::RightTrigger),
         (PlayerAction::SlotPrev, GamepadButton::LeftTrigger),
+    ])
+    .with_multiple([
+        (
+            PlayerAction::Right,
+            GamepadControlDirection::LEFT_RIGHT.threshold(0.5),
+        ),
+        (
+            PlayerAction::Left,
+            GamepadControlDirection::LEFT_LEFT.threshold(0.5),
+        ),
     ])
     .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
 }
