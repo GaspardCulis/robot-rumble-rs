@@ -1,6 +1,6 @@
 use bevy::{log::warn, math::Vec2};
-use rand::{Rng, SeedableRng};
-use rand_xoshiro::Xoshiro256PlusPlus;
+
+use crate::utils::poisson::poisson_sample_in_aabb;
 
 /// Returns true if `point` is inside the convex `polygon` using vectors.
 pub fn is_point_in_convex_polygon(point: Vec2, polygon: &[Vec2]) -> bool {
@@ -57,7 +57,7 @@ pub fn is_circle_inside_convex_polygon(center: Vec2, radius: f32, polygon: &[Vec
     return true;
 }
 
-fn get_aabb(polygon: &[Vec2]) -> Option<(Vec2, Vec2)> {
+pub fn get_aabb(polygon: &[Vec2]) -> Option<(Vec2, Vec2)> {
     if polygon.len() < 3 {
         warn!("Not a polygon!");
         return None;
@@ -74,19 +74,18 @@ fn get_aabb(polygon: &[Vec2]) -> Option<(Vec2, Vec2)> {
     Some((min, max))
 }
 
-pub fn sample_point_in_polygon(polygon: &[Vec2], seed: u64) -> Vec2 {
+// Uses Poisson Sampling for now
+pub fn _sample_points_in_polygon(polygon: &[Vec2], seed: u64, n: usize) -> Option<Vec<Vec2>> {
     if let Some((min, max)) = get_aabb(polygon) {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
+        let mut points = poisson_sample_in_aabb(min, max, 200., 100, seed, 2 * n);
 
-        loop {
-            let x = rng.random_range(min.x..max.x);
-            let y = rng.random_range(min.y..max.y);
-            let p = Vec2::new(x, y);
-            if is_point_in_convex_polygon(p, polygon) {
-                return p;
-            }
-        }
+        // Retain only the points inside the polygon
+        points.retain(|&p| is_point_in_convex_polygon(p, polygon));
+
+        // Truncate to the first `n` valid points
+        points.truncate(n);
+        Some(points)
     } else {
-        return Vec2::ZERO;
+        None
     }
 }
