@@ -178,7 +178,7 @@ fn handle_grabber_interaction(
     >,
     grabber_query: Query<&Position, With<Grabber>>,
     assets: Res<SatelliteAssets>,
-    configs: Res<Assets<SatelliteConfig>>
+    configs: Res<Assets<SatelliteConfig>>,
 ) {
     for (player_entity, actions, position, nearby, grabbed_by, mut velocity) in
         player_query.iter_mut()
@@ -275,7 +275,7 @@ fn update_grabbed_players(
             let mut correction = (target_position - position.0) * stiffness;
 
             let radial_speed = velocity.0.dot(direction);
-            correction-= direction * radial_speed * 0.2;
+            correction -= direction * radial_speed * 0.2;
 
             let tangent = Vec2::new(-direction.y, direction.x);
             let tangential_speed = velocity.0.dot(tangent);
