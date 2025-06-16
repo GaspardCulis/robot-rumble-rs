@@ -14,7 +14,8 @@ struct SplitscreenSetupMenu;
 pub struct SplitscreenSetupPlugin;
 impl Plugin for SplitscreenSetupPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(Screen::Home), spawn_menu);
+        app.add_systems(OnEnter(Screen::SplitscreenSetup), spawn_menu)
+            .add_systems(OnExit(Screen::SplitscreenSetup), despawn_menu);
     }
 }
 
@@ -76,4 +77,13 @@ fn spawn_menu(mut commands: Commands) {
                 },
             ));
         });
+}
+
+fn despawn_menu(
+    mut commands: Commands,
+    query: Query<Entity, With<SplitscreenSetupMenu>>,
+) -> Result {
+    let menu = query.single()?;
+    commands.entity(menu).despawn();
+    Ok(())
 }
