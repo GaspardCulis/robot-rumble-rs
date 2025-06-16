@@ -4,11 +4,10 @@ use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
 
-use crate::core::worldgen::voronoi::*;
 #[cfg(feature = "dev_tools")]
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
-use crate::utils;
+use crate::{core::worldgen::voronoi::*, utils::poisson::poisson_sample_in_aabb};
 
 use super::physics::Position;
 mod voronoi;
@@ -101,18 +100,14 @@ fn handle_genworld_event(
         //rng.random_range(config.min_clusters..config.max_clusters) as usize;
         let effective_radius = (config.edge_radius - config.edge_margin) as f32;
         // Pick cluster centers using Poisson sampling
-        let mut positions: Vec<Vec2> = utils::poisson::poisson_box_sampling(
-            2.0 * effective_radius,
-            2.0 * effective_radius,
+        let mut positions: Vec<Vec2> = poisson_sample_in_aabb(
+            Vec2::ZERO - effective_radius,
+            Vec2::ZERO + effective_radius,
             1200.,
             100,
             *seed,
             num_planets,
-        )
-        // Translate to world's coordinate system
-        .iter()
-        .map(|pos| *pos - Vec2::splat(effective_radius))
-        .collect();
+        );
 
         // Add Sun before building
         positions.push(Vec2::ZERO);
