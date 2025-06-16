@@ -103,6 +103,7 @@ fn handle_genworld_event(
         // Pick cluster centers using Poisson sampling
         let mut positions: Vec<Vec2> = utils::poisson::poisson_box_sampling(
             2.0 * effective_radius,
+            2.0 * effective_radius,
             1200.,
             100,
             *seed,

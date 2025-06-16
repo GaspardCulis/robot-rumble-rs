@@ -9,7 +9,8 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 ///
 /// # Arguments
 ///
-/// * `bounding_side` - Length of each side of the square bounding box.
+/// * `width` - Width of a bounding box.
+/// * `hight` - Hight of a bounding box.
 /// * `min_distance` - Minimum allowed distance between generated points.
 /// * `max_attempts` - Maximum number of attempts to place points.
 /// * `seed` - Random seed for reproducible sampling.
@@ -19,7 +20,8 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 ///
 /// A vector of `Vec2` points within the square bounding box.
 pub fn poisson_box_sampling(
-    bounding_side: f32,
+    width: f32,
+    hight: f32,
     min_distance: f32,
     max_attempts: u32,
     seed: u64,
@@ -28,7 +30,7 @@ pub fn poisson_box_sampling(
     let mut setters = Poisson::<2, Xoshiro256PlusPlus>::new();
     setters.set_seed(seed);
     // Sample on a bounding box of a edge circle
-    setters.set_dimensions([bounding_side, bounding_side], min_distance);
+    setters.set_dimensions([width, hight], min_distance);
     setters.set_samples(max_attempts);
     let sample: Vec<Vec2> = setters
         .generate()
