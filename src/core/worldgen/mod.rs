@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "dev_tools")]
 use crate::entities::planet::{PlanetType, Radius, SpawnPlanetEvent};
 use crate::entities::satellite::{SatelliteKind, SpawnSatelliteEvent};
+use crate::utils::geo::{get_aabb, is_circle_inside_convex_polygon, is_point_in_convex_polygon};
 use crate::{core::worldgen::voronoi::*, utils::poisson::poisson_sample_in_aabb};
 
 use super::physics::Position;
@@ -120,11 +121,13 @@ fn handle_genworld_event(
         );
         let (polygons, centroids) = adjust_to_circle(diagram, config.edge_radius as f32);
         voronoi_drawing_event.write(VoronoiGeneratedEvent {
-            polygons,
+            polygons: polygons.clone(),
             centroids: centroids.clone(),
         });
 
-        for position in centroids {
+        // Generate clusters
+        for (i, position) in centroids.iter().enumerate() {
+            let polygon = &polygons[i];
             let radius = rng
                 .random_range(config.min_cluster_planet_radius..config.max_cluster_planet_radius);
             info!("Generating planet at ({},{})", position.x, position.y);
@@ -134,13 +137,33 @@ fn handle_genworld_event(
                 info!("Sun's cluster, skipping");
                 continue;
             }
-
+            // add core
             planets.push(SpawnPlanetEvent {
-                position: Position(position),
+                position: Position(*position),
                 radius: Radius(radius),
                 r#type: PlanetType::Planet,
                 seed: rng.random(),
             });
+            // Sample surrounding planets, TODO: add to config
+            let (min, max) = get_aabb(polygon).unwrap();
+            let mut points = poisson_sample_in_aabb(min, max, 350., 100, *seed, 2 * 10);
+
+            // Filter: inside polygon, not too close to central planet
+            points.retain(|&p| {
+                is_circle_inside_convex_polygon(p, 200., polygon)
+                    && p.distance(*position) > (radius as f32 + 400.)
+            });
+            let filling = rng.random_range(1..5);
+            points.truncate(filling);
+            for point in points {
+                let smaller_radius = rng.random_range(150..200);
+                planets.push(SpawnPlanetEvent {
+                    position: Position(point),
+                    radius: Radius(smaller_radius),
+                    r#type: PlanetType::Planet,
+                    seed: rng.random(),
+                });
+            }
         }
 
         // Générer un certain nombre de satellites
