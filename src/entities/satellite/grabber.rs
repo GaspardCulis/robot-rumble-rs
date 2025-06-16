@@ -180,13 +180,14 @@ fn handle_grabber_interaction(
     assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
 ) {
+    let Some(config) = configs.get(&assets.config) else {
+        warn!("Satellite config not loaded yet");
+        return;
+    };
+
     for (player_entity, actions, position, nearby, grabbed_by, mut velocity) in
         player_query.iter_mut()
     {
-        let Some(config) = configs.get(&assets.config) else {
-            warn!("Satellite config not loaded yet");
-            return;
-        };
         if velocity.0.length() > config.max_grabber_speed {
             continue;
         }
