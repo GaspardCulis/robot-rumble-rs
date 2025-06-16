@@ -33,6 +33,10 @@
         TextLine{text:"Multiplayer"}
         Splat<Padding>(8px)
 
+    "local"
+        +animation{}
+        TextLine{text:"Local Play"}
+        Splat<Padding>(8px)
 
     "settings"
         +animation{}

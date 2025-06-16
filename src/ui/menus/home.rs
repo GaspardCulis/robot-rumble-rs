@@ -48,6 +48,11 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: R
                 .get("multiplayer")
                 .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::MatchMaking));
             scene_handle
+                .get("local")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| {
+                    next.set(Screen::SplitscreenSetup)
+                });
+            scene_handle
                 .get("settings")
                 .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::Home)); // TODO: Implement menu
             scene_handle
