@@ -248,11 +248,12 @@ fn update_grabbed_players(
     assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
 ) {
+    let Some(config) = configs.get(&assets.config) else {
+        warn!("Satellite config not loaded yet");
+        return;
+    };
+
     for (entity, position, mut velocity, constraint) in query.iter_mut() {
-        let Some(config) = configs.get(&assets.config) else {
-            warn!("Satellite config not loaded yet");
-            return;
-        };
         if velocity.0.length() > config.max_grabber_speed {
             commands
                 .entity(entity)
