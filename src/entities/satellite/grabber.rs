@@ -1,8 +1,6 @@
-use bevy::math::ops::atan2;
 use bevy::prelude::*;
 use bevy::text::{JustifyText, Text2d, TextColor, TextFont, TextLayout};
 use bevy_ggrs::{GgrsSchedule, LocalPlayers};
-use leafwing_input_manager::prelude::ActionState;
 
 use super::SatelliteSet;
 use super::assets::{SatelliteAssets, SatelliteConfig};
@@ -10,10 +8,8 @@ use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::Player;
 
-const ROPE_MIN_LENGTH: f32 = 50.0;
-const ROPE_MAX_LENGTH: f32 = 275.0;
-const ROPE_ADJUST_SPEED: f32 = 50.0;
-const GRABBER_ENTRY_MARGIN: f32 = 10.0;
+// Use to give a initial boost to the player so he is not stuck in the grabber
+const TANGENTIAL_SPEED: f32 = 800.0;
 
 #[derive(Component)]
 #[require(Name::new("Grabber"))]
@@ -28,15 +24,7 @@ pub struct ShowInteractPrompt {
 pub struct NearbyGrabber(pub Entity);
 
 #[derive(Component, Clone)]
-pub struct GrabbedBy(pub Entity);
-
-#[derive(Component, Clone)]
-pub struct GrabbedOrbit {
-    pub center: Vec2,
-    pub distance: f32,
-    pub angle: f32,
-    pub initial_speed: f32,
-}
+pub struct GrabbedBy;
 
 #[derive(Component)]
 #[require(Name::new("PlayerPrompt"))]
@@ -51,6 +39,12 @@ pub struct GrabberRope {
     pub grabber: Entity,
 }
 
+#[derive(Component, Clone, Reflect)]
+pub struct GrabbedConstraint {
+    pub anchor: Entity,
+    pub distance: f32,
+}
+
 pub struct GrabberPlugin;
 impl Plugin for GrabberPlugin {
     fn build(&self, app: &mut App) {
@@ -59,9 +53,7 @@ impl Plugin for GrabberPlugin {
             (
                 detect_player_entry,
                 handle_grabber_interaction,
-                adjust_rope_length,
                 update_grabbed_players,
-                cleanup_grabbed_orbits,
                 cleanup_grabber_ropes,
                 update_grabber_ropes,
             )
@@ -89,7 +81,7 @@ fn detect_player_entry(
             .iter()
             .filter_map(|(entity, position)| {
                 let distance = player_position.distance(position.0) + 30.0;
-                (distance < config.grabber_radius + GRABBER_ENTRY_MARGIN)
+                (distance < config.grabber_radius + config.grabber_entry_margin)
                     .then_some((entity, distance))
             })
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
@@ -124,7 +116,7 @@ fn display_interact_prompt(
     for (player_entity, player, prompt, nearby_grabber) in player_query.iter() {
         if local_players
             .as_ref()
-            .is_some_and(|local| local.0.contains(&player.handle))
+            .is_some_and(|local| !local.0.contains(&player.handle))
         {
             continue;
         }
@@ -180,13 +172,26 @@ fn handle_grabber_interaction(
             &Position,
             Option<&NearbyGrabber>,
             Option<&GrabbedBy>,
-            &Velocity,
+            &mut Velocity,
         ),
         With<Player>,
     >,
     grabber_query: Query<&Position, With<Grabber>>,
+    assets: Res<SatelliteAssets>,
+    configs: Res<Assets<SatelliteConfig>>,
 ) {
-    for (player_entity, actions, position, nearby, grabbed_by, vel) in player_query.iter_mut() {
+    let Some(config) = configs.get(&assets.config) else {
+        warn!("Satellite config not loaded yet");
+        return;
+    };
+
+    for (player_entity, actions, position, nearby, grabbed_by, mut velocity) in
+        player_query.iter_mut()
+    {
+        if velocity.0.length() > config.max_grabber_speed {
+            continue;
+        }
+
         let is_pressed = actions.pressed(&PlayerAction::Interact);
 
         if is_pressed && grabbed_by.is_none() {
@@ -197,32 +202,26 @@ fn handle_grabber_interaction(
                 let pos = position.0;
                 let offset = pos - center;
                 let distance = offset.length();
-                let angle = atan2(offset.y, offset.x);
 
-                let tangent = if offset.length_squared() > f32::EPSILON {
-                    Vec2::new(-offset.y, offset.x).normalize()
+                // Appliquer une vélocité tangentielle pour commencer l'orbite
+                let tangent = Vec2::new(-offset.y, offset.x).normalize_or_zero();
+                let direction_sign = if velocity.0.dot(tangent) >= 0.0 {
+                    1.0
                 } else {
-                    Vec2::ZERO
+                    -1.0
                 };
-
-                let sign = if vel.0.dot(tangent) >= 0.0 { 1.0 } else { -1.0 };
-                let mut speed = vel.0.dot(tangent);
-                if speed.abs() < 600.0 {
-                    speed = 600.0 * sign;
-                }
+                velocity.0 = tangent * TANGENTIAL_SPEED * direction_sign;
 
                 commands
                     .entity(player_entity)
-                    .insert(GrabbedBy(nearby.0))
-                    .insert(GrabbedOrbit {
-                        center,
+                    .insert(GrabbedBy)
+                    .insert(GrabbedConstraint {
+                        anchor: nearby.0,
                         distance,
-                        angle,
-                        initial_speed: speed,
                     });
+
                 let mesh = meshes.add(Rectangle::new(4.0, 1.0));
                 let material = materials.add(Color::srgb(0.0, 0.0, 1.0));
-
                 commands.spawn((
                     Mesh2d(mesh),
                     MeshMaterial2d(material),
@@ -238,43 +237,53 @@ fn handle_grabber_interaction(
             commands
                 .entity(player_entity)
                 .remove::<GrabbedBy>()
-                .remove::<GrabbedOrbit>();
+                .remove::<GrabbedConstraint>();
         }
     }
 }
 
 fn update_grabbed_players(
     mut commands: Commands,
-    mut query: Query<
-        (
-            Entity,
-            &mut Position,
-            &mut Velocity,
-            &mut GrabbedOrbit,
-            &GrabbedBy,
-        ),
-        Without<Grabber>,
-    >,
-    satellite_query: Query<&Position, With<Grabber>>,
-    time: Res<Time>,
+    mut query: Query<(Entity, &mut Position, &mut Velocity, &GrabbedConstraint), With<Player>>,
+    anchor_query: Query<&Position, (With<Grabber>, Without<Player>)>,
+    assets: Res<SatelliteAssets>,
+    configs: Res<Assets<SatelliteConfig>>,
 ) {
-    let delta = time.delta_secs();
+    let Some(config) = configs.get(&assets.config) else {
+        warn!("Satellite config not loaded yet");
+        return;
+    };
 
-    for (entity, mut pos, mut vel, mut orbit, grabbed_by) in query.iter_mut() {
-        if let Ok(sat_pos) = satellite_query.get(grabbed_by.0) {
-            orbit.center = sat_pos.0;
-            orbit.angle += (orbit.initial_speed / orbit.distance) * delta;
-
-            let offset = Vec2::from_angle(orbit.angle) * orbit.distance;
-            let tangent = Vec2::new(-offset.y, offset.x).normalize();
-
-            vel.0 = tangent * orbit.initial_speed;
-            pos.0 = orbit.center + offset;
-        } else {
+    for (entity, position, mut velocity, constraint) in query.iter_mut() {
+        if velocity.0.length() > config.max_grabber_speed {
             commands
                 .entity(entity)
-                .remove::<GrabbedOrbit>()
-                .remove::<GrabbedBy>();
+                .remove::<GrabbedBy>()
+                .remove::<GrabbedConstraint>();
+            continue;
+        }
+        if let Ok(anchor_pos) = anchor_query.get(constraint.anchor) {
+            let offset = position.0 - anchor_pos.0;
+            let current_distance = offset.length();
+
+            if current_distance < f32::EPSILON {
+                continue;
+            }
+
+            let direction = offset / current_distance;
+            let target_position = anchor_pos.0 + direction * constraint.distance;
+
+            let stiffness = 5.0;
+            let mut correction = (target_position - position.0) * stiffness;
+
+            let radial_speed = velocity.0.dot(direction);
+            correction -= direction * radial_speed * 0.2;
+
+            let tangent = Vec2::new(-direction.y, direction.x);
+            let tangential_speed = velocity.0.dot(tangent);
+            let orbit_boost = 0.05;
+            correction += tangent * tangential_speed.signum() * orbit_boost;
+            velocity.0 += correction;
         }
     }
 }
@@ -306,45 +315,6 @@ fn update_grabber_ropes(
             }
             _ => commands.entity(entity).despawn(),
         }
-    }
-}
-
-fn adjust_rope_length(
-    mut query: Query<
-        (&ActionState<PlayerAction>, &mut GrabbedOrbit),
-        (With<Player>, With<GrabbedBy>),
-    >,
-) {
-    for (actions, mut orbit) in query.iter_mut() {
-        let delta = match (
-            actions.pressed(&PlayerAction::RopeRetract),
-            actions.pressed(&PlayerAction::RopeExtend),
-        ) {
-            (true, false) => -ROPE_ADJUST_SPEED,
-            (false, true) => ROPE_ADJUST_SPEED,
-            _ => 0.0,
-        };
-
-        if delta != 0.0 {
-            let old = orbit.distance;
-            let new = (old + delta).clamp(ROPE_MIN_LENGTH, ROPE_MAX_LENGTH);
-
-            if old > 1.0 && new != old {
-                let speed = orbit.initial_speed * old / new;
-                orbit.initial_speed = orbit.initial_speed * 0.5 + speed * 0.5;
-            }
-
-            orbit.distance = new;
-        }
-    }
-}
-
-fn cleanup_grabbed_orbits(
-    mut commands: Commands,
-    query: Query<Entity, (With<GrabbedOrbit>, Without<GrabbedBy>)>,
-) {
-    for entity in query.iter() {
-        commands.entity(entity).remove::<GrabbedOrbit>();
     }
 }
 
