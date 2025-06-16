@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::ui::widgets::UIButton;
+
 use super::Screen;
 
 #[derive(Resource, Default)]
@@ -21,12 +23,13 @@ impl Plugin for SplitscreenSetupPlugin {
 
 fn spawn_menu(mut commands: Commands) {
     info!("Loading Splitscreen setup menu UI");
-    commands.init_resource::<UiState>();
+    commands.insert_resource(UiState { num_players: 2 });
+
     commands
         .spawn((
             Node {
                 display: Display::Flex,
-                flex_direction: FlexDirection::Column,
+                flex_direction: FlexDirection::Row,
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 align_items: AlignItems::Center,
@@ -36,46 +39,24 @@ fn spawn_menu(mut commands: Commands) {
             SplitscreenSetupMenu,
         ))
         .with_children(|spawner| {
-            spawner.spawn((
-                Node {
-                    width: Val::Px(100.0),
-                    height: Val::Px(60.0),
-                    padding: UiRect::all(Val::Percent(3.0)),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
+            spawner
+                .spawn(Node {
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
                     ..default()
-                },
-                Text::new("+"),
-                TextFont {
-                    font_size: 32.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-                TextLayout {
-                    justify: JustifyText::Center,
-                    ..default()
-                },
-            ));
-            spawner.spawn((
-                Node {
-                    width: Val::Px(100.0),
-                    height: Val::Px(60.0),
-                    padding: UiRect::all(Val::Percent(3.0)),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
-                Text::new("-"),
-                TextFont {
-                    font_size: 32.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-                TextLayout {
-                    justify: JustifyText::Center,
-                    ..default()
-                },
-            ));
+                })
+                .with_children(|spawner| {
+                    spawner.spawn(UIButton::default().with_text("+")).observe(
+                        |_: Trigger<Pointer<Click>>, mut state: ResMut<UiState>| {
+                            state.num_players += 1;
+                        },
+                    );
+                    spawner.spawn(UIButton::default().with_text("-")).observe(
+                        |_: Trigger<Pointer<Click>>, mut state: ResMut<UiState>| {
+                            state.num_players = state.num_players.checked_sub(1).unwrap_or(0);
+                        },
+                    );
+                });
         });
 }
 
