@@ -5,11 +5,6 @@ use crate::ui::UiAssets;
 
 use super::Screen;
 
-#[derive(Resource, Default)]
-struct UiState {
-    selected_menu_entry: Option<Entity>,
-}
-
 #[derive(Component)]
 /// Marker for despawning
 struct HomeMenu;
@@ -35,6 +30,7 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: R
         ("ui/main.cob", "home"),
         &mut scene_builder,
         move |scene_handle| {
+            // Set background image
             scene_handle.get("background").modify(
                 move |mut entity_commands: EntityCommands<'_>| {
                     entity_commands.insert(
@@ -43,6 +39,21 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: R
                     );
                 },
             );
+            // Add click observers
+            scene_handle
+                .get("multiplayer")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::MatchMaking));
+            scene_handle
+                .get("settings")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::Home)); // TODO: Implement menu
+            scene_handle
+                .get("credits")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::Home)); // TODO: Implement menu
+            scene_handle
+                .get("quit")
+                .on_pressed(|mut exit: EventWriter<AppExit>| {
+                    exit.write(AppExit::Success);
+                });
         },
     );
 }
