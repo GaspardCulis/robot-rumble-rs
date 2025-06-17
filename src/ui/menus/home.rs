@@ -9,9 +9,6 @@ use super::Screen;
 /// Marker for despawning
 struct HomeMenu;
 
-#[derive(Component)]
-struct MenuEntry;
-
 pub struct HomeMenuPlugin;
 impl Plugin for HomeMenuPlugin {
     fn build(&self, app: &mut App) {
@@ -19,7 +16,8 @@ impl Plugin for HomeMenuPlugin {
             .add_systems(
                 Update,
                 update_background_size.run_if(in_state(Screen::Home)),
-            );
+            )
+            .add_systems(OnExit(Screen::Home), despawn_menu);
     }
 }
 
@@ -30,6 +28,9 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: R
         ("ui/main.cob", "home"),
         &mut scene_builder,
         move |scene_handle| {
+            // Add marker struct
+            scene_handle.insert(HomeMenu);
+
             // Set background image
             scene_handle.get("background").modify(
                 move |mut entity_commands: EntityCommands<'_>| {
@@ -39,6 +40,7 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: R
                     );
                 },
             );
+
             // Add click observers
             scene_handle
                 .get("multiplayer")
@@ -56,6 +58,12 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: R
                 });
         },
     );
+}
+
+fn despawn_menu(mut commands: Commands, query: Query<Entity, With<HomeMenu>>) -> Result {
+    let menu = query.single()?;
+    commands.entity(menu).despawn();
+    Ok(())
 }
 
 fn update_background_size(
