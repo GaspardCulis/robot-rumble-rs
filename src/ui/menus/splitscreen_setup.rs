@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_cobweb_ui::prelude::*;
 
+use crate::ui::UiAssets;
+
 use super::Screen;
 
 #[derive(Component)]
@@ -15,8 +17,10 @@ impl Plugin for SplitscreenSetupPlugin {
     }
 }
 
-fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
+fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: Res<UiAssets>) {
     info!("Loading Splitscreen Setup menu UI");
+
+    let gamepad_icon = assets.gamepad_icon.clone();
 
     commands.ui_root().spawn_scene(
         ("ui/menu/splitscreen_setup.cob", "splitscreen_setup"),
@@ -24,6 +28,24 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
         move |scene_handle| {
             // Add marker struct
             scene_handle.insert(SplitscreenSetupMenu);
+
+            for i in 1..=3 {
+                let gamepad_icon = gamepad_icon.clone();
+
+                scene_handle.get("container").spawn_scene(
+                    ("ui/menu/splitscreen_setup.cob", "player_config"),
+                    move |scene_handle| {
+                        // Update text
+                        scene_handle.get("text").update_text(format!("Player {i}"));
+                        // Set image handles
+                        scene_handle.get("gamepad_icon").modify(
+                            move |mut entity_commands: EntityCommands<'_>| {
+                                entity_commands.insert(ImageNode::new(gamepad_icon.clone()));
+                            },
+                        );
+                    },
+                );
+            }
         },
     );
 }

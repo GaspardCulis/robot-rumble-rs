@@ -24,8 +24,31 @@
     FlexNode{
         flex_direction: Column
         justify_main:Center
+        justify_cross:Center
         width: 100%
         height: 100%
     }
-    "jaaj"
-        TextLine{ text: "Hello, World!" }
+    "title"
+        TextLine{ text: "Player select" }
+    "container"
+        FlexNode{
+            flex_direction: Row
+            justify_main:Center
+            justify_cross:Center
+            margin: { top: 80px }
+        }
+
+"player_config"
+    FlexNode{
+        flex_direction: Column
+        justify_cross: Center
+    }
+    "text"
+        TextLine{text: "Player 1"}
+    "gamepad_icon"
+        FlexNode{
+            width: 100px
+            height: 100px
+            margin: { right: 10px left: 10px top: -20px }
+        }
+        LoadedImageNode{ /* Image set in code */ }
