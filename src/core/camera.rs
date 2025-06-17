@@ -1,18 +1,19 @@
-use bevy::{math::FloatPow, prelude::*};
+use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
-use crate::{level::limit::MapLimit, utils::math};
+use crate::level::limit::MapLimit;
 
 use super::physics::PhysicsSet;
 
-/// Start biasing camera toward center past this world radius fraction
-const EDGE_BIAS_THRESHOLD: f32 = 0.65;
-/// Extra space so camera sees world edges without clipping
+/// Extra space so camera sees edges without clipping
 const EDGE_PADDING: f32 = 200.0;
-/// Camera translation speed increase
-const MAX_EXTRA_SPEED: f32 = 10.0;
-/// How strongly the camera biases toward center near the edge
-const BIAS_STRENGTH_FACTOR: f32 = 0.3;
+/// How fast camera zooms in/out
+const ZOOM_SPEED: f32 = 3.0;
+/// How fast camera follows
+const FOLLOW_SPEED: f32 = 5.0;
+/// What fraction of the world is seen at least
+const MIN_WORLD_FRACTION: f32 = 0.2; // i.e. 20%
+
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
@@ -30,59 +31,44 @@ pub struct CameraFollowTarget;
 fn camera_movement(
     mut camera: Query<&mut Transform, (With<Camera2d>, Without<CameraFollowTarget>)>,
     window: Query<&Window>,
-    target: Query<&Transform, With<CameraFollowTarget>>,
+    targets: Query<&Transform, With<CameraFollowTarget>>,
     limit: Option<Res<MapLimit>>,
     time: Res<Time>,
 ) -> Result {
-    if target.is_empty() {
+    if targets.is_empty() {
         // Not having target is not an error
         return Ok(());
     };
-
     let mut camera_transform = camera.single_mut()?;
     let window = window.single()?;
-    let target_transform = target.single()?;
-
     let screen_size = window.size();
-    let cursor_position = window.cursor_position().unwrap_or(screen_size / 2.);
-    let max_cursor_offset = screen_size * 0.2;
-    let mut offset = (cursor_position / screen_size - 0.5) * Vec2::new(1., -1.) * max_cursor_offset;
-    let player_pos = target_transform.translation.xy();
 
-    let mut dest = player_pos;
+    let positions: Vec<Vec2> = targets.iter().map(|t| t.translation.xy()).collect();
+    let center = positions.iter().copied().sum::<Vec2>() / positions.len() as f32;
 
-    let mut follow_speed = 5.0;
-
+    // Bounding box for players
+    let max_dist = positions
+        .iter()
+        .map(|&pos| pos.distance(center))
+        .fold(0.0, f32::max);
+    // Zoom scale
+    let mut target_scale = ((max_dist + EDGE_PADDING) * 2.0) / screen_size.min_element();
+    // Adjust scale with world bounds
     if let Some(limit) = limit {
-        // Calculate player's bias to worlds's center
-        let world_center = Vec2::ZERO;
-        let dist_from_center = player_pos.distance(world_center);
-        let bias_factor = ((dist_from_center - EDGE_BIAS_THRESHOLD * limit.radius)
-            / ((1.0 - EDGE_BIAS_THRESHOLD) * limit.radius))
-            .clamp(0.0, 1.0)
-            .squared();
-        dest = dest.lerp(world_center, bias_factor * BIAS_STRENGTH_FACTOR);
-
-        // Clamp camera on rectangular bounds
-        let bounds = limit.radius + EDGE_PADDING;
-        let min_bound = Vec2::new(-bounds, -bounds);
-        let max_bound = Vec2::new(bounds, bounds);
-        let half_screen = (screen_size * 0.5) * camera_transform.scale.xy();
-
-        offset *= 1.0 - bias_factor;
-        dest = dest.clamp(min_bound + half_screen, max_bound - half_screen);
-
-        // Adjust follow speed on bounds
-        follow_speed += MAX_EXTRA_SPEED * bias_factor;
+        let world_extent = (limit.radius + EDGE_PADDING) * 2.0;
+        let min_scale = (world_extent * MIN_WORLD_FRACTION) / screen_size.min_element();
+        let max_scale = world_extent / screen_size.min_element();
+        target_scale = target_scale.clamp(min_scale, max_scale);
     }
-
-    dest += offset;
-
-    camera_transform.translation = math::lerp(
-        camera_transform.translation,
-        Vec3::new(dest.x, dest.y, 0.),
-        time.delta_secs() * follow_speed,
-    );
+    // Zoom transition
+    let current_scale = camera_transform.scale;
+    camera_transform.scale =
+        current_scale.lerp(Vec3::splat(target_scale), time.delta_secs() * ZOOM_SPEED);
+    // Follow center
+    let target_pos = Vec3::new(center.x, center.y, camera_transform.translation.z);
+    camera_transform.translation = camera_transform
+        .translation
+        .lerp(target_pos, time.delta_secs() * FOLLOW_SPEED);
 
     Ok(())
 }
