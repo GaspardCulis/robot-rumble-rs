@@ -114,7 +114,7 @@ WeaponsConfig({
             projectile: Blackhole,
         ),
         skin: (
-            sprite: "weapons/blackhole_gun.png",
+            sprite: "img/weapons/blackhole_gun.png",
             scale: 0.75,
         ),
     ),
