@@ -23,9 +23,11 @@ impl Plugin for HomeMenuPlugin {
 
 fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: Res<UiAssets>) {
     info!("Loading Home menu UI");
+
     let background_image = assets.background_image.clone();
+
     commands.ui_root().spawn_scene(
-        ("ui/main.cob", "home"),
+        ("ui/menu/home.cob", "home"),
         &mut scene_builder,
         move |scene_handle| {
             // Add marker struct
