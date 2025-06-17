@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_cobweb_ui::prelude::*;
 
-use crate::ui::{UiAssets, widgets::*};
+use crate::ui::UiAssets;
 
 use super::Screen;
 

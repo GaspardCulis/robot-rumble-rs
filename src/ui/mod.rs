@@ -4,7 +4,6 @@ use bevy_cobweb_ui::prelude::*;
 
 mod hud;
 mod menus;
-pub mod widgets;
 
 pub use menus::Screen;
 
