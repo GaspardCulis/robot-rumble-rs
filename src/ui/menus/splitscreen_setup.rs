@@ -1,13 +1,7 @@
 use bevy::prelude::*;
-
-use crate::ui::widgets::UIButton;
+use bevy_cobweb_ui::prelude::*;
 
 use super::Screen;
-
-#[derive(Resource, Default)]
-struct UiState {
-    num_players: usize,
-}
 
 #[derive(Component)]
 /// Marker for despawning
@@ -21,43 +15,17 @@ impl Plugin for SplitscreenSetupPlugin {
     }
 }
 
-fn spawn_menu(mut commands: Commands) {
-    info!("Loading Splitscreen setup menu UI");
-    commands.insert_resource(UiState { num_players: 2 });
+fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
+    info!("Loading Splitscreen Setup menu UI");
 
-    commands
-        .spawn((
-            Node {
-                display: Display::Flex,
-                flex_direction: FlexDirection::Row,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                ..default()
-            },
-            SplitscreenSetupMenu,
-        ))
-        .with_children(|spawner| {
-            spawner
-                .spawn(Node {
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    ..default()
-                })
-                .with_children(|spawner| {
-                    spawner.spawn(UIButton::default().with_text("+")).observe(
-                        |_: Trigger<Pointer<Click>>, mut state: ResMut<UiState>| {
-                            state.num_players += 1;
-                        },
-                    );
-                    spawner.spawn(UIButton::default().with_text("-")).observe(
-                        |_: Trigger<Pointer<Click>>, mut state: ResMut<UiState>| {
-                            state.num_players = state.num_players.checked_sub(1).unwrap_or(0);
-                        },
-                    );
-                });
-        });
+    commands.ui_root().spawn_scene(
+        ("ui/menu/splitscreen_setup.cob", "splitscreen_setup"),
+        &mut scene_builder,
+        move |scene_handle| {
+            // Add marker struct
+            scene_handle.insert(SplitscreenSetupMenu);
+        },
+    );
 }
 
 fn despawn_menu(
