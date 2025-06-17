@@ -1,18 +1,18 @@
 (
     central_star_radius: 300,
 
-    min_clusters: 3,
-    max_clusters: 6,
+    min_clusters: 10,
+    max_clusters: 15,
 
-    min_cluster_planet_radius: 200,
-    max_cluster_planet_radius: 400,
+    min_cluster_planet_radius: 150,
+    max_cluster_planet_radius: 350,
 
-    cluster_relaxation: 10,
+    cluster_relaxation: 5,
 
     min_planet_surface_distance: 200,
 
-    edge_radius: 3000,
-    edge_margin: 1000,
+    edge_radius: 2600,
+    edge_margin: 800,
 
     min_satellites: 5,
     max_satellites: 10,

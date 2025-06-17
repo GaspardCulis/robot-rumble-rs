@@ -98,16 +98,20 @@ fn handle_genworld_event(
         });
 
         let num_planets = rng.random_range(config.min_clusters..config.max_clusters) as usize;
-        //rng.random_range(config.min_clusters..config.max_clusters) as usize;
+        // Générer un certain nombre de satellites
+
+        let num_satellites =
+            rng.random_range(config.min_satellites..config.max_satellites) as usize;
+
         let effective_radius = (config.edge_radius - config.edge_margin) as f32;
         // Pick cluster centers using Poisson sampling
         let mut positions: Vec<Vec2> = poisson_sample_in_aabb(
             Vec2::ZERO - effective_radius,
             Vec2::ZERO + effective_radius,
-            1200.,
+            850.,
             100,
             *seed,
-            num_planets,
+            2 * (num_planets + num_satellites),
         );
 
         // Add Sun before building
@@ -123,8 +127,8 @@ fn handle_genworld_event(
         });
 
         // Generate clusters
-        for (i, position) in centroids.iter().enumerate() {
-            let polygon = &polygons[i];
+        for i in 0..num_planets {
+            let position = centroids[i];
             let radius = rng
                 .random_range(config.min_cluster_planet_radius..config.max_cluster_planet_radius);
             info!("Generating planet at ({},{})", position.x, position.y);
@@ -136,80 +140,34 @@ fn handle_genworld_event(
             }
             // add core
             planets.push(SpawnPlanetEvent {
-                position: Position(*position),
+                position: Position(position),
                 radius: Radius(radius),
                 r#type: PlanetType::Planet,
                 seed: rng.random(),
             });
-            // Sample surrounding planets, TODO: add to config
-            let (min, max) = get_aabb(polygon).unwrap();
-            let mut points = poisson_sample_in_aabb(min, max, 350., 100, *seed, 2 * 10);
-
-            // Filter: inside polygon, not too close to central planet
-            points.retain(|&p| {
-                is_circle_inside_convex_polygon(p, 200., polygon)
-                    && p.distance(*position) > (radius as f32 + 400.)
-            });
-            let filling = rng.random_range(1..5);
-            points.truncate(filling);
-            for point in points {
-                let smaller_radius = rng.random_range(150..200);
-                planets.push(SpawnPlanetEvent {
-                    position: Position(point),
-                    radius: Radius(smaller_radius),
-                    r#type: PlanetType::Planet,
-                    seed: rng.random(),
-                });
-            }
         }
 
-        // Générer un certain nombre de satellites
-        let mut satellite_positions: Vec<Position> = Vec::new();
-        let num_satellites = rng.random_range(config.min_satellites..config.max_satellites);
-
-        for _ in 0..num_satellites {
-            let mut attempts = 0;
-            loop {
-                attempts += 1;
-                if attempts > 10 {
-                    warn!("Could not place satellite after 10 attempts, skipping...");
-                    break;
-                }
-
-                let angle = rng.random_range(0.0..std::f32::consts::TAU);
-                let distance =
-                    rng.random_range(config.satellite_min_distance..config.satellite_max_distance);
-                let position = Position(Vec2::from_angle(angle) * distance);
-
-                let safe_distance_planet = config.satellite_planet_min_distance;
-                let safe_distance_satellite = config.satellite_satellite_min_distance;
-
-                let far_from_planets = planets.iter().all(|planet| {
-                    position.0.distance(planet.position.0)
-                        > (planet.radius.0 as f32 + safe_distance_planet)
-                });
-
-                let far_from_satellites = satellite_positions
-                    .iter()
-                    .all(|existing| position.0.distance(existing.0) > safe_distance_satellite);
-
-                let kind = match rng.random_range(0..3) {
-                    0 => SatelliteKind::Graviton,
-                    1 => SatelliteKind::Bumper,
-                    _ => SatelliteKind::Grabber,
-                };
-
-                if far_from_planets && far_from_satellites {
-                    satellite_spawn_events.write(SpawnSatelliteEvent {
-                        position: position.clone(),
-                        // FIX: Config file or constant, will be done when we have better sprites
-                        scale: 0.7,
-                        kind,
-                    });
-                    satellite_positions.push(position);
-                    break;
-                }
+        for j in num_planets..num_satellites + num_planets {
+            let position = centroids[j];
+            let radius = 300;
+            info!("Generating satelite at ({},{})", position.x, position.y);
+            let distance = position.distance(Vec2::ZERO);
+            if distance < (radius + config.central_star_radius) as f32 {
+                // This is a part of the Sun's cluster then
+                info!("Sun's cluster, skipping");
+                continue;
             }
+            let kind = match rng.random_range(0..3) {
+                0 => SatelliteKind::Graviton,
+                1 => SatelliteKind::Bumper,
+                _ => SatelliteKind::Grabber,
+            };
+            satellite_spawn_events.write(SpawnSatelliteEvent {
+                position: Position(position.clone()),
+                // FIX: Config file or constant, will be done when we have better sprites
+                scale: 0.7,
+                kind,
+            });
         }
 
         for spawn_event in planets {
