@@ -33,7 +33,8 @@ impl Plugin for SplitscreenSetupPlugin {
             // Hack for starting the game
             .add_systems(
                 OnEnter(GameState::WorldGen),
-                |mut next: ResMut<NextState<GameState>>| next.set(GameState::InGame),
+                (|mut next: ResMut<NextState<GameState>>| next.set(GameState::InGame))
+                    .run_if(|args: Res<crate::Args>| args.mode == crate::GameMode::LocalPlay),
             );
     }
 }
