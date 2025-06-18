@@ -1,5 +1,6 @@
 use bevy::prelude::{App, Plugin};
 
+pub mod audio;
 pub mod background;
 pub mod camera;
 pub mod collision;
@@ -7,7 +8,6 @@ pub mod gravity;
 pub mod inputs;
 pub mod physics;
 pub mod worldgen;
-
 pub struct CorePlugins;
 impl Plugin for CorePlugins {
     fn build(&self, app: &mut App) {
@@ -16,6 +16,7 @@ impl Plugin for CorePlugins {
             .add_plugins(gravity::GravityPlugin)
             .add_plugins(inputs::InputsPlugin)
             .add_plugins(physics::PhysicsPlugin)
-            .add_plugins(worldgen::WorldgenPlugin);
+            .add_plugins(worldgen::WorldgenPlugin)
+            .add_plugins(audio::AudioPlugin);
     }
 }
