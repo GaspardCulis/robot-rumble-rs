@@ -1,5 +1,8 @@
 use crate::{
-    core::physics::{PhysicsSet, Position, Rotation, Velocity},
+    core::{
+        audio::{SoundEffect::Shooting, SoundEvent},
+        physics::{PhysicsSet, Position, Rotation, Velocity},
+    },
     entities::projectile::{
         Damage, DecayTimer, Projectile,
         config::{BH_BULLET_DECAY_TIME, ProjectilesAssets, ProjectilesConfig},
@@ -150,6 +153,7 @@ fn fire_weapon_system(
         With<WeaponType>,
     >,
     mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
+    mut events: EventWriter<SoundEvent>,
     projectiles_assets: Res<ProjectilesAssets>,
     projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
@@ -197,6 +201,8 @@ fn fire_weapon_system(
                     warn!("Empy projectile config!")
                 }
             }
+            // make sound
+            events.write(SoundEvent { clip: Shooting });
 
             state.current_ammo -= 1;
             // Reset timers if shooting
