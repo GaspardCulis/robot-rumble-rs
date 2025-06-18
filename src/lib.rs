@@ -27,6 +27,9 @@ pub struct Args {
     /// Runs the game in synctest mode
     #[clap(long)]
     pub synctest: bool,
+    /// Runs the game in localplay mode
+    #[clap(long)]
+    pub localplay: bool,
     /// Number of players to match against
     #[arg(short, long, default_value_t = 2)]
     pub players: usize,

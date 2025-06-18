@@ -19,7 +19,7 @@ use crate::{
 const SYNCTEST_NUM_PLAYERS: usize = 2;
 
 pub fn p2p_mode(args: Res<Args>) -> bool {
-    !args.synctest
+    !(args.synctest || args.localplay)
 }
 
 pub fn synctest_mode(args: Res<Args>) -> bool {

@@ -1,6 +1,14 @@
 use bevy::{input::gamepad::GamepadEvent, prelude::*};
 use bevy_cobweb::prelude::*;
 use bevy_cobweb_ui::prelude::*;
+use rand::Rng;
+
+use crate::{
+    GameState,
+    core::{camera, inputs},
+    entities::player::Player,
+    network,
+};
 
 use super::Screen;
 
@@ -21,7 +29,12 @@ impl Plugin for SplitscreenSetupPlugin {
                 Update,
                 update_player_count.run_if(in_state(Screen::SplitscreenSetup)),
             )
-            .add_systems(OnExit(Screen::SplitscreenSetup), despawn_menu);
+            .add_systems(OnExit(Screen::SplitscreenSetup), despawn_menu)
+            // Hack for starting the game
+            .add_systems(
+                OnEnter(GameState::WorldGen),
+                |mut next: ResMut<NextState<GameState>>| next.set(GameState::InGame),
+            );
     }
 }
 
@@ -44,9 +57,7 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, gamepads:
             // Add button handlers
             scene_handle
                 .get("start_button")
-                .on_pressed(|mut next: ResMut<NextState<Screen>>| {
-                    info!("Starting local play match");
-                });
+                .on_pressed(handle_start_button_press);
 
             // Spawn player config UIs
             scene_handle.get("container").update_on(
@@ -87,6 +98,57 @@ fn update_player_count(
             info.single_mut(&mut commands).1.player_count = gamepads.iter().count();
         }
     }
+}
+
+// FIX: Too much boilerplate to start a match; create a better framework.
+fn handle_start_button_press(
+    mut commands: Commands,
+    mut next_screen: ResMut<NextState<Screen>>,
+    mut next_gamestate: ResMut<NextState<GameState>>,
+    mut args: ResMut<crate::Args>,
+    gamepads: Query<Entity, With<Gamepad>>,
+) {
+    info!("Starting local play match");
+    next_screen.set(Screen::None);
+    args.localplay = true;
+
+    // Load world
+    let seed = rand::rng().random();
+    commands.insert_resource(network::SessionSeed(seed));
+
+    // Spawn players with associated gamepad input maps
+    let player_bundles = gamepads
+        .iter()
+        .enumerate()
+        .map(|(i, gamepad)| {
+            let mut input_map = inputs::default_input_map();
+            input_map.set_gamepad(gamepad);
+            (Player { handle: i }, input_map)
+        })
+        .collect::<Vec<_>>();
+
+    let mut session_builder = bevy_ggrs::ggrs::SessionBuilder::<network::SessionConfig>::new()
+        .with_num_players(player_bundles.len())
+        .with_input_delay(2);
+
+    for (player, input_map) in player_bundles.into_iter() {
+        session_builder = session_builder
+            .add_player(bevy_ggrs::ggrs::PlayerType::Local, player.handle)
+            .expect("Failed to add player");
+
+        commands.spawn((player, input_map));
+    }
+
+    let mut socket = bevy_matchbox::MatchboxSocket::new_unreliable(
+        "wss://matchbox.gasdev.fr/extreme_bevy?next=1",
+    );
+    let ggrs_session = session_builder
+        .start_p2p_session(socket.take_channel(0).unwrap())
+        .expect("Failed to start P2P session");
+
+    commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
+
+    next_gamestate.set(GameState::WorldGen);
 }
 
 fn despawn_menu(
