@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_cobweb_ui::prelude::*;
 
-use crate::GameState;
+use crate::{GameMode, GameState};
 
 use super::Screen;
 
@@ -27,6 +27,11 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
             // Add marker struct
             scene_handle.insert(MatchmakingSetupMenu);
 
+            // Add button handlers
+            scene_handle
+                .get("start_button")
+                .on_pressed(handle_start_button_press);
+
             // Spawn game mode buttons
             for n in 2..=5 {
                 scene_handle.get("container").spawn_scene(
@@ -34,6 +39,11 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
                     |scene_handle| {
                         // Update text
                         scene_handle.get("text").update_text(format!("{n}P Match"));
+
+                        // Add select listener
+                        scene_handle.on_select(move |mut args: ResMut<crate::Args>| {
+                            args.players = n;
+                        });
 
                         // Set 2 player match as selected by default
                         if n == 2 {
@@ -45,6 +55,17 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
             }
         },
     );
+}
+
+fn handle_start_button_press(
+    mut next_screen: ResMut<NextState<Screen>>,
+    mut next_gamestate: ResMut<NextState<GameState>>,
+    mut args: ResMut<crate::Args>,
+) {
+    args.mode = GameMode::Multiplayer;
+
+    next_screen.set(Screen::None);
+    next_gamestate.set(GameState::MatchMaking);
 }
 
 fn despawn_menu(
