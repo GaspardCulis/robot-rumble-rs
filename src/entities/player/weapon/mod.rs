@@ -35,6 +35,8 @@ pub struct WeaponState {
 #[relationship_target(relationship = super::Weapon)]
 pub struct Owner(Entity);
 
+#[derive(Component)]
+pub struct ReloadingPlayer;
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
@@ -49,7 +51,12 @@ impl Plugin for WeaponPlugin {
                 (
                     #[cfg(feature = "dev_tools")]
                     handle_config_reload,
-                    (add_stats_component, add_sprite)
+                    (
+                        add_stats_component,
+                        add_sprite,
+                        mode_change_detection,
+                        visibility_change_detection,
+                    )
                         .before(PhysicsSet::Player)
                         .run_if(resource_exists::<WeaponsAssets>),
                 ),
@@ -120,6 +127,57 @@ fn add_sprite(
     }
 }
 
+// this will be very useful a bit further in visuals and sound effects
+fn visibility_change_detection(
+    query: Query<(&WeaponType, &AudioSink), (Changed<Visibility>, With<ReloadingPlayer>)>,
+) {
+    for (_, sink) in query.iter() {
+        sink.toggle_playback();
+    }
+    warn!("Weapon changed visibility!");
+}
+
+// do some effects on mode changes
+fn mode_change_detection(
+    mut commands: Commands,
+    query: Query<(Entity, &WeaponMode, &WeaponType), Changed<WeaponMode>>,
+    weapon_assets: Res<WeaponsAssets>,
+    weapon_configs: Res<Assets<WeaponsConfig>>,
+    asset_server: Res<AssetServer>,
+) {
+    // pls gspard fix assets pls pls
+    let Some(weapon_config) = weapon_configs.get(&weapon_assets.config) else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
+    for (entity, mode, weapon_type) in query.iter() {
+        let Some(weapon_config) = weapon_config.0.get(weapon_type) else {
+            warn!("Couldn't load WeaponsConfig");
+            return;
+        };
+        match mode {
+            WeaponMode::Reloading => {
+                if let Some(reload_path) = &weapon_config.sounds.reload {
+                    let reload_sound: Handle<AudioSource> = asset_server.load(reload_path);
+                    commands.entity(entity).insert((
+                        AudioPlayer(reload_sound),
+                        ReloadingPlayer,
+                        PlaybackSettings::REMOVE,
+                    ));
+                } else {
+                    warn!("No reload sound is previewed!")
+                }
+            }
+            WeaponMode::Triggered => {
+                commands
+                    .entity(entity)
+                    .remove::<(AudioPlayer, ReloadingPlayer)>();
+            }
+            _ => {}
+        }
+    }
+}
+
 /// Also handles ammo reloads for convenience
 fn tick_weapon_timers(
     mut query: Query<(&mut WeaponState, &WeaponStats, &mut WeaponMode), With<Position>>,
@@ -130,7 +188,7 @@ fn tick_weapon_timers(
         if *mode == WeaponMode::Reloading {
             state.reload_timer.tick(time.delta());
         }
-        // Verify current_ammo is 0 to avoid a subtle bug where we fire when WeaponState is instantiated
+
         if state.reload_timer.finished() && state.current_ammo < stats.magazine_size {
             state.current_ammo = stats.magazine_size;
             *mode = WeaponMode::Idle;
@@ -210,8 +268,7 @@ fn fire_weapon_system(
             // make sound
             // shitcode, pls gsprd mk hndls
             if let Some(weapon_config) = weapon_config.0.get(weapon_type) {
-                let fire_sound  =
-                    asset_server.load(weapon_config.sounds.fire.clone());
+                let fire_sound = asset_server.load(weapon_config.sounds.fire.clone());
                 events.write(SoundEvent { handle: fire_sound });
             }
 
