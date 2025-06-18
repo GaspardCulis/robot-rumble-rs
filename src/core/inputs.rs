@@ -4,6 +4,9 @@ use leafwing_input_manager::prelude::*;
 
 use crate::entities::player::Player;
 
+/// Threshold for stick inputs to be acknowledged
+const GAMEPAD_THRESHOLD: f32 = 0.5;
+
 pub type PlayerActionState = ActionState<PlayerAction>;
 
 #[derive(Actionlike, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
@@ -30,15 +33,7 @@ pub struct InputsPlugin;
 impl Plugin for InputsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .add_systems(
-                Update,
-                (
-                    update_gamepad_direction_input,
-                    update_gamepad_shoot_input, // Running it before `ulpd` ensures it only affects shoot input if a gamepad acts on `ShootDirection`
-                    update_local_pointer_direction,
-                )
-                    .chain(),
-            );
+            .add_systems(Update, update_local_pointer_direction);
     }
 }
 
@@ -70,43 +65,6 @@ fn update_local_pointer_direction(
     }
 
     Ok(())
-}
-
-fn update_gamepad_direction_input(
-    gamepads: Query<&Gamepad>,
-    mut player_query: Query<(&Player, &mut PlayerActionState)>,
-    local_players: Res<LocalPlayers>,
-) {
-    let Some(gamepad) = gamepads.single().ok() else {
-        // Don't do anything if 0 gamepads.
-        // Maybe rework code if multiple ones
-        return;
-    };
-
-    for (_, mut action_state) in player_query.iter_mut().filter(|(player, action)| {
-        local_players.0.contains(&player.handle)
-            // Prioritize keyboard input
-            && !action.pressed(&PlayerAction::Right)
-            && !action.pressed(&PlayerAction::Left)
-    }) {
-        // Round so that only input strength > 0.5 is registered
-        // Maybe reconsider later if we want analog direction input
-        let stick_axis_value = gamepad.left_stick().x.round();
-        action_state.set_button_value(&PlayerAction::Right, stick_axis_value.clamp(0.0, 1.0));
-        action_state.set_button_value(&PlayerAction::Left, -stick_axis_value.clamp(-1.0, 0.0));
-    }
-}
-
-fn update_gamepad_shoot_input(mut query: Query<&mut PlayerActionState>) {
-    for mut action_state in query.iter_mut() {
-        if action_state
-            .axis_pair(&PlayerAction::PointerDirection)
-            .length()
-            > 0.6
-        {
-            action_state.set_button_value(&PlayerAction::Shoot, 1.0);
-        }
-    }
 }
 
 pub fn default_input_map() -> InputMap<PlayerAction> {
@@ -141,10 +99,21 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
         (PlayerAction::Right, GamepadButton::DPadRight),
         (PlayerAction::Left, GamepadButton::DPadLeft),
         (PlayerAction::Jump, GamepadButton::South),
+        (PlayerAction::Shoot, GamepadButton::RightTrigger2),
         (PlayerAction::Reload, GamepadButton::West),
         (PlayerAction::Interact, GamepadButton::East),
         (PlayerAction::SlotNext, GamepadButton::RightTrigger),
         (PlayerAction::SlotPrev, GamepadButton::LeftTrigger),
+    ])
+    .with_multiple([
+        (
+            PlayerAction::Right,
+            GamepadControlDirection::LEFT_RIGHT.threshold(GAMEPAD_THRESHOLD),
+        ),
+        (
+            PlayerAction::Left,
+            GamepadControlDirection::LEFT_LEFT.threshold(GAMEPAD_THRESHOLD),
+        ),
     ])
     .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
 }
