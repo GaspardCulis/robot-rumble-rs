@@ -17,7 +17,7 @@ impl Plugin for MatchmakingSetupPlugin {
     }
 }
 
-fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
+fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, args: Res<crate::Args>) {
     info!("Loading Splitscreen Setup menu UI");
 
     commands.ui_root().spawn_scene(
@@ -48,8 +48,8 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
                             args.players = n;
                         });
 
-                        // Set 2 player match as selected by default
-                        if n == 2 {
+                        // Set the default selection
+                        if n == args.players {
                             let entity = scene_handle.id();
                             scene_handle.react().entity_event(entity, Select);
                         }
