@@ -9,6 +9,7 @@ use crate::core::collision::{CollisionPlugin, CollisionShape, CollisionState};
 use crate::core::gravity::{Mass, Passive};
 use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
+use crate::entities::player::weapon::config::WeaponStats;
 use crate::utils::math;
 
 use super::planet;
@@ -134,14 +135,21 @@ fn update_weapon(
             &mut Velocity,
             &mut Rotation,
             &WeaponState,
+            &WeaponStats,
         ),
         Without<Player>,
     >,
 ) {
     for (action_state, player_position, player_velocity, weapon) in player_query.iter() {
         let axis_pair = action_state.axis_pair(&PlayerAction::PointerDirection);
-        if let Ok((mut mode, mut position, mut velocity, mut direction, weapon_state)) =
-            weapon_query.get_mut(weapon.0)
+        if let Ok((
+            mut mode,
+            mut position,
+            mut velocity,
+            mut direction,
+            weapon_state,
+            weapon_stats,
+        )) = weapon_query.get_mut(weapon.0)
         {
             direction.0 = if axis_pair != Vec2::ZERO {
                 axis_pair.to_angle()
@@ -151,7 +159,9 @@ fn update_weapon(
             let pressed = action_state.get_pressed();
             if pressed.contains(&PlayerAction::Shoot) && weapon_state.current_ammo > 0 {
                 *mode = WeaponMode::Triggered;
-            } else if pressed.contains(&PlayerAction::Reload) {
+            } else if pressed.contains(&PlayerAction::Reload)
+                && weapon_state.current_ammo < weapon_stats.magazine_size
+            {
                 *mode = WeaponMode::Reloading;
             } else if *mode != WeaponMode::Reloading {
                 *mode = WeaponMode::Idle;
