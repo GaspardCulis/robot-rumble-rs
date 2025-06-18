@@ -134,7 +134,6 @@ fn visibility_change_detection(
     for (_, sink) in query.iter() {
         sink.toggle_playback();
     }
-    warn!("Weapon changed visibility!");
 }
 
 // do some effects on mode changes
