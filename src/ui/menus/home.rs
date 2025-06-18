@@ -1,20 +1,13 @@
 use bevy::prelude::*;
+use bevy_cobweb_ui::prelude::*;
 
-use crate::ui::{UiAssets, widgets::*};
+use crate::ui::UiAssets;
 
 use super::Screen;
-
-#[derive(Resource, Default)]
-struct UiState {
-    selected_menu_entry: Option<Entity>,
-}
 
 #[derive(Component)]
 /// Marker for despawning
 struct HomeMenu;
-
-#[derive(Component)]
-struct MenuEntry;
 
 pub struct HomeMenuPlugin;
 impl Plugin for HomeMenuPlugin {
@@ -22,101 +15,57 @@ impl Plugin for HomeMenuPlugin {
         app.add_systems(OnEnter(Screen::Home), spawn_menu)
             .add_systems(
                 Update,
-                (update_menu_entry_scale, update_background_size).run_if(in_state(Screen::Home)),
+                update_background_size.run_if(in_state(Screen::Home)),
             )
             .add_systems(OnExit(Screen::Home), despawn_menu);
     }
 }
 
-fn spawn_menu(mut commands: Commands, assets: Res<UiAssets>) {
+fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: Res<UiAssets>) {
     info!("Loading Home menu UI");
-    commands.init_resource::<UiState>();
-    commands
-        .spawn((
-            Node {
-                display: Display::Flex,
-                flex_direction: FlexDirection::Column,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                padding: UiRect::all(Val::Percent(3.0)),
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Center,
-                ..default()
-            },
-            HomeMenu,
-        ))
-        .with_children(|spawner| {
-            spawner
-                .spawn((UIButton::default().with_text("Multiplayer"), MenuEntry))
-                .observe(
-                    |_: Trigger<Pointer<Click>>, mut menu: ResMut<NextState<Screen>>| {
-                        menu.set(Screen::MatchMaking);
-                    },
-                )
-                .observe(hover_in_observer)
-                .observe(hover_out_observer);
-            spawner
-                .spawn((UIButton::default().with_text("Settings"), MenuEntry))
-                .observe(
-                    |_: Trigger<Pointer<Click>>, mut menu: ResMut<NextState<Screen>>| {
-                        menu.set(Screen::Home);
-                    },
-                )
-                .observe(hover_in_observer)
-                .observe(hover_out_observer);
-            spawner
-                .spawn((UIButton::default().with_text("Credits"), MenuEntry))
-                .observe(
-                    |_: Trigger<Pointer<Click>>, mut menu: ResMut<NextState<Screen>>| {
-                        menu.set(Screen::Home);
-                    },
-                )
-                .observe(hover_in_observer)
-                .observe(hover_out_observer);
-            spawner
-                .spawn((UIButton::default().with_text("Quit"), MenuEntry))
-                .observe(
-                    |_: Trigger<Pointer<Click>>, mut exit: EventWriter<AppExit>| {
-                        // Close the app on click
-                        exit.write(AppExit::Success);
-                    },
-                )
-                .observe(hover_in_observer)
-                .observe(hover_out_observer);
 
-            spawner.spawn((
-                ImageNode::new(assets.background_image.clone())
-                    .with_rect(Rect::new(0.0, 0.0, 2560.0, 1440.0)),
-                Node {
-                    min_width: Val::Percent(100.),
-                    position_type: PositionType::Absolute,
-                    top: Val::Px(0.),
-                    left: Val::Px(0.),
-                    ..default()
+    let background_image = assets.background_image.clone();
+
+    commands.ui_root().spawn_scene(
+        ("ui/menu/home.cob", "home"),
+        &mut scene_builder,
+        move |scene_handle| {
+            // Add marker struct
+            scene_handle.insert(HomeMenu);
+
+            // Set background image
+            scene_handle.get("background").modify(
+                move |mut entity_commands: EntityCommands<'_>| {
+                    entity_commands.insert(
+                        ImageNode::new(background_image.clone())
+                            .with_rect(Rect::new(0.0, 0.0, 2560.0, 1440.0)),
+                    );
                 },
-                ZIndex(-1),
-            ));
-        });
+            );
+
+            // Add click observers
+            scene_handle
+                .get("multiplayer")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::MatchMaking));
+            scene_handle
+                .get("settings")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::Home)); // TODO: Implement menu
+            scene_handle
+                .get("credits")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::Home)); // TODO: Implement menu
+            scene_handle
+                .get("quit")
+                .on_pressed(|mut exit: EventWriter<AppExit>| {
+                    exit.write(AppExit::Success);
+                });
+        },
+    );
 }
 
-fn update_menu_entry_scale(
-    mut query: Query<(Entity, &mut Transform), With<MenuEntry>>,
-    ui_state: Res<UiState>,
-    time: Res<Time>,
-) {
-    for (entity, mut transform) in query.iter_mut() {
-        let selected = ui_state
-            .selected_menu_entry
-            .is_some_and(|selected| selected == entity);
-
-        let target_scale = if selected {
-            Vec3::splat(1.2)
-        } else {
-            Vec3::ONE
-        };
-
-        transform.scale = transform.scale.lerp(target_scale, time.delta_secs() * 16.0);
-    }
+fn despawn_menu(mut commands: Commands, query: Query<Entity, With<HomeMenu>>) -> Result {
+    let menu = query.single()?;
+    commands.entity(menu).despawn();
+    Ok(())
 }
 
 fn update_background_size(
@@ -140,25 +89,4 @@ fn update_background_size(
     }
 
     Ok(())
-}
-
-fn despawn_menu(mut commands: Commands, query: Query<Entity, With<HomeMenu>>) -> Result {
-    let menu = query.single()?;
-    commands.entity(menu).despawn();
-    Ok(())
-}
-
-fn hover_in_observer(trigger: Trigger<Pointer<Over>>, mut ui_state: ResMut<UiState>) {
-    let event = trigger.event();
-    ui_state.selected_menu_entry = Some(event.target);
-}
-
-fn hover_out_observer(trigger: Trigger<Pointer<Out>>, mut ui_state: ResMut<UiState>) {
-    let event = trigger.event();
-    if ui_state
-        .selected_menu_entry
-        .is_some_and(|selected| selected == event.target)
-    {
-        ui_state.selected_menu_entry = None;
-    }
 }

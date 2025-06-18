@@ -7,6 +7,7 @@ mod home;
 #[derive(States, Clone, PartialEq, Eq, Debug, Hash, Default)]
 pub enum Screen {
     #[default]
+    CobwebAssetLoading,
     AssetLoading,
     Home,
     Settings,
