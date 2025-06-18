@@ -19,11 +19,11 @@ use crate::{
 const SYNCTEST_NUM_PLAYERS: usize = 2;
 
 pub fn p2p_mode(args: Res<Args>) -> bool {
-    !(args.synctest || args.localplay)
+    args.mode == crate::GameMode::Multiplayer
 }
 
 pub fn synctest_mode(args: Res<Args>) -> bool {
-    args.synctest
+    args.mode == crate::GameMode::Synctest
 }
 
 pub fn checksum_position(position: &physics::Position) -> u64 {

@@ -110,7 +110,7 @@ fn handle_start_button_press(
 ) {
     info!("Starting local play match");
     next_screen.set(Screen::None);
-    args.localplay = true;
+    args.mode = crate::GameMode::LocalPlay;
 
     // Load world
     let seed = rand::rng().random();

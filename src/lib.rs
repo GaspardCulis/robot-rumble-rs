@@ -21,15 +21,24 @@ pub enum GameState {
     InGame,
 }
 
+#[derive(clap::ValueEnum, serde::Serialize, Eq, PartialEq, Clone, Debug, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum GameMode {
+    #[default]
+    /// Runs the game in peer-to-peer mode
+    Multiplayer,
+    /// Runs the game in localplay mode (splitscreen)
+    LocalPlay,
+    /// Runs the game in synctest mode
+    Synctest,
+}
+
 // TODO: Should be defined by `robot-rumble` main
 #[derive(Parser, Resource, Debug)]
 pub struct Args {
-    /// Runs the game in synctest mode
-    #[clap(long)]
-    pub synctest: bool,
-    /// Runs the game in localplay mode
-    #[clap(long)]
-    pub localplay: bool,
+    /// Game mode
+    #[arg(value_enum, short, long, default_value_t)]
+    pub mode: GameMode,
     /// Number of players to match against
     #[arg(short, long, default_value_t = 2)]
     pub players: usize,
