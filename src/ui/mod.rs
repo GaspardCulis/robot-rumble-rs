@@ -11,8 +11,6 @@ pub use menus::Screen;
 pub struct UiAssets {
     #[asset(path = "img/backgrounds/terrorist-dog.webp")]
     pub background_image: Handle<Image>,
-    #[asset(path = "img/icons/gamepad-icon.png")]
-    pub gamepad_icon: Handle<Image>,
 }
 
 pub struct UiPlugins;
