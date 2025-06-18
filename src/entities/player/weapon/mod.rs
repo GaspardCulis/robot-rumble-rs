@@ -155,7 +155,7 @@ fn fire_weapon_system(
     projectiles_assets: Res<ProjectilesAssets>,
     projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
-    assets: Res<WeaponsAssets>,
+    weapon_assets: Res<WeaponsAssets>,
     weapon_configs: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
@@ -164,6 +164,10 @@ fn fire_weapon_system(
         return;
     };
 
+    let Some(weapon_config) = weapon_configs.get(&weapon_assets.config) else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
     for (mut state, mut mode, position, velocity, rotation, stats, owner, weapon_type) in
         weapon_query.iter_mut()
     {
@@ -205,16 +209,10 @@ fn fire_weapon_system(
             }
             // make sound
             // shitcode, pls gsprd mk hndls
-            let config = if let Some(c) = weapon_configs.get(&assets.config) {
-                c
-            } else {
-                warn!("Couldn't load WeaponsConfig");
-                return;
-            };
-            if let Some(weapon_config) = config.0.get(weapon_type) {
-                let sound: Handle<AudioSource> =
+            if let Some(weapon_config) = weapon_config.0.get(weapon_type) {
+                let fire_sound: Handle<AudioSource> =
                     asset_server.load(weapon_config.sounds.fire.clone());
-                events.write(SoundEvent { handle: sound });
+                events.write(SoundEvent { handle: fire_sound });
             }
 
             state.current_ammo -= 1;
