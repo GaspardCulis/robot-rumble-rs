@@ -210,7 +210,7 @@ fn fire_weapon_system(
             // make sound
             // shitcode, pls gsprd mk hndls
             if let Some(weapon_config) = weapon_config.0.get(weapon_type) {
-                let fire_sound: Handle<AudioSource> =
+                let fire_sound  =
                     asset_server.load(weapon_config.sounds.fire.clone());
                 events.write(SoundEvent { handle: fire_sound });
             }

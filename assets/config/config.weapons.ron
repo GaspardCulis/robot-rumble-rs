@@ -16,7 +16,7 @@ WeaponsConfig({
             scale: 3.0,
         ),
         sounds: (
-            fire: "audio/fire.ogg",
+            fire: "audio/pistol_fire.ogg",
         )
     ),
     Shotgun: (
@@ -36,7 +36,7 @@ WeaponsConfig({
             scale: 3.0,
         ),
         sounds: (
-            fire: "audio/fire.ogg",
+            fire: "audio/shotgun_fire.ogg",
         )
     ),
     Rifle: (
@@ -56,7 +56,7 @@ WeaponsConfig({
             scale: 0.25,
         ),
         sounds: (
-            fire: "audio/fire.ogg",
+            fire: "audio/pistol_fire.ogg",
         )
     ),
     Sniper: (
@@ -76,7 +76,7 @@ WeaponsConfig({
             scale: 0.25,
         ),
         sounds: (
-            fire: "audio/fire.ogg",
+            fire: "audio/pistol_fire.ogg",
         )
     ),
     Revolver: (
@@ -96,7 +96,7 @@ WeaponsConfig({
             scale: 0.5,
         ),
         sounds: (
-            fire: "audio/fire.ogg",
+            fire: "audio/pistol_fire.ogg",
         )
     ),
     Pulse: (
@@ -116,7 +116,7 @@ WeaponsConfig({
             scale: 4.0,
         ),
         sounds: (
-            fire: "audio/fire.ogg",
+            fire: "audio/pistol_fire.ogg",
         )
     ),
     BlackholeGun: (
@@ -136,7 +136,7 @@ WeaponsConfig({
             scale: 0.75,
         ),
         sounds: (
-            fire: "audio/fire.ogg",
+            fire: "audio/pistol_fire.ogg",
         )
     ),
 })
