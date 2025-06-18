@@ -62,6 +62,17 @@ LoadImages[$gamepad_icon]
         BrRadius(8px)
         "text"
             TextLine{ text: "Start match" }
+    "back_button"
+        AbsoluteNode{
+            top:auto
+            left: 10px
+            bottom: 10px
+        }
+        Splat<Padding>(20px)
+        Responsive<BackgroundColor>{idle:#00000000 hover:#66888888 press:#668888ff}
+        BrRadius(8px)
+        "text"
+            TextLine{ text: "Back" }
 
 "player_info"
     FlexNode{

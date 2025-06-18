@@ -59,6 +59,9 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, gamepads:
             scene_handle
                 .get("start_button")
                 .on_pressed(handle_start_button_press);
+            scene_handle
+                .get("back_button")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::Home));
 
             // Spawn player config UIs
             scene_handle.get("container").update_on(
