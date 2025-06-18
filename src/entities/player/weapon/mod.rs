@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        audio::{SoundEffect::Shooting, SoundEvent},
+        audio::SoundEvent,
         physics::{PhysicsSet, Position, Rotation, Velocity},
     },
     entities::projectile::{
@@ -140,30 +140,32 @@ fn tick_weapon_timers(
 
 fn fire_weapon_system(
     mut commands: Commands,
-    mut weapon_query: Query<
-        (
-            &mut WeaponState,
-            &mut WeaponMode,
-            &Position,
-            &Velocity,
-            &Rotation,
-            &WeaponStats,
-            &Owner,
-        ),
-        With<WeaponType>,
-    >,
+    mut weapon_query: Query<(
+        &mut WeaponState,
+        &mut WeaponMode,
+        &Position,
+        &Velocity,
+        &Rotation,
+        &WeaponStats,
+        &Owner,
+        &WeaponType,
+    )>,
     mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
     mut events: EventWriter<SoundEvent>,
     projectiles_assets: Res<ProjectilesAssets>,
     projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
+    assets: Res<WeaponsAssets>,
+    weapon_configs: Res<Assets<WeaponsConfig>>,
+    asset_server: Res<AssetServer>,
 ) {
     let Some(projectiles_config) = projectiles_configs.get(&projectiles_assets.config) else {
         warn!("Couldn't load ProjectileConfig");
         return;
     };
 
-    for (mut state, mut mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut()
+    for (mut state, mut mode, position, velocity, rotation, stats, owner, weapon_type) in
+        weapon_query.iter_mut()
     {
         if (*mode == WeaponMode::Triggered)
             && state.cooldown_timer.finished()
@@ -202,7 +204,18 @@ fn fire_weapon_system(
                 }
             }
             // make sound
-            events.write(SoundEvent { clip: Shooting });
+            // shitcode, pls gsprd mk hndls
+            let config = if let Some(c) = weapon_configs.get(&assets.config) {
+                c
+            } else {
+                warn!("Couldn't load WeaponsConfig");
+                return;
+            };
+            if let Some(weapon_config) = config.0.get(weapon_type) {
+                let sound: Handle<AudioSource> =
+                    asset_server.load(weapon_config.sounds.fire.clone());
+                events.write(SoundEvent { handle: sound });
+            }
 
             state.current_ammo -= 1;
             // Reset timers if shooting
