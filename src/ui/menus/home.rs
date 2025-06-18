@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_cobweb_ui::prelude::*;
 
-use crate::ui::UiAssets;
+use crate::{GameState, ui::UiAssets};
 
 use super::Screen;
 
@@ -44,9 +44,13 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: R
             );
 
             // Add click observers
-            scene_handle
-                .get("multiplayer")
-                .on_pressed(|mut next: ResMut<NextState<Screen>>| next.set(Screen::MatchMaking));
+            scene_handle.get("multiplayer").on_pressed(
+                |mut next_screen: ResMut<NextState<Screen>>,
+                 mut next_gamestate: ResMut<NextState<GameState>>| {
+                    next_screen.set(Screen::None);
+                    next_gamestate.set(GameState::MatchMaking);
+                },
+            );
             scene_handle
                 .get("local")
                 .on_pressed(|mut next: ResMut<NextState<Screen>>| {

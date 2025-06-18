@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::GameState;
-
 mod home;
 mod splitscreen_setup;
 
@@ -13,8 +11,8 @@ pub enum Screen {
     Home,
     Settings,
     Credits,
-    MatchMaking,
     SplitscreenSetup,
+    None,
 }
 
 pub struct MenusPlugin;
@@ -23,9 +21,6 @@ impl Plugin for MenusPlugin {
         app.add_plugins((
             home::HomeMenuPlugin,
             splitscreen_setup::SplitscreenSetupPlugin,
-        ))
-        .add_systems(OnEnter(Screen::MatchMaking), |mut commands: Commands| {
-            commands.set_state(GameState::MatchMaking);
-        });
+        ));
     }
 }
