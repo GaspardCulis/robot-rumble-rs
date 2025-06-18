@@ -8,7 +8,7 @@ use super::Screen;
 /// Marker for despawning
 struct SplitscreenSetupMenu;
 
-#[derive(ReactComponent, Default)]
+#[derive(ReactComponent)]
 struct MatchInfo {
     player_count: usize,
 }
@@ -25,7 +25,7 @@ impl Plugin for SplitscreenSetupPlugin {
     }
 }
 
-fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
+fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, gamepads: Query<&Gamepad>) {
     info!("Loading Splitscreen Setup menu UI");
 
     commands.ui_root().spawn_scene(
@@ -36,7 +36,9 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder) {
             scene_handle.insert(SplitscreenSetupMenu);
 
             // Add reactive components
-            scene_handle.insert_reactive(MatchInfo::default());
+            scene_handle.insert_reactive(MatchInfo {
+                player_count: gamepads.iter().count(),
+            });
             let scene_id = scene_handle.id();
 
             // Spawn player config UIs
