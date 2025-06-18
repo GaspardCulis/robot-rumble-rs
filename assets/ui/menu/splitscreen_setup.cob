@@ -51,15 +51,26 @@ LoadImages[$gamepad_icon]
             column_gap: 16px
             margin: { top: 80px }
         }
+    "start_button"
+        AbsoluteNode{
+            top:auto left:auto
+            right: 10px
+            bottom: 10px
+        }
+        Splat<Padding>(20px)
+        Responsive<BackgroundColor>{idle:#00000000 hover:#66888888 press:#668888ff}
+        BrRadius(8px)
+        "text"
+            TextLine{ text: "Start match" }
 
 "player_info"
     FlexNode{
         flex_direction: Column
         justify_cross: Center
     }
-    BackgroundColor(Hsla{hue:138 saturation:0.23 lightness:0.57 alpha:1})
-    BorderColor(Hsla{hue:174 saturation:0.23 lightness:0.18 alpha:1})
-    BrRadius(6px)
+    Splat<Padding>(8px)
+    BackgroundColor(#668888ff)
+    BrRadius(8px)
 
     "text"
         TextLine{text: "Player X"}

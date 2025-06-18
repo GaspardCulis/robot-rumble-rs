@@ -41,6 +41,13 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, gamepads:
             });
             let scene_id = scene_handle.id();
 
+            // Add button handlers
+            scene_handle
+                .get("start_button")
+                .on_pressed(|mut next: ResMut<NextState<Screen>>| {
+                    info!("Starting local play match");
+                });
+
             // Spawn player config UIs
             scene_handle.get("container").update_on(
                 entity_mutation::<MatchInfo>(scene_id),
