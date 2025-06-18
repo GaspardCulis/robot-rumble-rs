@@ -136,7 +136,7 @@ fn handle_start_button_press(
             .add_player(bevy_ggrs::ggrs::PlayerType::Local, player.handle)
             .expect("Failed to add player");
 
-        commands.spawn((player, input_map));
+        commands.spawn((player, input_map, camera::CameraFollowTarget));
     }
 
     let mut socket = bevy_matchbox::MatchboxSocket::new_unreliable(
