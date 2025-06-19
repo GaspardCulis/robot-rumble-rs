@@ -92,16 +92,15 @@ impl GgrsSessionInput for PlayerActionState {
     }
 
     fn from_ggrs_session_input(&mut self, input: NetworkInputs) {
-        self.reset_all();
-
         let keys = input.keys;
 
         let buttons = get_button_actions();
 
         debug_assert!(buttons.len() < 16);
         for (i, action) in buttons.into_iter().enumerate() {
+            self.reset(action);
             if keys & (1 << i) != 0 {
-                self.press(&action);
+                self.press(action);
             }
         }
 
@@ -128,8 +127,6 @@ fn get_button_actions() -> &'static [PlayerAction] {
         PlayerAction::Slot1,
         PlayerAction::Slot2,
         PlayerAction::Slot3,
-        PlayerAction::SlotNext,
-        PlayerAction::SlotPrev,
     ]
 }
 
