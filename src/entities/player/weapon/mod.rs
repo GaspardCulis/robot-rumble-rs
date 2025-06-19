@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        audio::SoundEvent,
+        audio::{AudioSFX, SoundEvent},
         physics::{PhysicsSet, Position, Rotation, Velocity},
     },
     entities::projectile::{
@@ -10,6 +10,9 @@ use crate::{
 };
 use bevy::{math::ops::cos, prelude::*};
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
+use bevy_kira_audio::{
+    AudioChannel, AudioControl, AudioInstance, AudioSource, AudioTween, PlaybackState,
+};
 use config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -35,9 +38,6 @@ pub struct WeaponState {
 #[relationship_target(relationship = super::Weapon)]
 pub struct Owner(Entity);
 
-#[derive(Component, Reflect)]
-pub struct ReloadingSound;
-
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
@@ -45,7 +45,7 @@ impl Plugin for WeaponPlugin {
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
             .register_type::<WeaponMode>()
-            .register_type::<ReloadingSound>()
+            .register_type::<ReloadingAudio>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
             .register_required_components::<WeaponType, WeaponMode>()
             .add_systems(
@@ -131,40 +131,55 @@ fn add_sprite(
 
 // this will be very useful a bit further in visuals and sound effects
 fn visibility_change_detection(
-    query: Query<(&WeaponType, Option<&ReloadingSound>), Changed<Visibility>>,
+    query: Query<Option<&ReloadingAudio>, (Changed<Visibility>, With<WeaponType>)>,
+    mut audio_instances: ResMut<Assets<AudioInstance>>,
 ) {
-    for (_) in query.iter() {
-        continue;
+    for maybe_audio in query.iter() {
+        if let Some(audio) = maybe_audio {
+            let handle = &audio.0;
+            if let Some(instance) = audio_instances.get_mut(handle) {
+                match instance.state() {
+                    PlaybackState::Paused { .. } => {
+                        // There are a lot of control methods defined on the instance
+                        instance.resume(AudioTween::default());
+                    }
+                    PlaybackState::Playing { .. } => {
+                        instance.pause(AudioTween::default());
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
 }
+
+#[derive(Component, Reflect)]
+struct ReloadingAudio(Handle<AudioInstance>);
 
 // do some effects on mode changes
 fn mode_change_detection(
     mut commands: Commands,
-    query: Query<(Entity, &WeaponMode, &WeaponType), Changed<WeaponMode>>,
+    query: Query<(Entity, &WeaponMode, &WeaponType, Option<&ReloadingAudio>), Changed<WeaponMode>>,
     weapon_assets: Res<WeaponsAssets>,
-    weapon_configs: Res<Assets<WeaponsConfig>>,
+    sfx_channel: Res<AudioChannel<AudioSFX>>,
+    mut audio_instances: ResMut<Assets<AudioInstance>>,
 ) {
-    // pls gspard fix assets pls pls
-    let Some(weapon_config) = weapon_configs.get(&weapon_assets.config) else {
-        warn!("Couldn't load WeaponsConfig");
-        return;
-    };
-    for (entity, mode, weapon_type) in query.iter() {
-        let Some(weapon_config) = weapon_config.0.get(weapon_type) else {
-            warn!("Couldn't load WeaponsConfig");
-            return;
-        };
+    for (entity, mode, _, maybe_audio) in query.iter() {
         match mode {
             WeaponMode::Reloading => {
-                if let Some(_) = &weapon_config.sounds.reload {
-                    commands.entity(entity).insert(ReloadingSound);
-                } else {
-                    warn!("No reload sound is previewed!")
-                }
+                let sound: Handle<AudioSource> = weapon_assets.reload.clone();
+                let handle: Handle<AudioInstance> = sfx_channel.play(sound).handle();
+                commands.entity(entity).insert(ReloadingAudio(handle));
             }
             _ => {
-                commands.entity(entity).remove::<ReloadingSound>();
+                if let Some(audio) = maybe_audio {
+                    let handle = &audio.0;
+                    if let Some(instance) = audio_instances.get_mut(handle) {
+                        instance.stop(AudioTween::default());
+                    }
+
+                    commands.entity(entity).remove::<ReloadingAudio>();
+                }
             }
         }
     }
