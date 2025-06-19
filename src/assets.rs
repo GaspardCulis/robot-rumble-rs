@@ -10,6 +10,7 @@ use crate::{
         projectile::config as projectiles,
         satellite::assets as satellite,
     },
+    network::config as network,
     ui,
 };
 
@@ -36,6 +37,9 @@ impl Plugin for AssetsPlugin {
         .add_plugins(RonAssetPlugin::<satellite::SatelliteConfig>::new(&[
             "satellites.ron",
         ]))
+        .add_plugins(RonAssetPlugin::<network::NetworkConfig>::new(&[
+            "network.ron",
+        ]))
         .add_loading_state(
             LoadingState::new(crate::ui::Screen::AssetLoading)
                 .continue_to_state(crate::ui::Screen::Home)
@@ -46,6 +50,7 @@ impl Plugin for AssetsPlugin {
                 .load_collection::<weapon::WeaponsAssets>()
                 .load_collection::<projectiles::ProjectilesAssets>()
                 .load_collection::<satellite::SatelliteAssets>()
+                .load_collection::<network::NetworkAssets>()
                 .load_collection::<ui::UiAssets>(),
         );
     }

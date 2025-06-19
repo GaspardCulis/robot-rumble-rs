@@ -23,7 +23,7 @@ WeaponsConfig({
         stats: (
             cooldown: 0.5,
             magazine_size: 8,
-            reload_time: 5.0,
+            reload_time: 4.0,
             damage_multiplier: 1.0,
             projectile_speed: 1200.0,
             shot_bullet_count: 10,
@@ -37,6 +37,7 @@ WeaponsConfig({
         ),
         sounds: (
             fire: "audio/shotgun_fire.ogg",
+            reload: Some("audio/shotgun_reload.ogg"),
         )
     ),
     Rifle: (

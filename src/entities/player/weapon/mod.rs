@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        audio::SoundEvent,
+        audio::AudioSFX,
         physics::{PhysicsSet, Position, Rotation, Velocity},
     },
     entities::projectile::{
@@ -10,6 +10,7 @@ use crate::{
 };
 use bevy::{math::ops::cos, prelude::*};
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
+use bevy_kira_audio::{AudioChannel, AudioControl, AudioInstance, AudioTween, PlaybackState};
 use config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -35,10 +36,14 @@ pub struct WeaponState {
 #[relationship_target(relationship = super::Weapon)]
 pub struct Owner(Entity);
 
+#[derive(Component, Reflect)]
+struct AudioReload(Handle<AudioInstance>);
+
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<WeaponType>()
+        app.register_type::<AudioReload>()
+            .register_type::<WeaponType>()
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
             .register_type::<WeaponMode>()
@@ -49,7 +54,12 @@ impl Plugin for WeaponPlugin {
                 (
                     #[cfg(feature = "dev_tools")]
                     handle_config_reload,
-                    (add_stats_component, add_sprite)
+                    (
+                        add_stats_component,
+                        add_sprite,
+                        mode_change_detection,
+                        visibility_change_detection,
+                    )
                         .before(PhysicsSet::Player)
                         .run_if(resource_exists::<WeaponsAssets>),
                 ),
@@ -70,9 +80,7 @@ fn add_stats_component(
     assets: Res<WeaponsAssets>,
     configs: Res<Assets<WeaponsConfig>>,
 ) {
-    let config = if let Some(c) = configs.get(&assets.config) {
-        c
-    } else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Couldn't load WeaponsConfig");
         return;
     };
@@ -100,9 +108,7 @@ fn add_sprite(
     configs: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    let config = if let Some(c) = configs.get(&assets.config) {
-        c
-    } else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Couldn't load WeaponsConfig");
         return;
     };
@@ -120,6 +126,73 @@ fn add_sprite(
     }
 }
 
+// this will be very useful a bit further in visuals and sound effects
+fn visibility_change_detection(
+    query: Query<Option<&AudioReload>, (Changed<Visibility>, With<WeaponType>)>,
+    mut audio_instances: ResMut<Assets<AudioInstance>>,
+) {
+    for maybe_audio in query.iter() {
+        if let Some(audio) = maybe_audio {
+            let handle = &audio.0;
+            if let Some(instance) = audio_instances.get_mut(handle) {
+                match instance.state() {
+                    PlaybackState::Paused { .. } => {
+                        // There are a lot of control methods defined on the instance
+                        instance.resume(AudioTween::default());
+                    }
+                    PlaybackState::Playing { .. } => {
+                        instance.pause(AudioTween::default());
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
+// do some effects on mode changes
+fn mode_change_detection(
+    mut commands: Commands,
+    query: Query<(Entity, &WeaponMode, &WeaponType, Option<&AudioReload>), Changed<WeaponMode>>,
+    weapon_assets: Res<WeaponsAssets>,
+    weapon_configs: Res<Assets<WeaponsConfig>>,
+    asset_server: Res<AssetServer>,
+    sfx_channel: Res<AudioChannel<AudioSFX>>,
+    mut audio_instances: ResMut<Assets<AudioInstance>>,
+) {
+    let Some(weapons_config) = weapon_configs.get(&weapon_assets.config) else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
+    for (entity, mode, weapon_type, maybe_audio) in query.iter() {
+        let Some(weapon_config) = weapons_config.0.get(weapon_type) else {
+            warn!("Couldn't load WeaponConfig");
+            return;
+        };
+        match mode {
+            WeaponMode::Reloading => {
+                if let Some(sound_path) = weapon_config.sounds.reload.clone() {
+                    let sound = asset_server.load(sound_path);
+                    let handle: Handle<AudioInstance> = sfx_channel.play(sound).handle();
+                    commands.entity(entity).insert(AudioReload(handle));
+                } else {
+                    warn!("Reload sound for current weapon is not implemented!");
+                }
+            }
+            _ => {
+                if let Some(audio) = maybe_audio {
+                    let handle = &audio.0;
+                    if let Some(instance) = audio_instances.get_mut(handle) {
+                        instance.stop(AudioTween::default());
+                    }
+
+                    commands.entity(entity).remove::<AudioReload>();
+                }
+            }
+        }
+    }
+}
+
 /// Also handles ammo reloads for convenience
 fn tick_weapon_timers(
     mut query: Query<(&mut WeaponState, &WeaponStats, &mut WeaponMode), With<Position>>,
@@ -130,7 +203,7 @@ fn tick_weapon_timers(
         if *mode == WeaponMode::Reloading {
             state.reload_timer.tick(time.delta());
         }
-        // Verify current_ammo is 0 to avoid a subtle bug where we fire when WeaponState is instantiated
+
         if state.reload_timer.finished() && state.current_ammo < stats.magazine_size {
             state.current_ammo = stats.magazine_size;
             *mode = WeaponMode::Idle;
@@ -151,13 +224,13 @@ fn fire_weapon_system(
         &WeaponType,
     )>,
     mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
-    mut events: EventWriter<SoundEvent>,
     projectiles_assets: Res<ProjectilesAssets>,
     projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
     weapon_assets: Res<WeaponsAssets>,
     weapon_configs: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
+    sfx_channel: Res<AudioChannel<AudioSFX>>,
 ) {
     let Some(projectiles_config) = projectiles_configs.get(&projectiles_assets.config) else {
         warn!("Couldn't load ProjectileConfig");
@@ -171,10 +244,7 @@ fn fire_weapon_system(
     for (mut state, mut mode, position, velocity, rotation, stats, owner, weapon_type) in
         weapon_query.iter_mut()
     {
-        if (*mode == WeaponMode::Triggered)
-            && state.cooldown_timer.finished()
-            && state.current_ammo > 0
-        {
+        if *mode == WeaponMode::Triggered && state.can_fire() {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
@@ -211,7 +281,7 @@ fn fire_weapon_system(
             // shitcode, pls gsprd mk hndls
             if let Some(weapon_config) = weapon_config.0.get(weapon_type) {
                 let fire_sound = asset_server.load(weapon_config.sounds.fire.clone());
-                events.write(SoundEvent { handle: fire_sound });
+                sfx_channel.play(fire_sound.clone());
             }
 
             state.current_ammo -= 1;
@@ -227,6 +297,12 @@ fn fire_weapon_system(
                 owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
             }
         }
+    }
+}
+
+impl WeaponState {
+    pub fn can_fire(&self) -> bool {
+        self.cooldown_timer.finished() && self.current_ammo > 0
     }
 }
 
