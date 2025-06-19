@@ -10,7 +10,7 @@ use crate::{
 };
 use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_ggrs::{GgrsSchedule, LocalInputs, LocalPlayers, PlayerInputs, ReadInputs};
-use leafwing_input_manager::prelude::ActionState;
+use leafwing_input_manager::{Actionlike, InputControlKind};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
@@ -21,21 +21,6 @@ pub struct NetworkInputs {
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, Deref, DerefMut)]
 pub struct AlwaysEqWrapper<T>(T);
-
-const INPUT_UP: u32 = 1 << 0;
-const INPUT_DOWN: u32 = 1 << 1;
-const INPUT_LEFT: u32 = 1 << 2;
-const INPUT_RIGHT: u32 = 1 << 3;
-const INPUT_SHOOT: u32 = 1 << 4;
-const INPUT_SLOT1: u32 = 1 << 5;
-const INPUT_SLOT2: u32 = 1 << 6;
-const INPUT_SLOT3: u32 = 1 << 7;
-const INPUT_SLOT_NEXT: u32 = 1 << 8;
-const INPUT_SLOT_PREV: u32 = 1 << 9;
-const INPUT_INTERACT: u32 = 1 << 10;
-const INPUT_ROPE_EXTEND: u32 = 1 << 11;
-const INPUT_ROPE_RETRACT: u32 = 1 << 12;
-const INPUT_RELOAD: u32 = 1 << 13;
 
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
@@ -75,38 +60,29 @@ fn update_remote_inputs(
 ) {
     for (player, mut action_state) in query.iter_mut() {
         let (input, _) = inputs[player.handle];
-        *action_state = PlayerActionState::from_ggrs_session_input(input);
+        action_state.from_ggrs_session_input(input);
     }
 }
 
 pub trait GgrsSessionInput {
     fn as_ggrs_session_input(&self) -> NetworkInputs;
 
-    fn from_ggrs_session_input(input: NetworkInputs) -> Self;
+    fn from_ggrs_session_input(&mut self, input: NetworkInputs);
 }
 
 impl GgrsSessionInput for PlayerActionState {
     fn as_ggrs_session_input(&self) -> NetworkInputs {
         let mut keys = 0;
 
-        for action in self.get_pressed() {
-            keys |= match action {
-                PlayerAction::Jump => INPUT_UP,
-                PlayerAction::Sneak => INPUT_DOWN,
-                PlayerAction::Left => INPUT_LEFT,
-                PlayerAction::Right => INPUT_RIGHT,
-                PlayerAction::Shoot => INPUT_SHOOT,
-                PlayerAction::Slot1 => INPUT_SLOT1,
-                PlayerAction::Slot2 => INPUT_SLOT2,
-                PlayerAction::Slot3 => INPUT_SLOT3,
-                PlayerAction::SlotNext => INPUT_SLOT_NEXT,
-                PlayerAction::SlotPrev => INPUT_SLOT_PREV,
-                PlayerAction::Reload => INPUT_RELOAD,
-                PlayerAction::PointerDirection => unimplemented!("Should not get called"),
-                PlayerAction::Interact => INPUT_INTERACT,
-                PlayerAction::RopeExtend => INPUT_ROPE_EXTEND,
-                PlayerAction::RopeRetract => INPUT_ROPE_RETRACT,
-            };
+        let mut buttons = get_button_actions(self);
+        buttons.sort();
+
+        for (i, _) in buttons
+            .into_iter()
+            .enumerate()
+            .filter(|(_, button)| self.pressed(button))
+        {
+            keys = keys | (1 << i);
         }
 
         NetworkInputs {
@@ -115,61 +91,33 @@ impl GgrsSessionInput for PlayerActionState {
         }
     }
 
-    fn from_ggrs_session_input(input: NetworkInputs) -> Self {
-        let mut action_state = ActionState::<PlayerAction>::default();
+    fn from_ggrs_session_input(&mut self, input: NetworkInputs) {
+        self.reset_all();
 
         let keys = input.keys;
 
-        if keys & INPUT_UP != 0 {
-            action_state.press(&PlayerAction::Jump);
-        }
-        if keys & INPUT_DOWN != 0 {
-            action_state.press(&PlayerAction::Sneak);
-        }
-        if keys & INPUT_LEFT != 0 {
-            action_state.press(&PlayerAction::Left);
-        }
-        if keys & INPUT_RIGHT != 0 {
-            action_state.press(&PlayerAction::Right);
-        }
-        if keys & INPUT_SHOOT != 0 {
-            action_state.press(&PlayerAction::Shoot);
-        }
-        if keys & INPUT_SLOT1 != 0 {
-            action_state.press(&PlayerAction::Slot1);
-        }
-        if keys & INPUT_SLOT2 != 0 {
-            action_state.press(&PlayerAction::Slot2);
-        }
-        if keys & INPUT_SLOT3 != 0 {
-            action_state.press(&PlayerAction::Slot3);
-        }
-        if keys & INPUT_SLOT_NEXT != 0 {
-            action_state.press(&PlayerAction::SlotNext);
-        }
-        if keys & INPUT_SLOT_PREV != 0 {
-            action_state.press(&PlayerAction::SlotPrev);
-        }
-        if keys & INPUT_RELOAD != 0 {
-            action_state.press(&PlayerAction::Reload);
-        }
-        if keys & INPUT_INTERACT != 0 {
-            action_state.press(&PlayerAction::Interact);
-        }
-        if keys & INPUT_ROPE_EXTEND != 0 {
-            action_state.press(&PlayerAction::RopeExtend);
-        }
-        if keys & INPUT_ROPE_RETRACT != 0 {
-            action_state.press(&PlayerAction::RopeRetract);
+        let mut buttons = get_button_actions(self);
+        buttons.sort();
+
+        for (i, action) in buttons.into_iter().enumerate() {
+            if keys & (1 << i) != 0 {
+                self.press(&action);
+            }
         }
 
-        action_state.set_axis_pair(
+        self.set_axis_pair(
             &PlayerAction::PointerDirection,
             *input.pointer_direction.deref(),
         );
-
-        action_state
     }
+}
+
+fn get_button_actions(action_state: &PlayerActionState) -> Vec<PlayerAction> {
+    action_state
+        .keys()
+        .into_iter()
+        .filter(|action| action.input_control_kind() == InputControlKind::Button)
+        .collect()
 }
 
 impl<T> PartialEq for AlwaysEqWrapper<T> {
