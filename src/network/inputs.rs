@@ -13,8 +13,9 @@ use bevy_ggrs::{GgrsSchedule, LocalInputs, LocalPlayers, PlayerInputs, ReadInput
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
+// FIX: Make smaller when https://github.com/gschup/bevy_ggrs#119 is fixed
 pub struct NetworkInputs {
-    keys: u32, // FIX: Make smaller when https://github.com/gschup/bevy_ggrs#119 is fixed
+    keys: u16,
     pointer_direction: AlwaysEqWrapper<Vec2>,
 }
 
@@ -75,6 +76,7 @@ impl GgrsSessionInput for PlayerActionState {
 
         let buttons = get_button_actions();
 
+        debug_assert!(buttons.len() < 16);
         for (i, _) in buttons
             .into_iter()
             .enumerate()
@@ -96,6 +98,7 @@ impl GgrsSessionInput for PlayerActionState {
 
         let buttons = get_button_actions();
 
+        debug_assert!(buttons.len() < 16);
         for (i, action) in buttons.into_iter().enumerate() {
             if keys & (1 << i) != 0 {
                 self.press(&action);
