@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::{
     core::{
         inputs::{PlayerAction, PlayerActionState},
@@ -8,29 +10,34 @@ use crate::{
 };
 use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_ggrs::{GgrsSchedule, LocalInputs, LocalPlayers, PlayerInputs, ReadInputs};
-use leafwing_input_manager::prelude::ActionState;
 use serde::{Deserialize, Serialize};
 
+/// The list of player actions that gets serialized
+/// Actions are expected to be `InputControlKind::Button`
+const SERIALIZED_BUTTON_INPUTS: &[PlayerAction] = &[
+    PlayerAction::Jump,
+    PlayerAction::Sneak,
+    PlayerAction::Left,
+    PlayerAction::Right,
+    PlayerAction::Shoot,
+    PlayerAction::Reload,
+    PlayerAction::Interact,
+    PlayerAction::RopeExtend,
+    PlayerAction::RopeRetract,
+    PlayerAction::Slot1,
+    PlayerAction::Slot2,
+    PlayerAction::Slot3,
+];
+
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
+// FIX: Make smaller when https://github.com/gschup/bevy_ggrs#119 is fixed
 pub struct NetworkInputs {
-    keys: u32, // FIX: Make smaller when https://github.com/gschup/bevy_ggrs#119 is fixed
-    pointer_direction: Vec2,
+    keys: u16,
+    pointer_direction: AlwaysEqWrapper<Vec2>,
 }
 
-const INPUT_UP: u32 = 1 << 0;
-const INPUT_DOWN: u32 = 1 << 1;
-const INPUT_LEFT: u32 = 1 << 2;
-const INPUT_RIGHT: u32 = 1 << 3;
-const INPUT_SHOOT: u32 = 1 << 4;
-const INPUT_SLOT1: u32 = 1 << 5;
-const INPUT_SLOT2: u32 = 1 << 6;
-const INPUT_SLOT3: u32 = 1 << 7;
-const INPUT_SLOT_NEXT: u32 = 1 << 8;
-const INPUT_SLOT_PREV: u32 = 1 << 9;
-const INPUT_INTERACT: u32 = 1 << 10;
-const INPUT_ROPE_EXTEND: u32 = 1 << 11;
-const INPUT_ROPE_RETRACT: u32 = 1 << 12;
-const INPUT_RELOAD: u32 = 1 << 13;
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, Deref, DerefMut)]
+pub struct AlwaysEqWrapper<T>(T);
 
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
@@ -70,101 +77,66 @@ fn update_remote_inputs(
 ) {
     for (player, mut action_state) in query.iter_mut() {
         let (input, _) = inputs[player.handle];
-        *action_state = PlayerActionState::from_ggrs_session_input(input);
+        action_state.set_ggrs_session_input(input);
     }
 }
 
 pub trait GgrsSessionInput {
     fn as_ggrs_session_input(&self) -> NetworkInputs;
 
-    fn from_ggrs_session_input(input: NetworkInputs) -> Self;
+    fn set_ggrs_session_input(&mut self, input: NetworkInputs);
 }
 
 impl GgrsSessionInput for PlayerActionState {
     fn as_ggrs_session_input(&self) -> NetworkInputs {
         let mut keys = 0;
 
-        for action in self.get_pressed() {
-            keys |= match action {
-                PlayerAction::Jump => INPUT_UP,
-                PlayerAction::Sneak => INPUT_DOWN,
-                PlayerAction::Left => INPUT_LEFT,
-                PlayerAction::Right => INPUT_RIGHT,
-                PlayerAction::Shoot => INPUT_SHOOT,
-                PlayerAction::Slot1 => INPUT_SLOT1,
-                PlayerAction::Slot2 => INPUT_SLOT2,
-                PlayerAction::Slot3 => INPUT_SLOT3,
-                PlayerAction::SlotNext => INPUT_SLOT_NEXT,
-                PlayerAction::SlotPrev => INPUT_SLOT_PREV,
-                PlayerAction::Reload => INPUT_RELOAD,
-                PlayerAction::PointerDirection => unimplemented!("Should not get called"),
-                PlayerAction::Interact => INPUT_INTERACT,
-                PlayerAction::RopeExtend => INPUT_ROPE_EXTEND,
-                PlayerAction::RopeRetract => INPUT_ROPE_RETRACT,
-            };
+        let buttons = SERIALIZED_BUTTON_INPUTS;
+
+        debug_assert!(buttons.len() < 16);
+        for (i, _) in buttons
+            .iter()
+            .enumerate()
+            .filter(|(_, button)| self.pressed(button))
+        {
+            keys |= 1 << i;
         }
 
         NetworkInputs {
             keys,
-            // Avoids rollbacks for other peers as pointer_direction cannot be predicted
-            pointer_direction: if keys & INPUT_SHOOT != 0 {
-                self.axis_pair(&PlayerAction::PointerDirection)
-            } else {
-                Vec2::ZERO
-            },
+            pointer_direction: self.axis_pair(&PlayerAction::PointerDirection).into(),
         }
     }
 
-    fn from_ggrs_session_input(input: NetworkInputs) -> Self {
-        let mut action_state = ActionState::<PlayerAction>::default();
-
+    fn set_ggrs_session_input(&mut self, input: NetworkInputs) {
         let keys = input.keys;
 
-        if keys & INPUT_UP != 0 {
-            action_state.press(&PlayerAction::Jump);
-        }
-        if keys & INPUT_DOWN != 0 {
-            action_state.press(&PlayerAction::Sneak);
-        }
-        if keys & INPUT_LEFT != 0 {
-            action_state.press(&PlayerAction::Left);
-        }
-        if keys & INPUT_RIGHT != 0 {
-            action_state.press(&PlayerAction::Right);
-        }
-        if keys & INPUT_SHOOT != 0 {
-            action_state.press(&PlayerAction::Shoot);
-        }
-        if keys & INPUT_SLOT1 != 0 {
-            action_state.press(&PlayerAction::Slot1);
-        }
-        if keys & INPUT_SLOT2 != 0 {
-            action_state.press(&PlayerAction::Slot2);
-        }
-        if keys & INPUT_SLOT3 != 0 {
-            action_state.press(&PlayerAction::Slot3);
-        }
-        if keys & INPUT_SLOT_NEXT != 0 {
-            action_state.press(&PlayerAction::SlotNext);
-        }
-        if keys & INPUT_SLOT_PREV != 0 {
-            action_state.press(&PlayerAction::SlotPrev);
-        }
-        if keys & INPUT_RELOAD != 0 {
-            action_state.press(&PlayerAction::Reload);
-        }
-        if keys & INPUT_INTERACT != 0 {
-            action_state.press(&PlayerAction::Interact);
-        }
-        if keys & INPUT_ROPE_EXTEND != 0 {
-            action_state.press(&PlayerAction::RopeExtend);
-        }
-        if keys & INPUT_ROPE_RETRACT != 0 {
-            action_state.press(&PlayerAction::RopeRetract);
+        let buttons = SERIALIZED_BUTTON_INPUTS;
+
+        debug_assert!(buttons.len() < 16);
+        for (i, action) in buttons.iter().enumerate() {
+            self.reset(action);
+            if keys & (1 << i) != 0 {
+                self.press(action);
+            }
         }
 
-        action_state.set_axis_pair(&PlayerAction::PointerDirection, input.pointer_direction);
+        self.set_axis_pair(
+            &PlayerAction::PointerDirection,
+            *input.pointer_direction.deref(),
+        );
+    }
+}
 
-        action_state
+impl<T> PartialEq for AlwaysEqWrapper<T> {
+    /// Tiny hack to not rollback certain kind of inputs even if different
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+
+impl<T> From<T> for AlwaysEqWrapper<T> {
+    fn from(value: T) -> Self {
+        Self(value)
     }
 }

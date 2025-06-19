@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_ggrs::*;
-use bevy_matchbox::{matchbox_socket::RtcIceServerConfig, prelude::*};
+use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
 use rand::Rng as _;
 
@@ -20,6 +20,7 @@ use synctest::{
     start_synctest_session, synctest_mode,
 };
 
+pub mod config;
 pub mod inputs;
 mod synctest;
 
@@ -57,49 +58,62 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
-            .checksum_component::<physics::Position>(checksum_position)
-            .add_systems(
-                OnEnter(GameState::MatchMaking),
-                (
-                    start_matchbox_socket.run_if(p2p_mode),
-                    start_synctest_session.run_if(synctest_mode),
+            .checksum_component::<physics::Position>(checksum_position);
+
+        app.add_systems(
+            OnEnter(GameState::MatchMaking),
+            (
+                start_matchbox_socket.run_if(p2p_mode),
+                start_synctest_session.run_if(synctest_mode),
+            ),
+        )
+        .add_systems(
+            OnEnter(GameState::WorldGen),
+            (generate_world, spawn_synctest_players.run_if(synctest_mode)).chain(),
+        )
+        .add_systems(
+            OnEnter(GameState::InGame),
+            (spawn_players, add_local_player_components)
+                .chain()
+                .run_if(p2p_mode),
+        )
+        .add_systems(
+            Update,
+            (
+                wait_for_players.run_if(
+                    in_state(GameState::MatchMaking)
+                        .and(resource_exists::<MatchboxSocket>)
+                        .and(p2p_mode),
                 ),
-            )
-            .add_systems(
-                OnEnter(GameState::WorldGen),
-                (generate_world, spawn_synctest_players.run_if(synctest_mode)).chain(),
-            )
-            .add_systems(
-                OnEnter(GameState::InGame),
-                (spawn_players, add_local_player_components)
-                    .chain()
-                    .run_if(p2p_mode),
-            )
-            .add_systems(
-                Update,
-                (
-                    wait_for_players.run_if(in_state(GameState::MatchMaking).and(p2p_mode)),
-                    wait_start_match.run_if(in_state(GameState::WorldGen).and(p2p_mode)),
-                    handle_ggrs_events.run_if(in_state(GameState::InGame)),
-                ),
-            );
+                wait_start_match.run_if(in_state(GameState::WorldGen).and(p2p_mode)),
+                handle_ggrs_events.run_if(in_state(GameState::InGame)),
+            ),
+        );
     }
 }
 
-fn start_matchbox_socket(mut commands: Commands, args: Res<crate::Args>) {
+fn start_matchbox_socket(
+    mut commands: Commands,
+    args: Res<crate::Args>,
+    assets: Res<config::NetworkAssets>,
+    configs: Res<Assets<config::NetworkConfig>>,
+) -> Result {
+    let config = configs
+        .get(&assets.config)
+        .ok_or(BevyError::from("Couldn't get NetworkConfig"))?;
+
     let room_url = format!(
-        "wss://matchbox.gasdev.fr/extreme_bevy?next={}",
-        args.players
+        "wss://{}/robot_rumble?next={}",
+        config.matchbox_host, args.players
     );
     info!("connecting to matchbox server: {room_url}");
+
     let builder = WebRtcSocketBuilder::new(room_url)
         .add_unreliable_channel()
-        .ice_server(RtcIceServerConfig {
-            urls: vec!["turn:gasdev.fr:3478".to_string()],
-            username: Some("default".to_string()), // Fixes `ErrNoTurnCredentials`
-            credential: Some("default".to_string()), // Same
-        });
+        .ice_server(config.ice_server_config.clone().into());
     commands.insert_resource(MatchboxSocket::from(builder));
+
+    Ok(())
 }
 
 fn wait_for_players(
@@ -145,21 +159,34 @@ fn wait_start_match(
     mut socket: ResMut<MatchboxSocket>,
     mut next_state: ResMut<NextState<GameState>>,
     mut timeout: ResMut<StartMatchDelay>,
+    assets: Res<config::NetworkAssets>,
+    configs: Res<Assets<config::NetworkConfig>>,
     args: Res<crate::Args>,
     time: Res<Time>,
-) {
+) -> Result {
     timeout.0.tick(time.delta());
     if !timeout.0.finished() {
-        return;
+        return Ok(());
     }
+
+    let config = configs
+        .get(&assets.config)
+        .ok_or(BevyError::from("Couldn't get NetworkConfig"))?;
 
     let players = socket.players();
     assert_eq!(players.len(), args.players);
 
+    // Setup session
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(args.players)
-        .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 })
-        .with_input_delay(2);
+        .with_input_delay(config.input_delay)
+        .with_fps(config.session_fps)
+        .unwrap()
+        .with_check_distance(config.check_distance)
+        .with_max_prediction_window(config.max_prediction_window)
+        .with_disconnect_timeout(config.disconnect_timeout)
+        .with_desync_detection_mode(config.desync_detection.into());
+    commands.insert_resource(RollbackFrameRate(config.schedule_fps));
 
     for (i, player) in players.into_iter().enumerate() {
         session_builder = session_builder
@@ -178,6 +205,8 @@ fn wait_start_match(
     commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
 
     next_state.set(GameState::InGame);
+
+    Ok(())
 }
 
 /// Spawn position is handled by level::spawn

@@ -1,6 +1,6 @@
 #[cfg(feature = "dev_tools")]
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use bevy::prelude::*;
+use bevy::{log, prelude::*};
 #[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 #[cfg(feature = "dev_tools")]
@@ -29,6 +29,10 @@ fn main() {
                     prevent_default_event_handling: false,
                     ..default()
                 }),
+                ..default()
+            })
+            .set(log::LogPlugin {
+                filter: format!("{},discord_presence=off", log::DEFAULT_FILTER),
                 ..default()
             })
             .build(),
