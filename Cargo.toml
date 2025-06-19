@@ -75,6 +75,10 @@ features = [
   "libm",
 ]
 
+[patch.crates-io]
+bevy_ggrs = { git = "https://github.com/gschup/bevy_ggrs.git" }
+ggrs = { git = "https://github.com/gschup/ggrs.git" }
+
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1
