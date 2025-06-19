@@ -80,9 +80,7 @@ fn add_stats_component(
     assets: Res<WeaponsAssets>,
     configs: Res<Assets<WeaponsConfig>>,
 ) {
-    let config = if let Some(c) = configs.get(&assets.config) {
-        c
-    } else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Couldn't load WeaponsConfig");
         return;
     };
@@ -110,9 +108,7 @@ fn add_sprite(
     configs: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    let config = if let Some(c) = configs.get(&assets.config) {
-        c
-    } else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Couldn't load WeaponsConfig");
         return;
     };
@@ -248,10 +244,7 @@ fn fire_weapon_system(
     for (mut state, mut mode, position, velocity, rotation, stats, owner, weapon_type) in
         weapon_query.iter_mut()
     {
-        if (*mode == WeaponMode::Triggered)
-            && state.cooldown_timer.finished()
-            && state.current_ammo > 0
-        {
+        if *mode == WeaponMode::Triggered && state.can_fire() {
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
@@ -304,6 +297,12 @@ fn fire_weapon_system(
                 owner_velocity.0 -= Vec2::from_angle(rotation.0) * stats.recoil;
             }
         }
+    }
+}
+
+impl WeaponState {
+    pub fn can_fire(&self) -> bool {
+        self.cooldown_timer.finished() && self.current_ammo > 0
     }
 }
 

@@ -10,6 +10,7 @@ use crate::{
         projectile::config as projectiles,
         satellite::assets as satellite,
     },
+    network::config as network,
 };
 
 /// Responsible for loading all crate's assets, and registering their asset loaders.
@@ -35,6 +36,9 @@ impl Plugin for AssetsPlugin {
         .add_plugins(RonAssetPlugin::<satellite::SatelliteConfig>::new(&[
             "satellites.ron",
         ]))
+        .add_plugins(RonAssetPlugin::<network::NetworkConfig>::new(&[
+            "network.ron",
+        ]))
         .add_loading_state(
             LoadingState::new(crate::GameState::AssetLoading)
                 .continue_to_state(crate::GameState::MatchMaking)
@@ -44,7 +48,8 @@ impl Plugin for AssetsPlugin {
                 .finally_init_resource::<player_skin::SkinAssets>()
                 .load_collection::<weapon::WeaponsAssets>()
                 .load_collection::<projectiles::ProjectilesAssets>()
-                .load_collection::<satellite::SatelliteAssets>(),
+                .load_collection::<satellite::SatelliteAssets>()
+                .load_collection::<network::NetworkAssets>(),
         );
     }
 }
