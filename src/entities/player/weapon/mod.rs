@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        audio::{AudioSFX, SoundEvent},
+        audio::AudioSFX,
         physics::{PhysicsSet, Position, Rotation, Velocity},
     },
     entities::projectile::{
@@ -216,13 +216,13 @@ fn fire_weapon_system(
         &WeaponType,
     )>,
     mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
-    mut events: EventWriter<SoundEvent>,
     projectiles_assets: Res<ProjectilesAssets>,
     projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
     weapon_assets: Res<WeaponsAssets>,
     weapon_configs: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
+    sfx_channel: Res<AudioChannel<AudioSFX>>,
 ) {
     let Some(projectiles_config) = projectiles_configs.get(&projectiles_assets.config) else {
         warn!("Couldn't load ProjectileConfig");
@@ -276,7 +276,7 @@ fn fire_weapon_system(
             // shitcode, pls gsprd mk hndls
             if let Some(weapon_config) = weapon_config.0.get(weapon_type) {
                 let fire_sound = asset_server.load(weapon_config.sounds.fire.clone());
-                events.write(SoundEvent { handle: fire_sound });
+                sfx_channel.play(fire_sound.clone());
             }
 
             state.current_ammo -= 1;
