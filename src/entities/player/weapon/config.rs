@@ -4,11 +4,16 @@ use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_asset_loader::asset_collection::AssetCollection;
 
 use crate::entities::projectile::Projectile;
+use bevy_kira_audio::AudioSource;
 
 #[derive(AssetCollection, Resource)]
 pub struct WeaponsAssets {
     #[asset(path = "config/config.weapons.ron")]
     pub config: Handle<WeaponsConfig>,
+    #[asset(path = "audio/pistol_fire.ogg")]
+    pub fire: Handle<AudioSource>,
+    #[asset(path = "audio/shotgun_reload.ogg")]
+    pub reload: Handle<AudioSource>,
 }
 
 #[derive(serde::Deserialize, Asset, TypePath)]
