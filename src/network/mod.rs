@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_ggrs::*;
-use bevy_matchbox::prelude::*;
+use bevy_matchbox::{matchbox_socket::RtcIceServerConfig, prelude::*};
 use inputs::NetworkInputs;
 use rand::Rng as _;
 
@@ -107,7 +107,15 @@ fn start_matchbox_socket(
         config.matchbox_host, args.players
     );
     info!("connecting to matchbox server: {room_url}");
-    commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
+
+    let builder = WebRtcSocketBuilder::new(room_url)
+        .add_unreliable_channel()
+        .ice_server(RtcIceServerConfig {
+            urls: vec!["turn:gasdev.fr:3478".to_string()],
+            username: Some("default".to_string()), // Fixes `ErrNoTurnCredentials`
+            credential: Some("default".to_string()), // Same
+        });
+    commands.insert_resource(MatchboxSocket::from(builder));
 
     Ok(())
 }

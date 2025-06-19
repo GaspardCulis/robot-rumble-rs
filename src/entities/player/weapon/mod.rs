@@ -1,5 +1,8 @@
 use crate::{
-    core::physics::{PhysicsSet, Position, Rotation, Velocity},
+    core::{
+        audio::SoundEvent,
+        physics::{PhysicsSet, Position, Rotation, Velocity},
+    },
     entities::projectile::{
         Damage, DecayTimer, Projectile,
         config::{BH_BULLET_DECAY_TIME, ProjectilesAssets, ProjectilesConfig},
@@ -133,29 +136,36 @@ fn tick_weapon_timers(
 
 fn fire_weapon_system(
     mut commands: Commands,
-    mut weapon_query: Query<
-        (
-            &mut WeaponState,
-            &mut WeaponMode,
-            &Position,
-            &Velocity,
-            &Rotation,
-            &WeaponStats,
-            &Owner,
-        ),
-        With<WeaponType>,
-    >,
+    mut weapon_query: Query<(
+        &mut WeaponState,
+        &mut WeaponMode,
+        &Position,
+        &Velocity,
+        &Rotation,
+        &WeaponStats,
+        &Owner,
+        &WeaponType,
+    )>,
     mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
+    mut events: EventWriter<SoundEvent>,
     projectiles_assets: Res<ProjectilesAssets>,
     projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
+    weapon_assets: Res<WeaponsAssets>,
+    weapon_configs: Res<Assets<WeaponsConfig>>,
+    asset_server: Res<AssetServer>,
 ) {
     let Some(projectiles_config) = projectiles_configs.get(&projectiles_assets.config) else {
         warn!("Couldn't load ProjectileConfig");
         return;
     };
 
-    for (mut state, mut mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut()
+    let Some(weapon_config) = weapon_configs.get(&weapon_assets.config) else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
+    for (mut state, mut mode, position, velocity, rotation, stats, owner, weapon_type) in
+        weapon_query.iter_mut()
     {
         if *mode == WeaponMode::Triggered && state.can_fire() {
             // Putting it here is important as query iter order is non-deterministic
@@ -189,6 +199,13 @@ fn fire_weapon_system(
                 } else {
                     warn!("Empy projectile config!")
                 }
+            }
+            // make sound
+            // shitcode, pls gsprd mk hndls
+            if let Some(weapon_config) = weapon_config.0.get(weapon_type) {
+                let fire_sound  =
+                    asset_server.load(weapon_config.sounds.fire.clone());
+                events.write(SoundEvent { handle: fire_sound });
             }
 
             state.current_ammo -= 1;
