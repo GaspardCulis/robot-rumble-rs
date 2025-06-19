@@ -10,6 +10,7 @@ pub mod slingshot;
 mod visuals;
 
 use assets::{SatelliteAssets, SatelliteConfig};
+use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
 use bumper::Bumper;
 use grabber::Grabber;
@@ -95,8 +96,8 @@ fn handle_spawn_satellite(
                 entity.insert((
                     Slingshot,
                     SlingshotVisual {
-                        active: assets.working_slingshot.clone(),
-                        inactive: assets.destroyed_slingshot.clone(),
+                        active: assets.working_graviton.clone(),
+                        inactive: assets.destroyed_graviton.clone(),
                     },
                 ));
 
