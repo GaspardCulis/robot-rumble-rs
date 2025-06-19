@@ -10,7 +10,6 @@ use crate::{
 };
 use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_ggrs::{GgrsSchedule, LocalInputs, LocalPlayers, PlayerInputs, ReadInputs};
-use leafwing_input_manager::{Actionlike, InputControlKind};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
@@ -74,8 +73,7 @@ impl GgrsSessionInput for PlayerActionState {
     fn as_ggrs_session_input(&self) -> NetworkInputs {
         let mut keys = 0;
 
-        let mut buttons = get_button_actions(self);
-        buttons.sort();
+        let buttons = get_button_actions();
 
         for (i, _) in buttons
             .into_iter()
@@ -96,8 +94,7 @@ impl GgrsSessionInput for PlayerActionState {
 
         let keys = input.keys;
 
-        let mut buttons = get_button_actions(self);
-        buttons.sort();
+        let buttons = get_button_actions();
 
         for (i, action) in buttons.into_iter().enumerate() {
             if keys & (1 << i) != 0 {
@@ -112,12 +109,25 @@ impl GgrsSessionInput for PlayerActionState {
     }
 }
 
-fn get_button_actions(action_state: &PlayerActionState) -> Vec<PlayerAction> {
-    action_state
-        .keys()
-        .into_iter()
-        .filter(|action| action.input_control_kind() == InputControlKind::Button)
-        .collect()
+/// Returns the list of player actions that gets serialized
+/// Returned actions are expected to be `InputControlKind::Button`
+fn get_button_actions() -> &'static [PlayerAction] {
+    &[
+        PlayerAction::Jump,
+        PlayerAction::Sneak,
+        PlayerAction::Left,
+        PlayerAction::Right,
+        PlayerAction::Shoot,
+        PlayerAction::Reload,
+        PlayerAction::Interact,
+        PlayerAction::RopeExtend,
+        PlayerAction::RopeRetract,
+        PlayerAction::Slot1,
+        PlayerAction::Slot2,
+        PlayerAction::Slot3,
+        PlayerAction::SlotNext,
+        PlayerAction::SlotPrev,
+    ]
 }
 
 impl<T> PartialEq for AlwaysEqWrapper<T> {
