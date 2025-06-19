@@ -161,6 +161,7 @@ fn update_weapon(
                 *mode = WeaponMode::Triggered;
             } else if pressed.contains(&PlayerAction::Reload)
                 && weapon_state.current_ammo < weapon_stats.magazine_size
+                && *mode != WeaponMode::Reloading
             {
                 *mode = WeaponMode::Reloading;
             } else if *mode != WeaponMode::Reloading {
