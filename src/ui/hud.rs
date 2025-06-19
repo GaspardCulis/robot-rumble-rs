@@ -325,13 +325,13 @@ fn update_weapon_slot_ui(
 ) {
     let mut current_weapon_type: Option<WeaponType> = None;
 
-    if let Ok(weapon) = weapon_query.single() {
-        if let Some((_weapon, _player, arsenal)) = test_query.iter().next() {
-            for (weapon_type, weapon_entity) in &arsenal.0 {
-                if *weapon_entity == weapon.0 {
-                    current_weapon_type = Some(weapon_type.clone());
-                    break;
-                }
+    if let Ok(weapon) = weapon_query.single()
+        && let Some((_weapon, _player, arsenal)) = test_query.iter().next()
+    {
+        for (weapon_type, weapon_entity) in &arsenal.0 {
+            if *weapon_entity == weapon.0 {
+                current_weapon_type = Some(weapon_type.clone());
+                break;
             }
         }
     }
