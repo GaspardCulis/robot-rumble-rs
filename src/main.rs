@@ -7,7 +7,7 @@ use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use clap::Parser as _;
 
-use robot_rumble::{ui::Screen, *};
+use robot_rumble::*;
 
 fn main() {
     let args = Args::parse();
@@ -45,7 +45,7 @@ fn main() {
     .add_plugins(network::NetworkPlugin)
     .add_plugins(ui::UiPlugins)
     .init_state::<GameState>()
-    .init_state::<Screen>()
+    .init_state::<ui::Screen>()
     .insert_resource(args);
 
     #[cfg(feature = "dev_tools")]
