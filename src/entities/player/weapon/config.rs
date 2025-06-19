@@ -64,4 +64,5 @@ pub struct WeaponSkin {
 pub struct WeaponSounds {
     /// Path to the weapon fire
     pub fire: String,
+    pub reload: Option<String>,
 }
