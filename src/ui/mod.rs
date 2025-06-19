@@ -8,7 +8,7 @@ mod menus;
 pub use menus::Screen;
 
 #[derive(AssetCollection, Resource)]
-pub struct UiAssets {
+pub struct UIAssets {
     #[asset(path = "img/backgrounds/terrorist-dog.webp")]
     pub background_image: Handle<Image>,
 }

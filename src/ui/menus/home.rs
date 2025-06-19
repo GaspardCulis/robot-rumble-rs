@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_cobweb_ui::prelude::*;
 
-use crate::{GameState, ui::UiAssets};
+use crate::{GameState, ui::UIAssets};
 
 use super::Screen;
 
@@ -21,7 +21,7 @@ impl Plugin for HomeMenuPlugin {
     }
 }
 
-fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: Res<UiAssets>) {
+fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: Res<UIAssets>) {
     info!("Loading Home menu UI");
 
     let background_image = assets.background_image.clone();

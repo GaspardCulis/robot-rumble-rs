@@ -46,7 +46,7 @@ impl Plugin for AssetsPlugin {
                 .load_collection::<weapon::WeaponsAssets>()
                 .load_collection::<projectiles::ProjectilesAssets>()
                 .load_collection::<satellite::SatelliteAssets>()
-                .load_collection::<ui::UiAssets>(),
+                .load_collection::<ui::UIAssets>(),
         );
     }
 }
