@@ -11,17 +11,18 @@ pub struct GameAudioPlugin;
 
 // Channel for weapon audio
 #[derive(Resource)]
-struct SFX;
+pub struct AudioSFX;
+
 impl Plugin for GameAudioPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SoundEvent>()
             .add_plugins(AudioPlugin)
-            .add_audio_channel::<SFX>()
+            .add_audio_channel::<AudioSFX>()
             .add_systems(Update, play_sound);
     }
 }
 
-fn play_sound(mut events: EventReader<SoundEvent>, sfx_channel: Res<AudioChannel<SFX>>) {
+fn play_sound(mut events: EventReader<SoundEvent>, sfx_channel: Res<AudioChannel<AudioSFX>>) {
     for SoundEvent { handle } in events.read() {
         sfx_channel.play(handle.clone());
     }
