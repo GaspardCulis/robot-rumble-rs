@@ -1,11 +1,11 @@
 NetworkConfig (
     matchbox_host: "matchbox.gasdev.fr",
     
-    input_delay: 6,
+    input_delay: 4,
     session_fps: 60,
     schedule_fps: 60,
     check_distance: 2,
     max_prediction_window: 32,
     disconnect_timeout: 2.0,
-    desync_detection: On ( interval: 6 )
+    desync_detection: On ( interval: 4 )
 )
