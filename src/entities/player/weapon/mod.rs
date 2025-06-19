@@ -10,9 +10,7 @@ use crate::{
 };
 use bevy::{math::ops::cos, prelude::*};
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
-use bevy_kira_audio::{
-    AudioChannel, AudioControl, AudioInstance, AudioSource, AudioTween, PlaybackState,
-};
+use bevy_kira_audio::{AudioChannel, AudioControl, AudioInstance, AudioTween, PlaybackState};
 use config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -161,15 +159,29 @@ fn mode_change_detection(
     mut commands: Commands,
     query: Query<(Entity, &WeaponMode, &WeaponType, Option<&AudioReload>), Changed<WeaponMode>>,
     weapon_assets: Res<WeaponsAssets>,
+    weapon_configs: Res<Assets<WeaponsConfig>>,
+    asset_server: Res<AssetServer>,
     sfx_channel: Res<AudioChannel<AudioSFX>>,
     mut audio_instances: ResMut<Assets<AudioInstance>>,
 ) {
-    for (entity, mode, _, maybe_audio) in query.iter() {
+    let Some(weapons_config) = weapon_configs.get(&weapon_assets.config) else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
+    for (entity, mode, weapon_type, maybe_audio) in query.iter() {
+        let Some(weapon_config) = weapons_config.0.get(weapon_type) else {
+            warn!("Couldn't load WeaponConfig");
+            return;
+        };
         match mode {
             WeaponMode::Reloading => {
-                let sound: Handle<AudioSource> = weapon_assets.reload.clone();
-                let handle: Handle<AudioInstance> = sfx_channel.play(sound).handle();
-                commands.entity(entity).insert(AudioReload(handle));
+                if let Some(sound_path) = weapon_config.sounds.reload.clone() {
+                    let sound = asset_server.load(sound_path);
+                    let handle: Handle<AudioInstance> = sfx_channel.play(sound).handle();
+                    commands.entity(entity).insert(AudioReload(handle));
+                } else {
+                    warn!("Reload sound for current weapon is not implemented!");
+                }
             }
             _ => {
                 if let Some(audio) = maybe_audio {
