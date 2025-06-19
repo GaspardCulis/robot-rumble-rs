@@ -1,13 +1,17 @@
 use bevy::{prelude::*, ui::widget::NodeImageMode};
 
 use crate::{
-    core::inputs::{PlayerAction, PlayerActionState}, entities::player::{
-        inventory::Arsenal, weapon::{
-            config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig}, WeaponState
-        }, Player, Weapon
-    }, GameState
+    GameState,
+    core::inputs::{PlayerAction, PlayerActionState},
+    entities::player::{
+        Player, Weapon,
+        inventory::Arsenal,
+        weapon::{
+            WeaponState,
+            config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig},
+        },
+    },
 };
-
 
 #[derive(Component)]
 struct WeaponSlotUI {
@@ -58,7 +62,7 @@ impl Plugin for HudPlugin {
                 animate_ammo_reload,
             )
                 .run_if(in_state(GameState::InGame)),
-            );
+        );
     }
 }
 
@@ -161,7 +165,9 @@ fn spawn_arsenal_hud(
                                     BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6)),
                                     BorderColor(Color::WHITE),
                                     SelectedWeaponSlot,
-                                    WeaponSlotUI { weapon_type: arsenal[0].clone() },
+                                    WeaponSlotUI {
+                                        weapon_type: arsenal[0].clone(),
+                                    },
                                 ));
 
                                 for (i, weapon_type) in arsenal.iter().enumerate() {
@@ -184,7 +190,9 @@ fn spawn_arsenal_hud(
                                                 image_mode: NodeImageMode::Stretch,
                                                 ..default()
                                             },
-                                            WeaponSpriteUI { weapon_type: weapon_type.clone() },
+                                            WeaponSpriteUI {
+                                                weapon_type: weapon_type.clone(),
+                                            },
                                         ));
                                         if i == 0 {
                                             image_node.insert(SelectedWeaponSlot);
@@ -221,22 +229,26 @@ fn spawn_arsenal_hud(
                                         } else {
                                             Color::srgba(0.0, 0.0, 0.0, 0.6)
                                         }),
-                                        WeaponNameBoxUI { weapon_type: weapon_type.clone() },
+                                        WeaponNameBoxUI {
+                                            weapon_type: weapon_type.clone(),
+                                        },
                                     ))
-                                    .with_children(|name_box| {
-                                        name_box.spawn((
-                                            Text::new(format!("{}  {}", i + 1, formatted_name)),
-                                            TextFont {
-                                                font_size: 16.0,
-                                                ..default()
-                                            },
-                                            TextColor(Color::WHITE),
-                                            TextLayout {
-                                                justify: JustifyText::Center,
-                                                ..default()
-                                            },
-                                        ));
-                                    });
+                                    .with_children(
+                                        |name_box| {
+                                            name_box.spawn((
+                                                Text::new(format!("{}  {}", i + 1, formatted_name)),
+                                                TextFont {
+                                                    font_size: 16.0,
+                                                    ..default()
+                                                },
+                                                TextColor(Color::WHITE),
+                                                TextLayout {
+                                                    justify: JustifyText::Center,
+                                                    ..default()
+                                                },
+                                            ));
+                                        },
+                                    );
                                 }
                             });
                     });
@@ -273,7 +285,6 @@ fn spawn_arsenal_hud(
         // break;
     }
 }
-
 
 // Fonction pour formater le nom de l'arme
 fn format_weapon_name(weapon_type: &str) -> String {
@@ -314,8 +325,6 @@ fn update_weapon_slot_ui(
     reload_anim_query: Query<Option<&AmmoReloadAnimation>>,
     test_query: Query<(&Weapon, &Player, &Arsenal), Changed<Weapon>>,
 ) {
-
-
     let mut current_weapon_type: Option<WeaponType> = None;
 
     if let Ok(weapon) = weapon_query.single() {
@@ -384,8 +393,6 @@ fn update_weapon_slot_ui(
         }
     }
 }
-
-
 
 fn update_ammo_text(
     weapon_query: Query<&Weapon, With<Player>>,
