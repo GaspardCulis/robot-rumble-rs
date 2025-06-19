@@ -16,7 +16,6 @@ pub struct NetworkConfig {
     pub input_delay: usize,
     // TODO: Figure out what it does
     pub session_fps: usize,
-    #[allow(dead_code)] // Follow https://github.com/gschup/bevy_ggrs/issues/121
     /// Changes the rate at which GgrsSchedule is called per frame.
     pub schedule_fps: usize,
     // TODO: Figure out what it does

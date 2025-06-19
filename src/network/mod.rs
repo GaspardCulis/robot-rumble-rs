@@ -182,6 +182,7 @@ fn wait_start_match(
         .with_max_prediction_window(config.max_prediction_window)
         .with_disconnect_timeout(config.disconnect_timeout)
         .with_desync_detection_mode(config.desync_detection.into());
+    commands.insert_resource(RollbackFrameRate(config.schedule_fps));
 
     for (i, player) in players.into_iter().enumerate() {
         session_builder = session_builder
