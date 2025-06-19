@@ -67,9 +67,9 @@ impl Default for NetworkConfig {
     }
 }
 
-impl Into<bevy_ggrs::ggrs::DesyncDetection> for DesyncDetectionConfig {
-    fn into(self) -> bevy_ggrs::ggrs::DesyncDetection {
-        match self {
+impl From<DesyncDetectionConfig> for bevy_ggrs::ggrs::DesyncDetection {
+    fn from(val: DesyncDetectionConfig) -> Self {
+        match val {
             DesyncDetectionConfig::On { interval } => {
                 bevy_ggrs::ggrs::DesyncDetection::On { interval }
             }
@@ -78,12 +78,12 @@ impl Into<bevy_ggrs::ggrs::DesyncDetection> for DesyncDetectionConfig {
     }
 }
 
-impl Into<RtcIceServerConfig> for IceServerConfig {
-    fn into(self) -> RtcIceServerConfig {
-        RtcIceServerConfig {
-            urls: self.urls,
-            username: self.username,
-            credential: self.credential,
+impl From<IceServerConfig> for RtcIceServerConfig {
+    fn from(value: IceServerConfig) -> Self {
+        Self {
+            urls: value.urls,
+            username: value.username,
+            credential: value.credential,
         }
     }
 }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_ggrs::*;
-use bevy_matchbox::{matchbox_socket::RtcIceServerConfig, prelude::*};
+use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
 use rand::Rng as _;
 

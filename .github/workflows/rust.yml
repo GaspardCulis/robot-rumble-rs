@@ -8,6 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # Wait for bevy to adopt encase:0.11.1 to benefit https://github.com/teoxoy/encase/pull/96
+  RUSTFLAGS: "-A dead-code"
 
 jobs:
   check:

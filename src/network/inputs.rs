@@ -77,14 +77,14 @@ fn update_remote_inputs(
 ) {
     for (player, mut action_state) in query.iter_mut() {
         let (input, _) = inputs[player.handle];
-        action_state.from_ggrs_session_input(input);
+        action_state.set_ggrs_session_input(input);
     }
 }
 
 pub trait GgrsSessionInput {
     fn as_ggrs_session_input(&self) -> NetworkInputs;
 
-    fn from_ggrs_session_input(&mut self, input: NetworkInputs);
+    fn set_ggrs_session_input(&mut self, input: NetworkInputs);
 }
 
 impl GgrsSessionInput for PlayerActionState {
@@ -95,11 +95,11 @@ impl GgrsSessionInput for PlayerActionState {
 
         debug_assert!(buttons.len() < 16);
         for (i, _) in buttons
-            .into_iter()
+            .iter()
             .enumerate()
             .filter(|(_, button)| self.pressed(button))
         {
-            keys = keys | (1 << i);
+            keys |= 1 << i;
         }
 
         NetworkInputs {
@@ -108,13 +108,13 @@ impl GgrsSessionInput for PlayerActionState {
         }
     }
 
-    fn from_ggrs_session_input(&mut self, input: NetworkInputs) {
+    fn set_ggrs_session_input(&mut self, input: NetworkInputs) {
         let keys = input.keys;
 
         let buttons = SERIALIZED_BUTTON_INPUTS;
 
         debug_assert!(buttons.len() < 16);
-        for (i, action) in buttons.into_iter().enumerate() {
+        for (i, action) in buttons.iter().enumerate() {
             self.reset(action);
             if keys & (1 << i) != 0 {
                 self.press(action);

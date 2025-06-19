@@ -51,36 +51,38 @@ bevy_cobweb_ui = "0.19.2"
 
 [dependencies.bevy]
 version = "0.16"
+default-features = false
 features = [
   "std",
   "async_executor",
+  "multi_threaded",
+  "asset_processor",
   "configurable_error_handler",
 
-  "multi_threaded",
+  "bevy_ui",
   "bevy_asset",
   "bevy_audio",
   "bevy_gilrs",
   "bevy_winit",
   "bevy_render",
   "bevy_sprite",
-  "bevy_ui",
-  "default_font",
+  "bevy_mesh_picking_backend",
 
   "png",
   "webp",
   "vorbis",
+  "default_font",
 
   "x11",
   "wayland",
   "webgl2",
-
-  "asset_processor",
 
   # Support for deterministic float primitives
   "libm",
 ]
 
 [patch.crates-io]
+# Benefit https://github.com/gschup/bevy_ggrs/pull/122
 bevy_ggrs = { git = "https://github.com/gschup/bevy_ggrs.git" }
 ggrs = { git = "https://github.com/gschup/ggrs.git" }
 

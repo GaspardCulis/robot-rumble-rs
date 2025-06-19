@@ -135,20 +135,18 @@ fn visibility_change_detection(
     query: Query<Option<&AudioReload>, (Changed<Visibility>, With<WeaponType>)>,
     mut audio_instances: ResMut<Assets<AudioInstance>>,
 ) {
-    for maybe_audio in query.iter() {
-        if let Some(audio) = maybe_audio {
-            let handle = &audio.0;
-            if let Some(instance) = audio_instances.get_mut(handle) {
-                match instance.state() {
-                    PlaybackState::Paused { .. } => {
-                        // There are a lot of control methods defined on the instance
-                        instance.resume(AudioTween::default());
-                    }
-                    PlaybackState::Playing { .. } => {
-                        instance.pause(AudioTween::default());
-                    }
-                    _ => {}
+    for audio in query.iter().flatten() {
+        let handle = &audio.0;
+        if let Some(instance) = audio_instances.get_mut(handle) {
+            match instance.state() {
+                PlaybackState::Paused { .. } => {
+                    // There are a lot of control methods defined on the instance
+                    instance.resume(AudioTween::default());
                 }
+                PlaybackState::Playing { .. } => {
+                    instance.pause(AudioTween::default());
+                }
+                _ => {}
             }
         }
     }
