@@ -12,6 +12,23 @@ use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_ggrs::{GgrsSchedule, LocalInputs, LocalPlayers, PlayerInputs, ReadInputs};
 use serde::{Deserialize, Serialize};
 
+/// The list of player actions that gets serialized
+/// Actions are expected to be `InputControlKind::Button`
+const SERIALIZED_BUTTON_INPUTS: &[PlayerAction] = &[
+    PlayerAction::Jump,
+    PlayerAction::Sneak,
+    PlayerAction::Left,
+    PlayerAction::Right,
+    PlayerAction::Shoot,
+    PlayerAction::Reload,
+    PlayerAction::Interact,
+    PlayerAction::RopeExtend,
+    PlayerAction::RopeRetract,
+    PlayerAction::Slot1,
+    PlayerAction::Slot2,
+    PlayerAction::Slot3,
+];
+
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
 // FIX: Make smaller when https://github.com/gschup/bevy_ggrs#119 is fixed
 pub struct NetworkInputs {
@@ -74,7 +91,7 @@ impl GgrsSessionInput for PlayerActionState {
     fn as_ggrs_session_input(&self) -> NetworkInputs {
         let mut keys = 0;
 
-        let buttons = get_button_actions();
+        let buttons = SERIALIZED_BUTTON_INPUTS;
 
         debug_assert!(buttons.len() < 16);
         for (i, _) in buttons
@@ -94,7 +111,7 @@ impl GgrsSessionInput for PlayerActionState {
     fn from_ggrs_session_input(&mut self, input: NetworkInputs) {
         let keys = input.keys;
 
-        let buttons = get_button_actions();
+        let buttons = SERIALIZED_BUTTON_INPUTS;
 
         debug_assert!(buttons.len() < 16);
         for (i, action) in buttons.into_iter().enumerate() {
@@ -109,25 +126,6 @@ impl GgrsSessionInput for PlayerActionState {
             *input.pointer_direction.deref(),
         );
     }
-}
-
-/// Returns the list of player actions that gets serialized
-/// Returned actions are expected to be `InputControlKind::Button`
-fn get_button_actions() -> &'static [PlayerAction] {
-    &[
-        PlayerAction::Jump,
-        PlayerAction::Sneak,
-        PlayerAction::Left,
-        PlayerAction::Right,
-        PlayerAction::Shoot,
-        PlayerAction::Reload,
-        PlayerAction::Interact,
-        PlayerAction::RopeExtend,
-        PlayerAction::RopeRetract,
-        PlayerAction::Slot1,
-        PlayerAction::Slot2,
-        PlayerAction::Slot3,
-    ]
 }
 
 impl<T> PartialEq for AlwaysEqWrapper<T> {
