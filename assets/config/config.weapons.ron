@@ -15,6 +15,9 @@ WeaponsConfig({
             sprite: "img/weapons/pistol.png",
             scale: 3.0,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Shotgun: (
         stats: (
@@ -32,6 +35,9 @@ WeaponsConfig({
             sprite: "img/weapons/shotgun.png",
             scale: 3.0,
         ),
+        sounds: (
+            fire: "audio/shotgun_fire.ogg",
+        )
     ),
     Rifle: (
         stats: (
@@ -49,6 +55,9 @@ WeaponsConfig({
             sprite: "img/weapons/assaultrifle.png",
             scale: 0.25,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Sniper: (
         stats: (
@@ -66,6 +75,9 @@ WeaponsConfig({
             sprite: "img/weapons/sniper.png",
             scale: 0.25,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Revolver: (
         stats: (
@@ -83,6 +95,9 @@ WeaponsConfig({
             sprite: "img/weapons/revolver.png",
             scale: 0.5,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Pulse: (
         stats: (
@@ -100,6 +115,9 @@ WeaponsConfig({
             sprite: "img/weapons/pulse.png",
             scale: 4.0,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     BlackholeGun: (
         stats: (
@@ -117,5 +135,8 @@ WeaponsConfig({
             sprite: "weapons/blackhole_gun.png",
             scale: 0.75,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
 })
