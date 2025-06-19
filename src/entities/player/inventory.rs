@@ -4,16 +4,16 @@ use leafwing_input_manager::prelude::ActionState;
 
 use crate::core::physics;
 
-use super::{Player, PlayerAction, Weapon, weapon};
+use super::{Player, PlayerAction, Weapon, weapon::config::WeaponType};
 
-const DEFAULT_ARSENAL: [weapon::WeaponType; 3] = [
-    weapon::WeaponType::Pistol,
-    weapon::WeaponType::Shotgun,
-    weapon::WeaponType::Rifle,
+const DEFAULT_ARSENAL: [WeaponType; 3] = [
+    WeaponType::BlackholeGun,
+    WeaponType::Shotgun,
+    WeaponType::Rifle,
 ];
 
 #[derive(Component, Debug, Reflect)]
-pub struct Arsenal(pub Vec<(weapon::WeaponType, Entity)>);
+pub struct Arsenal(pub Vec<(WeaponType, Entity)>);
 
 pub struct InventoryPlugin;
 impl Plugin for InventoryPlugin {
@@ -79,16 +79,26 @@ fn handle_slot_change_inputs(
     query: Query<(Entity, &Weapon, &Arsenal, &ActionState<PlayerAction>)>,
 ) {
     for (player, current_weapon, arsenal, action_state) in query.iter() {
-        for action in action_state.get_pressed() {
+        for action in action_state.get_just_pressed() {
+            let current_slot = arsenal
+                .0
+                .iter()
+                .position(|(_, weapon)| weapon == &current_weapon.0)
+                .unwrap_or_default();
+
             let selected_slot = match action {
-                PlayerAction::Slot1 => Some(1),
-                PlayerAction::Slot2 => Some(2),
-                PlayerAction::Slot3 => Some(3),
+                PlayerAction::Slot1 => Some(0),
+                PlayerAction::Slot2 => Some(1),
+                PlayerAction::Slot3 => Some(2),
+                PlayerAction::SlotNext => Some((current_slot + 1) % arsenal.0.len()),
+                PlayerAction::SlotPrev => {
+                    Some(current_slot.checked_sub(1).unwrap_or(arsenal.0.len() - 1))
+                }
                 _ => None,
             };
 
             if let Some(slot) = selected_slot {
-                if let Some((_, selected_weapon)) = arsenal.0.get(slot - 1) {
+                if let Some((_, selected_weapon)) = arsenal.0.get(slot) {
                     if &current_weapon.0 != selected_weapon {
                         // Hide current weapon
                         commands

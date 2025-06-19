@@ -1,4 +1,15 @@
 use bevy::{platform::collections::HashMap, prelude::*};
+use bevy_asset_loader::asset_collection::AssetCollection;
+
+// TODO: add a config file
+pub static BLACKHOLE_RADIUS: u32 = 60;
+pub static BH_BULLET_DECAY_TIME: f32 = 0.5;
+
+#[derive(AssetCollection, Resource)]
+pub struct ProjectilesAssets {
+    #[asset(path = "config/config.projectiles.ron")]
+    pub config: Handle<ProjectilesConfig>,
+}
 
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
@@ -9,6 +20,7 @@ pub struct ProjectilesConfig(pub HashMap<Projectile, ProjectileConfig>);
 pub enum Projectile {
     #[default]
     Bullet,
+    Blackhole,
     Rocket,
     Laser,
     ShockWave,

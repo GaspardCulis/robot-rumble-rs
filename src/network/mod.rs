@@ -1,19 +1,19 @@
 use bevy::prelude::*;
 use bevy_ggrs::*;
-use bevy_matchbox::prelude::*;
+use bevy_matchbox::{matchbox_socket::RtcIceServerConfig, prelude::*};
 use inputs::NetworkInputs;
-use leafwing_input_manager::prelude::*;
 use rand::Rng as _;
 
 use crate::{
     GameState,
-    core::{camera::CameraFollowTarget, collision, physics, worldgen},
+    core::{camera::CameraFollowTarget, collision, gravity, physics, worldgen},
     entities::{
-        planet,
-        player::{self, Player, PlayerAction, weapon},
+        blackhole, planet,
+        player::{self, Player, weapon},
         projectile,
         satellite::{grabber, slingshot},
     },
+    level::save,
 };
 use synctest::{
     checksum_position, handle_ggrs_events, p2p_mode, spawn_synctest_players,
@@ -39,15 +39,20 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Position>()
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
+            .rollback_component_with_clone::<gravity::Mass>()
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
+            .rollback_component_with_clone::<player::Percentage>()
             .rollback_immutable_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
+            .rollback_component_with_clone::<projectile::Damage>()
             .rollback_component_with_clone::<grabber::GrabbedOrbit>()
             .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
             .rollback_component_with_clone::<slingshot::Orbited>()
+            .rollback_component_with_clone::<projectile::DecayTimer>()
+            .rollback_component_with_copy::<blackhole::BlackHole>()
             // Collisions
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
@@ -87,7 +92,14 @@ fn start_matchbox_socket(mut commands: Commands, args: Res<crate::Args>) {
         args.players
     );
     info!("connecting to matchbox server: {room_url}");
-    commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
+    let builder = WebRtcSocketBuilder::new(room_url)
+        .add_unreliable_channel()
+        .ice_server(RtcIceServerConfig {
+            urls: vec!["turn:gasdev.fr:3478".to_string()],
+            username: Some("default".to_string()), // Fixes `ErrNoTurnCredentials`
+            credential: Some("default".to_string()), // Same
+        });
+    commands.insert_resource(MatchboxSocket::from(builder));
 }
 
 fn wait_for_players(
@@ -183,9 +195,17 @@ fn spawn_players(mut commands: Commands, session: Res<bevy_ggrs::Session<Session
 
 fn generate_world(
     mut worldgen_events: EventWriter<worldgen::GenerateWorldEvent>,
+    mut load_level_save_events: EventWriter<save::LoadLevelSaveEvent>,
+    args: Res<crate::Args>,
     seed: Res<SessionSeed>,
 ) {
-    worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
+    if let Some(level_path) = &args.level_path {
+        load_level_save_events.write(save::LoadLevelSaveEvent {
+            path: level_path.clone(),
+        });
+    } else {
+        worldgen_events.write(worldgen::GenerateWorldEvent { seed: seed.0 });
+    }
 }
 
 fn add_local_player_components(
@@ -198,29 +218,7 @@ fn add_local_player_components(
         _ => unimplemented!(),
     };
 
-    let input_map = InputMap::new([
-        // Jump
-        (PlayerAction::Jump, KeyCode::Space),
-        (PlayerAction::Jump, KeyCode::KeyW),
-        // Sneak
-        (PlayerAction::Sneak, KeyCode::ShiftLeft),
-        (PlayerAction::Sneak, KeyCode::KeyS),
-        // Directions
-        (PlayerAction::Right, KeyCode::KeyD),
-        (PlayerAction::Left, KeyCode::KeyA),
-        // Slot selection
-        (PlayerAction::Slot1, KeyCode::Digit1),
-        (PlayerAction::Slot2, KeyCode::Digit2),
-        (PlayerAction::Slot3, KeyCode::Digit3),
-        // Reload
-        (PlayerAction::Reload, KeyCode::KeyR),
-        // Interaction
-        (PlayerAction::Interact, KeyCode::KeyE),
-    ])
-    .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
-    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
-    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
+    let input_map = crate::core::inputs::default_input_map();
 
     let local_players_query = query
         .iter()

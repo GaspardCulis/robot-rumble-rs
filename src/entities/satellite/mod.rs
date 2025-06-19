@@ -2,13 +2,14 @@ use crate::core::physics::{PhysicsSet, Position};
 use bevy::prelude::*;
 use bevy::render::mesh::Mesh;
 use bevy::sprite::Material2dPlugin;
-use bevy_common_assets::ron::RonAssetPlugin;
 
+pub mod assets;
 pub mod bumper;
 pub mod grabber;
 pub mod slingshot;
 mod visuals;
 
+use assets::{SatelliteAssets, SatelliteConfig};
 use bevy_ggrs::GgrsSchedule;
 use bumper::Bumper;
 use grabber::Grabber;
@@ -19,7 +20,7 @@ use visuals::{OrbitMaterial, generate_ring};
 #[require(Visibility)]
 pub struct Satellite;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, serde::Serialize, serde::Deserialize)]
 pub enum SatelliteKind {
     Slingshot,
     Bumper,
@@ -32,19 +33,6 @@ pub struct SpawnSatelliteEvent {
     pub scale: f32,
     pub kind: SatelliteKind,
 }
-
-#[derive(serde::Deserialize, Asset, TypePath)]
-pub struct SatelliteConfig {
-    pub orbit_radius: f32,
-    pub orbit_duration: f32,
-    pub orbit_cooldown: f32,
-    pub bump_radius: f32,
-    pub bump_multiplier: f32,
-    pub grabber_radius: f32,
-}
-
-#[derive(Resource)]
-pub struct SatelliteConfigHandle(pub Handle<SatelliteConfig>);
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 enum SatelliteSet {
@@ -70,37 +58,28 @@ impl Plugin for SatellitePlugin {
                     .in_set(PhysicsSet::Interaction),
             )
             .add_event::<SpawnSatelliteEvent>()
-            .add_systems(Startup, load_satellite_config)
-            .add_systems(Update, handle_spawn_satellite)
+            .add_systems(
+                Update,
+                handle_spawn_satellite.run_if(resource_exists::<SatelliteAssets>),
+            )
             .add_plugins(slingshot::SlingshotPlugin)
             .add_plugins(bumper::BumperPlugin)
             .add_plugins(grabber::GrabberPlugin);
     }
 }
 
-fn load_satellite_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let handle = asset_server.load("config/satellites.ron");
-    commands.insert_resource(SatelliteConfigHandle(handle));
-}
-
 fn handle_spawn_satellite(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut events: EventReader<SpawnSatelliteEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<OrbitMaterial>>,
-    config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
+    assets: Res<SatelliteAssets>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
-    let slingshot_active = asset_server.load("skins/satellite/working_slingshot.png");
-    let slingshot_inactive = asset_server.load("skins/satellite/destroyed_slingshot.png");
-
-    let bumper_texture = asset_server.load("skins/satellite/working_bumper.png");
-    let grabber_texture = asset_server.load("skins/satellite/working_grabber.png");
 
     for event in events.read() {
         let mut entity = commands.spawn((
@@ -116,15 +95,15 @@ fn handle_spawn_satellite(
                 entity.insert((
                     Slingshot,
                     SlingshotVisual {
-                        active: slingshot_active.clone(),
-                        inactive: slingshot_inactive.clone(),
+                        active: assets.working_slingshot.clone(),
+                        inactive: assets.destroyed_slingshot.clone(),
                     },
                 ));
 
                 entity.with_children(|parent| {
                     parent.spawn((
                         Sprite {
-                            image: slingshot_active.clone(),
+                            image: assets.working_graviton.clone(),
                             ..default()
                         },
                         child_transform,
@@ -136,7 +115,7 @@ fn handle_spawn_satellite(
                 entity.with_children(|parent| {
                     parent.spawn((
                         Sprite {
-                            image: bumper_texture.clone(),
+                            image: assets.working_bumper.clone(),
                             ..default()
                         },
                         child_transform,
@@ -148,7 +127,7 @@ fn handle_spawn_satellite(
                 entity.with_children(|parent| {
                     parent.spawn((
                         Sprite {
-                            image: grabber_texture.clone(),
+                            image: assets.working_grabber.clone(),
                             ..default()
                         },
                         child_transform,

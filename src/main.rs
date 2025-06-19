@@ -1,32 +1,13 @@
+#[cfg(feature = "dev_tools")]
+use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 use bevy::prelude::*;
 #[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 #[cfg(feature = "dev_tools")]
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
-use clap::Parser;
+use clap::Parser as _;
 
-mod core;
-mod entities;
-mod level;
-mod network;
-mod utils;
-
-#[derive(Parser, Resource, Debug)]
-pub struct Args {
-    /// Runs the game in synctest mode
-    #[clap(long)]
-    pub synctest: bool,
-    #[arg(short, long, default_value_t = 2)]
-    pub players: usize,
-}
-
-#[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
-pub enum GameState {
-    #[default]
-    MatchMaking,
-    WorldGen,
-    InGame,
-}
+use robot_rumble::*;
 
 fn main() {
     let args = Args::parse();
@@ -52,9 +33,11 @@ fn main() {
             })
             .build(),
     )
+    .add_plugins(assets::AssetsPlugin)
     .add_plugins(core::CorePlugins)
     .add_plugins(entities::EntitiesPlugins)
     .add_plugins(level::LevelPlugins)
+    .add_plugins(misc::MiscPlugins)
     .add_plugins(network::NetworkPlugin)
     .init_state::<GameState>()
     .insert_resource(args);
@@ -63,7 +46,16 @@ fn main() {
     app.add_plugins(EguiPlugin {
         enable_multipass_for_primary_context: true,
     })
-    .add_plugins(WorldInspectorPlugin::new());
+    .add_plugins(WorldInspectorPlugin::new())
+    .add_plugins(FpsOverlayPlugin {
+        config: FpsOverlayConfig {
+            text_config: TextFont {
+                font_size: 16.0,
+                ..default()
+            },
+            ..default()
+        },
+    });
 
     app.run();
 }

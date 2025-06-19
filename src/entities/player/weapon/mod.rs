@@ -1,14 +1,20 @@
 use crate::{
-    core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::{Damage, ProjectilesConfigHandle, config::ProjectilesConfig},
+    core::{
+        audio::SoundEvent,
+        physics::{PhysicsSet, Position, Rotation, Velocity},
+    },
+    entities::projectile::{
+        Damage, DecayTimer, Projectile,
+        config::{BH_BULLET_DECAY_TIME, ProjectilesAssets, ProjectilesConfig},
+    },
 };
 use bevy::{math::ops::cos, prelude::*};
-use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
+use config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
-mod config;
-pub use config::{WeaponStats, WeaponType};
+
+pub mod config;
 
 #[derive(Component, Clone, PartialEq, Default, Reflect)]
 pub enum WeaponMode {
@@ -29,9 +35,6 @@ pub struct WeaponState {
 #[relationship_target(relationship = super::Weapon)]
 pub struct Owner(Entity);
 
-#[derive(Resource)]
-struct WeaponsConfigHandle(Handle<config::WeaponsConfig>);
-
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
@@ -41,8 +44,6 @@ impl Plugin for WeaponPlugin {
             .register_type::<WeaponMode>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
             .register_required_components::<WeaponType, WeaponMode>()
-            .add_plugins(RonAssetPlugin::<config::WeaponsConfig>::new(&[]))
-            .add_systems(Startup, load_weapons_config)
             .add_systems(
                 Update,
                 (
@@ -50,7 +51,7 @@ impl Plugin for WeaponPlugin {
                     handle_config_reload,
                     (add_stats_component, add_sprite)
                         .before(PhysicsSet::Player)
-                        .run_if(resource_exists::<WeaponsConfigHandle>),
+                        .run_if(resource_exists::<WeaponsAssets>),
                 ),
             )
             .add_systems(
@@ -63,18 +64,13 @@ impl Plugin for WeaponPlugin {
     }
 }
 
-fn load_weapons_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let weapons_config = WeaponsConfigHandle(asset_server.load("config/weapons.ron"));
-    commands.insert_resource(weapons_config);
-}
-
 fn add_stats_component(
     mut commands: Commands,
     query: Query<(Entity, &WeaponType), Without<WeaponStats>>,
-    config_handle: Res<WeaponsConfigHandle>,
-    config_assets: Res<Assets<config::WeaponsConfig>>,
+    assets: Res<WeaponsAssets>,
+    configs: Res<Assets<WeaponsConfig>>,
 ) {
-    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
+    let config = if let Some(c) = configs.get(&assets.config) {
         c
     } else {
         warn!("Couldn't load WeaponsConfig");
@@ -100,11 +96,11 @@ fn add_stats_component(
 fn add_sprite(
     mut commands: Commands,
     query: Query<(Entity, &WeaponType), Without<Sprite>>,
-    config_handle: Res<WeaponsConfigHandle>,
-    config_assets: Res<Assets<config::WeaponsConfig>>,
+    assets: Res<WeaponsAssets>,
+    configs: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
 ) {
-    let config = if let Some(c) = config_assets.get(config_handle.0.id()) {
+    let config = if let Some(c) = configs.get(&assets.config) {
         c
     } else {
         warn!("Couldn't load WeaponsConfig");
@@ -144,32 +140,36 @@ fn tick_weapon_timers(
 
 fn fire_weapon_system(
     mut commands: Commands,
-    mut weapon_query: Query<
-        (
-            &mut WeaponState,
-            &mut WeaponMode,
-            &Position,
-            &Velocity,
-            &Rotation,
-            &WeaponStats,
-            &Owner,
-        ),
-        With<WeaponType>,
-    >,
+    mut weapon_query: Query<(
+        &mut WeaponState,
+        &mut WeaponMode,
+        &Position,
+        &Velocity,
+        &Rotation,
+        &WeaponStats,
+        &Owner,
+        &WeaponType,
+    )>,
     mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
-    projectile_config_handle: Res<ProjectilesConfigHandle>,
-    projectile_config_assets: Res<Assets<ProjectilesConfig>>,
+    mut events: EventWriter<SoundEvent>,
+    projectiles_assets: Res<ProjectilesAssets>,
+    projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
+    weapon_assets: Res<WeaponsAssets>,
+    weapon_configs: Res<Assets<WeaponsConfig>>,
+    asset_server: Res<AssetServer>,
 ) {
-    let projectile_config =
-        if let Some(c) = projectile_config_assets.get(projectile_config_handle.0.id()) {
-            c
-        } else {
-            warn!("Couldn't load ProjectileConfig");
-            return;
-        };
+    let Some(projectiles_config) = projectiles_configs.get(&projectiles_assets.config) else {
+        warn!("Couldn't load ProjectileConfig");
+        return;
+    };
 
-    for (mut state, mut mode, position, velocity, rotation, stats, owner) in weapon_query.iter_mut()
+    let Some(weapon_config) = weapon_configs.get(&weapon_assets.config) else {
+        warn!("Couldn't load WeaponsConfig");
+        return;
+    };
+    for (mut state, mut mode, position, velocity, rotation, stats, owner, weapon_type) in
+        weapon_query.iter_mut()
     {
         if (*mode == WeaponMode::Triggered)
             && state.cooldown_timer.finished()
@@ -178,7 +178,7 @@ fn fire_weapon_system(
             // Putting it here is important as query iter order is non-deterministic
             let mut rng = Xoshiro256PlusPlus::seed_from_u64(time.0 as u64);
             for _ in 0..stats.shot_bullet_count {
-                if let Some(projectile_config) = projectile_config.0.get(&stats.projectile) {
+                if let Some(projectile_config) = projectiles_config.0.get(&stats.projectile) {
                     let projectile_stats = &projectile_config.stats;
                     let random_angle = rng.random_range(-stats.spread..stats.spread);
 
@@ -194,11 +194,25 @@ fn fire_weapon_system(
                         Velocity(projectile_direction * (stats.projectile_speed + added_velocity)),
                         Damage(stats.damage_multiplier * projectile_stats.damage),
                     );
-
-                    commands.spawn(new_projectile).add_rollback();
+                    let mut projectile_entity = commands.spawn(new_projectile);
+                    // Add decay for black hole bullets
+                    if stats.projectile == Projectile::Blackhole {
+                        projectile_entity.insert(DecayTimer(Timer::from_seconds(
+                            BH_BULLET_DECAY_TIME,
+                            TimerMode::Once,
+                        )));
+                    }
+                    projectile_entity.add_rollback();
                 } else {
                     warn!("Empy projectile config!")
                 }
+            }
+            // make sound
+            // shitcode, pls gsprd mk hndls
+            if let Some(weapon_config) = weapon_config.0.get(weapon_type) {
+                let fire_sound  =
+                    asset_server.load(weapon_config.sounds.fire.clone());
+                events.write(SoundEvent { handle: fire_sound });
             }
 
             state.current_ammo -= 1;
@@ -221,7 +235,7 @@ fn fire_weapon_system(
 fn handle_config_reload(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<config::WeaponsConfig>>,
-    weapons: Query<Entity, Or<(With<WeaponStats>, With<Sprite>)>>,
+    weapons: Query<Entity, (With<WeaponStats>, With<Sprite>)>,
 ) {
     for event in events.read() {
         if let AssetEvent::Modified { id: _ } = event {

@@ -1,9 +1,18 @@
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
 
-use crate::utils::math;
+use crate::level::limit::MapLimit;
 
 use super::physics::PhysicsSet;
+
+/// Extra space so camera sees edges without clipping
+const EDGE_PADDING: f32 = 200.0;
+/// How fast camera zooms in/out
+const ZOOM_SPEED: f32 = 3.0;
+/// How fast camera follows
+const FOLLOW_SPEED: f32 = 5.0;
+/// What fraction of the world is seen at least
+const MIN_WORLD_FRACTION: f32 = 0.2; // i.e. 20%
 
 pub struct CameraPlugin;
 
@@ -22,30 +31,44 @@ pub struct CameraFollowTarget;
 fn camera_movement(
     mut camera: Query<&mut Transform, (With<Camera2d>, Without<CameraFollowTarget>)>,
     window: Query<&Window>,
-    target: Query<&Transform, With<CameraFollowTarget>>,
+    targets: Query<&Transform, With<CameraFollowTarget>>,
+    limit: Option<Res<MapLimit>>,
     time: Res<Time>,
 ) -> Result {
-    if target.is_empty() {
+    if targets.is_empty() {
         // Not having target is not an error
         return Ok(());
     };
-
     let mut camera_transform = camera.single_mut()?;
     let window = window.single()?;
-    let target_transform = target.single()?;
-
     let screen_size = window.size();
-    let cursor_position = window.cursor_position().unwrap_or(screen_size / 2.);
-    let max_cursor_offset = screen_size * 0.2;
-    let offset = (cursor_position / screen_size - 0.5) * Vec2::new(1., -1.) * max_cursor_offset;
 
-    let dest = target_transform.translation.xy() + offset * camera_transform.scale.xy();
+    let positions: Vec<Vec2> = targets.iter().map(|t| t.translation.xy()).collect();
+    let center = positions.iter().copied().sum::<Vec2>() / positions.len() as f32;
 
-    camera_transform.translation = math::lerp(
-        camera_transform.translation,
-        Vec3::new(dest.x, dest.y, 0.),
-        time.delta_secs() * 5.,
-    );
+    // Bounding box for players
+    let max_dist = positions
+        .iter()
+        .map(|&pos| pos.distance(center))
+        .fold(0.0, f32::max);
+    // Zoom scale
+    let mut target_scale = ((max_dist + EDGE_PADDING) * 2.0) / screen_size.min_element();
+    // Adjust scale with world bounds
+    if let Some(limit) = limit {
+        let world_extent = (limit.radius + EDGE_PADDING) * 2.0;
+        let min_scale = (world_extent * MIN_WORLD_FRACTION) / screen_size.min_element();
+        let max_scale = world_extent / screen_size.min_element();
+        target_scale = target_scale.clamp(min_scale, max_scale);
+    }
+    // Zoom transition
+    let current_scale = camera_transform.scale;
+    camera_transform.scale =
+        current_scale.lerp(Vec3::splat(target_scale), time.delta_secs() * ZOOM_SPEED);
+    // Follow center
+    let target_pos = Vec3::new(center.x, center.y, camera_transform.translation.z);
+    camera_transform.translation = camera_transform
+        .translation
+        .lerp(target_pos, time.delta_secs() * FOLLOW_SPEED);
 
     Ok(())
 }

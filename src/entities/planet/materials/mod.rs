@@ -91,10 +91,7 @@ where
     fn build(&self, app: &mut App) {
         app.register_type::<M>()
             .add_plugins(Material2dPlugin::<M>::default())
-            .add_systems(
-                Update,
-                instance_layer_material::<M>.run_if(resource_exists::<network::SessionSeed>),
-            );
+            .add_systems(Update, instance_layer_material::<M>);
     }
 }
 
@@ -111,10 +108,14 @@ fn instance_layer_material<M: PlanetMaterial>(
     mut images: ResMut<Assets<Image>>,
     mut material: ResMut<Assets<M>>,
     query: Query<(Entity, &Radius, &PlanetMaterialLayerInit<M>), Added<PlanetMaterialLayerInit<M>>>,
-    seed: Res<network::SessionSeed>,
+    seed: Option<Res<network::SessionSeed>>,
 ) {
     for (entity, radius, layer) in query.iter() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed.0);
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(
+            seed.as_ref()
+                .map(|seed_res| seed_res.0)
+                .unwrap_or(rand::rng().random()),
+        );
 
         let common = CommonMaterial {
             pixels: f32::min(radius.0 as f32 / 2., 200.),

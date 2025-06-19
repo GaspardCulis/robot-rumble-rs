@@ -1,5 +1,6 @@
 debug/
 target/
+tracy/
 # Cargo.lock
 
 .envrc
@@ -7,3 +8,6 @@ target/
 
 .vscode
 .helix
+
+# Avoid map editor oopsies
+map.ron

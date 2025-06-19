@@ -12,9 +12,12 @@ WeaponsConfig({
             projectile: Bullet,
         ),
         skin: (
-            sprite: "weapons/pistol.png",
+            sprite: "img/weapons/pistol.png",
             scale: 3.0,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Shotgun: (
         stats: (
@@ -29,9 +32,12 @@ WeaponsConfig({
             projectile: Bullet,
         ),
         skin: (
-            sprite: "weapons/shotgun.png",
+            sprite: "img/weapons/shotgun.png",
             scale: 3.0,
         ),
+        sounds: (
+            fire: "audio/shotgun_fire.ogg",
+        )
     ),
     Rifle: (
         stats: (
@@ -46,9 +52,12 @@ WeaponsConfig({
             projectile: Bullet,
         ),
         skin: (
-            sprite: "weapons/assaultrifle.png",
+            sprite: "img/weapons/assaultrifle.png",
             scale: 0.25,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Sniper: (
         stats: (
@@ -63,9 +72,12 @@ WeaponsConfig({
             projectile: Bullet,
         ),
         skin: (
-            sprite: "weapons/sniper.png",
+            sprite: "img/weapons/sniper.png",
             scale: 0.25,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Revolver: (
         stats: (
@@ -80,9 +92,12 @@ WeaponsConfig({
             projectile: Bullet,
         ),
         skin: (
-            sprite: "weapons/revolver.png",
+            sprite: "img/weapons/revolver.png",
             scale: 0.5,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Pulse: (
         stats: (
@@ -97,8 +112,31 @@ WeaponsConfig({
             projectile: Bullet,
         ),
         skin: (
-            sprite: "weapons/pulse.png",
+            sprite: "img/weapons/pulse.png",
             scale: 4.0,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
+    ),
+    BlackholeGun: (
+        stats: (
+            cooldown: 1,
+            magazine_size: 2,
+            reload_time: 1.5,
+            damage_multiplier: 0.0,
+            projectile_speed: 1500,
+            shot_bullet_count: 1,
+            recoil: 100,
+            spread: 0.0001,
+            projectile: Blackhole,
+        ),
+        skin: (
+            sprite: "weapons/blackhole_gun.png",
+            scale: 0.75,
+        ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
 })

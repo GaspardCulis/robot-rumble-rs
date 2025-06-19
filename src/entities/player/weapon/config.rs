@@ -1,8 +1,15 @@
 use std::time::Duration;
 
 use bevy::{platform::collections::HashMap, prelude::*};
+use bevy_asset_loader::asset_collection::AssetCollection;
 
 use crate::entities::projectile::Projectile;
+
+#[derive(AssetCollection, Resource)]
+pub struct WeaponsAssets {
+    #[asset(path = "config/config.weapons.ron")]
+    pub config: Handle<WeaponsConfig>,
+}
 
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct WeaponsConfig(pub HashMap<WeaponType, WeaponConfig>);
@@ -18,12 +25,14 @@ pub enum WeaponType {
     Sniper,
     Revolver,
     Pulse,
+    BlackholeGun,
 }
 
 #[derive(serde::Deserialize)]
 pub struct WeaponConfig {
     pub stats: WeaponStats,
     pub skin: WeaponSkin,
+    pub sounds: WeaponSounds,
 }
 
 #[serde_with::serde_as]
@@ -49,4 +58,10 @@ pub struct WeaponSkin {
     /// Path to the weapon sprite image
     pub sprite: String,
     pub scale: f32,
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct WeaponSounds {
+    /// Path to the weapon fire
+    pub fire: String,
 }

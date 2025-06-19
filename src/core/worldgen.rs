@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy_common_assets::ron::RonAssetPlugin;
+use bevy_asset_loader::asset_collection::AssetCollection;
 use rand::Rng;
 use rand_xoshiro::{Xoshiro256PlusPlus, rand_core::SeedableRng as _};
 use serde::{Deserialize, Serialize};
@@ -14,23 +14,15 @@ use super::physics::Position;
 pub struct WorldgenPlugin;
 impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(RonAssetPlugin::<WorldgenConfig>::new(&[]))
-            .add_event::<GenerateWorldEvent>()
-            .add_systems(Startup, load_worldgen_config)
-            .add_systems(
-                Update,
-                (
-                    handle_genworld_event,
-                    #[cfg(feature = "dev_tools")]
-                    handle_config_reload.run_if(resource_exists::<crate::network::SessionSeed>),
-                ),
-            );
+        app.add_event::<GenerateWorldEvent>().add_systems(
+            Update,
+            (
+                handle_genworld_event.run_if(resource_exists::<WorldgenAssets>),
+                #[cfg(feature = "dev_tools")]
+                handle_config_reload.run_if(resource_exists::<crate::network::SessionSeed>),
+            ),
+        );
     }
-}
-
-fn load_worldgen_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let config: Handle<WorldgenConfig> = asset_server.load("config/worldgen.ron");
-    commands.insert_resource(WorldgenConfigHandle(config));
 }
 
 #[derive(serde::Deserialize, Asset, TypePath)]
@@ -59,8 +51,11 @@ pub struct WorldgenConfig {
     satellite_satellite_min_distance: f32,
 }
 
-#[derive(Resource)]
-pub struct WorldgenConfigHandle(pub Handle<WorldgenConfig>);
+#[derive(AssetCollection, Resource)]
+pub struct WorldgenAssets {
+    #[asset(path = "config/config.worldgen.ron")]
+    pub config: Handle<WorldgenConfig>,
+}
 
 #[derive(Component, Debug, Reflect, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GenerationSeed(pub u64);
@@ -74,10 +69,10 @@ fn handle_genworld_event(
     mut events: EventReader<GenerateWorldEvent>,
     mut planet_spawn_events: EventWriter<SpawnPlanetEvent>,
     mut satellite_spawn_events: EventWriter<SpawnSatelliteEvent>,
-    config_handle: Res<WorldgenConfigHandle>,
     configs: Res<Assets<WorldgenConfig>>,
+    assets: Res<WorldgenAssets>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Worldgen config not loaded yet");
         return;
     };
@@ -165,6 +160,7 @@ fn handle_genworld_event(
                 if far_from_planets && far_from_satellites {
                     satellite_spawn_events.write(SpawnSatelliteEvent {
                         position: position.clone(),
+                        // FIX: Config file or constant, will be done when we have better sprites
                         scale: 0.7,
                         kind,
                     });
