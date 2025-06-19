@@ -47,6 +47,7 @@ fn spawn_menu(mut commands: Commands, mut scene_builder: SceneBuilder, assets: R
             scene_handle.get("multiplayer").on_pressed(
                 |mut next_screen: ResMut<NextState<Screen>>,
                  mut next_gamestate: ResMut<NextState<GameState>>| {
+                    // Exit menus, start matchmaking
                     next_screen.set(Screen::None);
                     next_gamestate.set(GameState::MatchMaking);
                 },

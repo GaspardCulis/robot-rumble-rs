@@ -53,6 +53,7 @@ fn main() {
             OnEnter(ui::Screen::Home),
             |mut next_screen: ResMut<NextState<ui::Screen>>,
              mut next_gamestate: ResMut<NextState<GameState>>| {
+                // Hack to bypass homescreen when using map editor
                 next_screen.set(ui::Screen::None);
                 next_gamestate.set(GameState::MatchMaking);
             },
