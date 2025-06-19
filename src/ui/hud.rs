@@ -8,7 +8,7 @@ use crate::{
         inventory::Arsenal,
         weapon::{
             WeaponState,
-            config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig},
+            config::{WeaponStats, WeaponType, WeaponsConfig, WeaponsConfigAssets},
         },
     },
 };
@@ -68,7 +68,7 @@ impl Plugin for HudPlugin {
 
 fn spawn_arsenal_hud(
     mut commands: Commands,
-    weapon_assets: Res<WeaponsAssets>,
+    weapon_assets: Res<WeaponsConfigAssets>,
     config_assets: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
     query_players: Query<(Entity, &Player, &Arsenal), Changed<Arsenal>>,

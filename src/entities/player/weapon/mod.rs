@@ -1,4 +1,5 @@
 use crate::{
+    GameState,
     core::{
         audio::AudioSFX,
         physics::{PhysicsSet, Position, Rotation, Velocity},
@@ -11,11 +12,14 @@ use crate::{
 use bevy::{math::ops::cos, prelude::*};
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
 use bevy_kira_audio::{AudioChannel, AudioControl, AudioInstance, AudioTween, PlaybackState};
-use config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
+pub mod assets;
 pub mod config;
+
+use assets::WeaponsAssets;
+use config::{WeaponStats, WeaponType, WeaponsConfig, WeaponsConfigAssets};
 
 #[derive(Component, Clone, PartialEq, Default, Reflect)]
 pub enum WeaponMode {
@@ -61,7 +65,7 @@ impl Plugin for WeaponPlugin {
                         visibility_change_detection,
                     )
                         .before(PhysicsSet::Player)
-                        .run_if(resource_exists::<WeaponsAssets>),
+                        .run_if(in_state(GameState::InGame)),
                 ),
             )
             .add_systems(
@@ -77,7 +81,7 @@ impl Plugin for WeaponPlugin {
 fn add_stats_component(
     mut commands: Commands,
     query: Query<(Entity, &WeaponType), Without<WeaponStats>>,
-    assets: Res<WeaponsAssets>,
+    assets: Res<WeaponsConfigAssets>,
     configs: Res<Assets<WeaponsConfig>>,
 ) {
     let Some(config) = configs.get(&assets.config) else {
@@ -106,21 +110,21 @@ fn add_sprite(
     query: Query<(Entity, &WeaponType), Without<Sprite>>,
     assets: Res<WeaponsAssets>,
     configs: Res<Assets<WeaponsConfig>>,
-    asset_server: Res<AssetServer>,
+    config_assets: Res<WeaponsConfigAssets>,
 ) {
-    let Some(config) = configs.get(&assets.config) else {
+    let Some(config) = configs.get(&config_assets.config) else {
         warn!("Couldn't load WeaponsConfig");
         return;
     };
 
     for (weapon_entity, weapon_type) in query.iter() {
-        if let Some(weapon_config) = config.0.get(weapon_type) {
-            let skin = weapon_config.skin.clone();
-
+        if let Some(weapon_config) = config.0.get(weapon_type)
+            && let Some(weapon_assets) = assets.get(weapon_type)
+        {
             commands.entity(weapon_entity).insert((
-                Sprite::from_image(asset_server.load(skin.sprite)),
+                Sprite::from_image(weapon_assets.skin.clone()),
                 Transform::from_xyz(0.0, 0.0, super::skin::PLAYER_SKIN_ZINDEX + 1.0)
-                    .with_scale(Vec3::splat(skin.scale)),
+                    .with_scale(Vec3::splat(weapon_config.skin.scale)),
             ));
         }
     }
@@ -154,25 +158,18 @@ fn visibility_change_detection(
 fn mode_change_detection(
     mut commands: Commands,
     query: Query<(Entity, &WeaponMode, &WeaponType, Option<&AudioReload>), Changed<WeaponMode>>,
-    weapon_assets: Res<WeaponsAssets>,
-    weapon_configs: Res<Assets<WeaponsConfig>>,
-    asset_server: Res<AssetServer>,
+    assets: Res<WeaponsAssets>,
     sfx_channel: Res<AudioChannel<AudioSFX>>,
     mut audio_instances: ResMut<Assets<AudioInstance>>,
 ) {
-    let Some(weapons_config) = weapon_configs.get(&weapon_assets.config) else {
-        warn!("Couldn't load WeaponsConfig");
-        return;
-    };
     for (entity, mode, weapon_type, maybe_audio) in query.iter() {
-        let Some(weapon_config) = weapons_config.0.get(weapon_type) else {
-            warn!("Couldn't load WeaponConfig");
+        let Some(weapon_assets) = assets.get(weapon_type) else {
+            warn!("Couldn't load WeaponAssets");
             return;
         };
         match mode {
             WeaponMode::Reloading => {
-                if let Some(sound_path) = weapon_config.sounds.reload.clone() {
-                    let sound = asset_server.load(sound_path);
+                if let Some(sound) = weapon_assets.reload.clone() {
                     let handle: Handle<AudioInstance> = sfx_channel.play(sound).handle();
                     commands.entity(entity).insert(AudioReload(handle));
                 } else {
@@ -227,9 +224,7 @@ fn fire_weapon_system(
     projectiles_assets: Res<ProjectilesAssets>,
     projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
-    weapon_assets: Res<WeaponsAssets>,
-    weapon_configs: Res<Assets<WeaponsConfig>>,
-    asset_server: Res<AssetServer>,
+    assets: Res<WeaponsAssets>,
     sfx_channel: Res<AudioChannel<AudioSFX>>,
 ) {
     let Some(projectiles_config) = projectiles_configs.get(&projectiles_assets.config) else {
@@ -237,10 +232,6 @@ fn fire_weapon_system(
         return;
     };
 
-    let Some(weapon_config) = weapon_configs.get(&weapon_assets.config) else {
-        warn!("Couldn't load WeaponsConfig");
-        return;
-    };
     for (mut state, mut mode, position, velocity, rotation, stats, owner, weapon_type) in
         weapon_query.iter_mut()
     {
@@ -278,10 +269,8 @@ fn fire_weapon_system(
                 }
             }
             // make sound
-            // shitcode, pls gsprd mk hndls
-            if let Some(weapon_config) = weapon_config.0.get(weapon_type) {
-                let fire_sound = asset_server.load(weapon_config.sounds.fire.clone());
-                sfx_channel.play(fire_sound.clone());
+            if let Some(weapon_assets) = assets.get(weapon_type) {
+                sfx_channel.play(weapon_assets.fire.clone());
             }
 
             state.current_ammo -= 1;
