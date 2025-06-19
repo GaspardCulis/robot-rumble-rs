@@ -133,7 +133,7 @@ fn update_slot_inputs(mut query: Query<(&mut ActionState<PlayerAction>, &Weapon,
                     0 => PlayerAction::Slot1,
                     1 => PlayerAction::Slot2,
                     2 => PlayerAction::Slot3,
-                    _ => unimplemented!("Should not happend"),
+                    _ => unimplemented!("Modulo ensures this does not happen"),
                 };
 
                 action_state.press(&action);
