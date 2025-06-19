@@ -129,8 +129,6 @@ fn update_slot_inputs(mut query: Query<(&mut ActionState<PlayerAction>, &Weapon,
                     current_slot.checked_sub(1).unwrap_or(arsenal.0.len() - 1)
                 };
 
-                println!("Switching  from slot {current_slot} to {selected_slot}");
-
                 let action = match selected_slot {
                     0 => PlayerAction::Slot1,
                     1 => PlayerAction::Slot2,
