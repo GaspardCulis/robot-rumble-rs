@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_loader::asset_collection::AssetCollection;
+use bevy_matchbox::matchbox_socket::RtcIceServerConfig;
 
 #[derive(AssetCollection, Resource)]
 pub struct NetworkAssets {
@@ -26,12 +27,21 @@ pub struct NetworkConfig {
     pub disconnect_timeout: std::time::Duration,
     /// Sets the desync detection mode. With desync detection, the session will compare checksums for all peers to detect discrepancies / desyncs between peers.
     pub desync_detection: DesyncDetectionConfig,
+    /// Configuration options for an ICE server connection.
+    pub ice_server_config: IceServerConfig,
 }
 
 #[derive(serde::Deserialize, Clone, Copy)]
 pub enum DesyncDetectionConfig {
     On { interval: u32 },
     Off,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct IceServerConfig {
+    urls: Vec<String>,
+    username: Option<String>,
+    credential: Option<String>,
 }
 
 impl Default for NetworkConfig {
@@ -47,6 +57,12 @@ impl Default for NetworkConfig {
             max_prediction_window: 8,
             disconnect_timeout: std::time::Duration::from_secs(2),
             desync_detection: DesyncDetectionConfig::Off,
+
+            ice_server_config: IceServerConfig {
+                urls: vec!["turn:gasdev.fr:3478".to_string()],
+                username: Some("default".to_string()), // Fixes `ErrNoTurnCredentials`
+                credential: Some("default".to_string()), // Same
+            },
         }
     }
 }
@@ -58,6 +74,16 @@ impl Into<bevy_ggrs::ggrs::DesyncDetection> for DesyncDetectionConfig {
                 bevy_ggrs::ggrs::DesyncDetection::On { interval }
             }
             DesyncDetectionConfig::Off => bevy_ggrs::ggrs::DesyncDetection::Off,
+        }
+    }
+}
+
+impl Into<RtcIceServerConfig> for IceServerConfig {
+    fn into(self) -> RtcIceServerConfig {
+        RtcIceServerConfig {
+            urls: self.urls,
+            username: self.username,
+            credential: self.credential,
         }
     }
 }

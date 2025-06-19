@@ -110,11 +110,7 @@ fn start_matchbox_socket(
 
     let builder = WebRtcSocketBuilder::new(room_url)
         .add_unreliable_channel()
-        .ice_server(RtcIceServerConfig {
-            urls: vec!["turn:gasdev.fr:3478".to_string()],
-            username: Some("default".to_string()), // Fixes `ErrNoTurnCredentials`
-            credential: Some("default".to_string()), // Same
-        });
+        .ice_server(config.ice_server_config.clone().into());
     commands.insert_resource(MatchboxSocket::from(builder));
 
     Ok(())
@@ -180,7 +176,7 @@ fn wait_start_match(
     let players = socket.players();
     assert_eq!(players.len(), args.players);
 
-    // Setup sesion
+    // Setup session
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(args.players)
         .with_input_delay(config.input_delay)
