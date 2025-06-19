@@ -122,6 +122,9 @@ fn display_interact_prompt(
     local_players: Option<Res<LocalPlayers>>,
 ) {
     for (player_entity, player, prompt, nearby_grabber) in player_query.iter() {
+        if let Some(local) = &local_players {
+            info!("Local players: {:?}", local.0);
+        }
         if local_players
             .as_ref()
             .is_some_and(|local| local.0.contains(&player.handle))

@@ -1,22 +1,17 @@
 use bevy::{prelude::*, ui::widget::NodeImageMode};
 
 use crate::{
-    GameState,
-    core::inputs::{PlayerAction, PlayerActionState},
-    entities::player::{
-        Player, Weapon,
-        weapon::{
-            WeaponState,
-            config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig},
-        },
-    },
+    core::inputs::{PlayerAction, PlayerActionState}, entities::player::{
+        inventory::Arsenal, weapon::{
+            config::{WeaponStats, WeaponType, WeaponsAssets, WeaponsConfig}, WeaponState
+        }, Player, Weapon
+    }, GameState
 };
 
-const WEAPON_SLOTS: [WeaponType; 3] = [WeaponType::Pistol, WeaponType::Shotgun, WeaponType::Rifle];
 
 #[derive(Component)]
 struct WeaponSlotUI {
-    index: usize,
+    weapon_type: WeaponType,
 }
 
 #[derive(Component)]
@@ -41,28 +36,28 @@ pub struct AmmoReloadAnimation {
 
 #[derive(Component)]
 struct WeaponNameBoxUI {
-    index: usize,
+    weapon_type: WeaponType,
 }
 
 #[derive(Component)]
 struct WeaponSpriteUI {
-    index: usize,
+    weapon_type: WeaponType,
 }
 
 pub struct HudPlugin;
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame), spawn_arsenal_hud)
-            .add_systems(
-                Update,
-                (
-                    update_weapon_slot_ui,
-                    update_ammo_text,
-                    update_ammo_background,
-                    trigger_reload_animation,
-                    animate_ammo_reload,
-                )
-                    .run_if(in_state(GameState::InGame)),
+        app.add_systems(
+            Update,
+            (
+                spawn_arsenal_hud,
+                update_weapon_slot_ui,
+                update_ammo_text,
+                update_ammo_background,
+                trigger_reload_animation,
+                animate_ammo_reload,
+            )
+                .run_if(in_state(GameState::InGame)),
             );
     }
 }
@@ -72,6 +67,7 @@ fn spawn_arsenal_hud(
     weapon_assets: Res<WeaponsAssets>,
     config_assets: Res<Assets<WeaponsConfig>>,
     asset_server: Res<AssetServer>,
+    query_players: Query<(Entity, &Player, &Arsenal), Changed<Arsenal>>,
 ) {
     let weapons_config = if let Some(c) = config_assets.get(&weapon_assets.config) {
         c
@@ -80,191 +76,204 @@ fn spawn_arsenal_hud(
         return;
     };
 
-    commands
-        .spawn(Node {
-            position_type: PositionType::Relative,
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            bottom: Val::Px(28.0),
-            align_items: AlignItems::End,
-            justify_content: JustifyContent::End,
-            ..default()
-        })
-        .with_children(|parent| {
-            // Fond (bande noire + blanche)
-            parent
-                .spawn(Node {
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Row,
-                    width: Val::Px(381.0),
-                    height: Val::Px(122.0),
-                    ..default()
-                })
-                .with_children(|background| {
-                    background.spawn((
-                        Node {
-                            width: Val::Percent(0.0),
-                            height: Val::Percent(100.0),
-                            ..default()
-                        },
-                        BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6)),
-                        BlackBar,
-                    ));
-                    background.spawn((
-                        Node {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(100.0),
-                            ..default()
-                        },
-                        BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.2)),
-                        AmmoBackground,
-                    ));
-                });
+    for (_entity, _player, maybe_arsenal) in query_players.iter() {
+        let arsenal: Vec<WeaponType> = maybe_arsenal
+            .0
+            .iter()
+            .map(|(weapon_type, _)| weapon_type.clone())
+            .collect();
 
-            // HUD principal superposé
-            parent
-                .spawn(Node {
-                    position_type: PositionType::Absolute,
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    width: Val::Px(350.0),
-                    height: Val::Px(150.0),
-                    bottom: Val::Px(-28.0),
-                    right: Val::Px(50.0),
-                    padding: UiRect::all(Val::Px(8.0)),
-                    ..default()
-                })
-                .with_children(|column| {
-                    // Cadre unique pour afficher les sprites superposés
-                    column
-                        .spawn(Node {
-                            display: Display::Flex,
-                            flex_direction: FlexDirection::Column,
-                            align_items: AlignItems::Center,
-                            justify_content: JustifyContent::Center,
-                            width: Val::Px(96.0),
-                            height: Val::Px(96.0),
-                            margin: UiRect::all(Val::Px(4.0)),
-                            padding: UiRect::all(Val::Px(6.0)),
-                            border: UiRect::all(Val::Px(1.0)),
-                            ..default()
-                        })
-                        .with_children(|frame| {
-                            frame.spawn((
-                                BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6)),
-                                BorderColor(Color::WHITE),
-                                SelectedWeaponSlot,
-                                WeaponSlotUI { index: 0 },
-                            ));
+        info!("Spawning HUD for arsenal: {:?}", maybe_arsenal);
 
-                            // Tous les sprites d'armes empilés au même endroit
-                            for (i, weapon_type) in WEAPON_SLOTS.iter().enumerate() {
-                                if let Some(config) = weapons_config.0.get(weapon_type) {
-                                    let skin = &config.skin;
-                                    let size = 96.0 * skin.scale;
-                                    let mut image_node = frame.spawn((
-                                        Node {
-                                            width: Val::Px(size),
-                                            height: Val::Px(size),
-                                            display: if i == 0 {
-                                                Display::Flex
-                                            } else {
-                                                Display::None
+        commands
+            .spawn(Node {
+                position_type: PositionType::Relative,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                bottom: Val::Px(28.0),
+                align_items: AlignItems::End,
+                justify_content: JustifyContent::End,
+                ..default()
+            })
+            .with_children(|parent| {
+                // Fond (bande noire + blanche)
+                parent
+                    .spawn(Node {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Row,
+                        width: Val::Px(381.0),
+                        height: Val::Px(122.0),
+                        ..default()
+                    })
+                    .with_children(|background| {
+                        background.spawn((
+                            Node {
+                                width: Val::Percent(0.0),
+                                height: Val::Percent(100.0),
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6)),
+                            BlackBar,
+                        ));
+                        background.spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(100.0),
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.2)),
+                            AmmoBackground,
+                        ));
+                    });
+
+                // HUD principal
+                parent
+                    .spawn(Node {
+                        position_type: PositionType::Absolute,
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        width: Val::Px(350.0),
+                        height: Val::Px(150.0),
+                        bottom: Val::Px(-28.0),
+                        right: Val::Px(50.0),
+                        padding: UiRect::all(Val::Px(8.0)),
+                        ..default()
+                    })
+                    .with_children(|column| {
+                        // Slot d'arme sélectionnée
+                        column
+                            .spawn(Node {
+                                display: Display::Flex,
+                                flex_direction: FlexDirection::Column,
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                width: Val::Px(96.0),
+                                height: Val::Px(96.0),
+                                margin: UiRect::all(Val::Px(4.0)),
+                                padding: UiRect::all(Val::Px(6.0)),
+                                border: UiRect::all(Val::Px(1.0)),
+                                ..default()
+                            })
+                            .with_children(|frame| {
+                                frame.spawn((
+                                    BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6)),
+                                    BorderColor(Color::WHITE),
+                                    SelectedWeaponSlot,
+                                    WeaponSlotUI { weapon_type: arsenal[0].clone() },
+                                ));
+
+                                for (i, weapon_type) in arsenal.iter().enumerate() {
+                                    if let Some(config) = weapons_config.0.get(weapon_type) {
+                                        let skin = &config.skin;
+                                        let size = 96.0 * skin.scale;
+                                        let mut image_node = frame.spawn((
+                                            Node {
+                                                width: Val::Px(size),
+                                                height: Val::Px(size),
+                                                display: if i == 0 {
+                                                    Display::Flex
+                                                } else {
+                                                    Display::None
+                                                },
+                                                ..default()
                                             },
-                                            ..default()
-                                        },
-                                        ImageNode {
-                                            image: asset_server.load(skin.sprite.clone()),
-                                            image_mode: NodeImageMode::Stretch,
-                                            ..default()
-                                        },
-                                        WeaponSpriteUI { index: i },
-                                    ));
-                                    if i == 0 {
-                                        image_node.insert(SelectedWeaponSlot);
+                                            ImageNode {
+                                                image: asset_server.load(skin.sprite.clone()),
+                                                image_mode: NodeImageMode::Stretch,
+                                                ..default()
+                                            },
+                                            WeaponSpriteUI { weapon_type: weapon_type.clone() },
+                                        ));
+                                        if i == 0 {
+                                            image_node.insert(SelectedWeaponSlot);
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
 
-                    // Noms d'armes côte à côte
-                    column
-                        .spawn(Node {
-                            position_type: PositionType::Absolute,
-                            bottom: Val::Px(0.0),
-                            right: Val::Px(-50.0),
-                            display: Display::Flex,
-                            flex_direction: FlexDirection::Row,
-                            ..default()
-                        })
-                        .with_children(|row| {
-                            for (i, weapon_type) in WEAPON_SLOTS.iter().enumerate() {
-                                let formatted_name =
-                                    format_weapon_name(&format!("{weapon_type:?}"));
-                                let is_selected = i == 0;
-                                row.spawn((
-                                    Node {
-                                        width: Val::Px(127.0),
-                                        height: Val::Px(28.0),
-                                        align_items: AlignItems::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
-                                    },
-                                    BackgroundColor(if is_selected {
-                                        Color::srgba(1.0, 1.0, 1.0, 0.2)
-                                    } else {
-                                        Color::srgba(0.0, 0.0, 0.0, 0.6)
-                                    }),
-                                    WeaponNameBoxUI { index: i },
-                                ))
-                                .with_children(|name_box| {
-                                    name_box.spawn((
-                                        Text::new(format!("{}  {}", i + 1, formatted_name)),
-                                        TextFont {
-                                            font_size: 16.0,
+                        // Noms des armes
+                        column
+                            .spawn(Node {
+                                position_type: PositionType::Absolute,
+                                bottom: Val::Px(0.0),
+                                right: Val::Px(-50.0),
+                                display: Display::Flex,
+                                flex_direction: FlexDirection::Row,
+                                ..default()
+                            })
+                            .with_children(|row| {
+                                for (i, weapon_type) in arsenal.iter().enumerate() {
+                                    let formatted_name =
+                                        format_weapon_name(&format!("{weapon_type:?}"));
+                                    let is_selected = i == 0;
+                                    row.spawn((
+                                        Node {
+                                            width: Val::Px(127.0),
+                                            height: Val::Px(28.0),
+                                            align_items: AlignItems::Center,
+                                            justify_content: JustifyContent::Center,
                                             ..default()
                                         },
-                                        TextColor(Color::WHITE),
-                                        TextLayout {
-                                            justify: JustifyText::Center,
-                                            ..default()
-                                        },
-                                    ));
-                                });
-                            }
-                        });
-                });
+                                        BackgroundColor(if is_selected {
+                                            Color::srgba(1.0, 1.0, 1.0, 0.2)
+                                        } else {
+                                            Color::srgba(0.0, 0.0, 0.0, 0.6)
+                                        }),
+                                        WeaponNameBoxUI { weapon_type: weapon_type.clone() },
+                                    ))
+                                    .with_children(|name_box| {
+                                        name_box.spawn((
+                                            Text::new(format!("{}  {}", i + 1, formatted_name)),
+                                            TextFont {
+                                                font_size: 16.0,
+                                                ..default()
+                                            },
+                                            TextColor(Color::WHITE),
+                                            TextLayout {
+                                                justify: JustifyText::Center,
+                                                ..default()
+                                            },
+                                        ));
+                                    });
+                                }
+                            });
+                    });
 
-            // Texte munitions
-            parent
-                .spawn(Node {
-                    position_type: PositionType::Absolute,
-                    display: Display::Flex,
-                    flex_direction: FlexDirection::Row,
-                    bottom: Val::Px(60.0),
-                    right: Val::Px(16.0),
-                    padding: UiRect::all(Val::Px(8.0)),
-                    ..default()
-                })
-                .with_children(|builder| {
-                    builder.spawn((
-                        Text::new("0 / 0"),
-                        TextFont {
-                            font_size: 24.0,
-                            ..default()
-                        },
-                        TextColor(Color::BLACK),
-                        TextLayout {
-                            justify: JustifyText::Left,
-                            ..default()
-                        },
-                        AmmoText,
-                    ));
-                });
-        });
+                // Munitions
+                parent
+                    .spawn(Node {
+                        position_type: PositionType::Absolute,
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Row,
+                        bottom: Val::Px(60.0),
+                        right: Val::Px(16.0),
+                        padding: UiRect::all(Val::Px(8.0)),
+                        ..default()
+                    })
+                    .with_children(|builder| {
+                        builder.spawn((
+                            Text::new("0 / 0"),
+                            TextFont {
+                                font_size: 24.0,
+                                ..default()
+                            },
+                            TextColor(Color::BLACK),
+                            TextLayout {
+                                justify: JustifyText::Left,
+                                ..default()
+                            },
+                            AmmoText,
+                        ));
+                    });
+            });
+
+        // Si tu veux HUD pour un seul joueur, décommente cette ligne :
+        // break;
+    }
 }
+
 
 // Fonction pour formater le nom de l'arme
 fn format_weapon_name(weapon_type: &str) -> String {
@@ -297,31 +306,31 @@ fn update_weapon_slot_ui(
         Option<&SelectedWeaponSlot>,
         &mut BorderColor,
     )>,
-    query_input: Query<&PlayerActionState>,
     mut name_boxes: Query<(&mut BackgroundColor, &WeaponNameBoxUI)>,
     mut weapon_sprites: Query<(&mut Node, &WeaponSpriteUI), Without<AmmoBackground>>,
     weapon_query: Query<&Weapon, With<Player>>,
     weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
     mut background_query: Query<(Entity, &mut Node), With<AmmoBackground>>,
     reload_anim_query: Query<Option<&AmmoReloadAnimation>>,
+    test_query: Query<(&Weapon, &Player, &Arsenal), Changed<Weapon>>,
 ) {
-    let Some(input) = query_input.iter().next() else {
-        return;
-    };
 
-    let selected_index = if input.just_pressed(&PlayerAction::Slot1) {
-        Some(0)
-    } else if input.just_pressed(&PlayerAction::Slot2) {
-        Some(1)
-    } else if input.just_pressed(&PlayerAction::Slot3) {
-        Some(2)
-    } else {
-        None
-    };
 
-    if let Some(new_selected) = selected_index {
+    let mut current_weapon_type: Option<WeaponType> = None;
+
+    if let Ok(weapon) = weapon_query.single() {
+        if let Some((_weapon, _player, arsenal)) = test_query.iter().next() {
+            for (weapon_type, weapon_entity) in &arsenal.0 {
+                if *weapon_entity == weapon.0 {
+                    current_weapon_type = Some(weapon_type.clone());
+                    break;
+                }
+            }
+        }
+    }
+    if let Some(current_weapon_type) = current_weapon_type.clone() {
         for (entity, slot_ui, selected_marker, mut border_color) in query_ui.iter_mut() {
-            if slot_ui.index == new_selected {
+            if slot_ui.weapon_type == current_weapon_type {
                 if selected_marker.is_none() {
                     commands.entity(entity).insert(SelectedWeaponSlot);
                 }
@@ -335,7 +344,7 @@ fn update_weapon_slot_ui(
         }
 
         for (mut bg_color, name_slot) in name_boxes.iter_mut() {
-            if name_slot.index == new_selected {
+            if name_slot.weapon_type == current_weapon_type {
                 *bg_color = BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.2));
             } else {
                 *bg_color = BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6));
@@ -343,7 +352,7 @@ fn update_weapon_slot_ui(
         }
 
         for (mut node, sprite_ui) in weapon_sprites.iter_mut() {
-            node.display = if sprite_ui.index == new_selected {
+            node.display = if sprite_ui.weapon_type == current_weapon_type {
                 Display::Flex
             } else {
                 Display::None
@@ -375,6 +384,8 @@ fn update_weapon_slot_ui(
         }
     }
 }
+
+
 
 fn update_ammo_text(
     weapon_query: Query<&Weapon, With<Player>>,
