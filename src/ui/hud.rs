@@ -31,11 +31,11 @@ struct AmmoBackground;
 struct BlackBar;
 
 #[derive(Component)]
-pub struct AmmoReloadAnimation {
-    pub from: f32,
-    pub to: f32,
-    pub timer: Timer,
-    pub original_weapon_entity: Entity,
+struct AmmoReloadAnimation {
+    from: f32,
+    to: f32,
+    timer: Timer,
+    original_weapon_entity: Entity,
 }
 
 #[derive(Component)]
