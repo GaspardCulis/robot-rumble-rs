@@ -48,6 +48,7 @@ bevy_kira_audio = "0.23.0"
 
 [dependencies.bevy]
 version = "0.16"
+default-features = false
 features = [
   "std",
   "async_executor",
