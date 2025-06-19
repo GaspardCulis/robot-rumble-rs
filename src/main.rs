@@ -1,13 +1,13 @@
 #[cfg(feature = "dev_tools")]
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use bevy::prelude::*;
+use bevy::{log, prelude::*};
 #[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 #[cfg(feature = "dev_tools")]
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use clap::Parser as _;
 
-use robot_rumble::*;
+use robot_rumble::{ui::Screen, *};
 
 fn main() {
     let args = Args::parse();
@@ -31,6 +31,10 @@ fn main() {
                 }),
                 ..default()
             })
+            .set(log::LogPlugin {
+                filter: format!("{},discord_presence=off", log::DEFAULT_FILTER),
+                ..default()
+            })
             .build(),
     )
     .add_plugins(assets::AssetsPlugin)
@@ -41,6 +45,7 @@ fn main() {
     .add_plugins(network::NetworkPlugin)
     .add_plugins(ui::UiPlugins)
     .init_state::<GameState>()
+    .init_state::<Screen>()
     .insert_resource(args);
 
     #[cfg(feature = "dev_tools")]
