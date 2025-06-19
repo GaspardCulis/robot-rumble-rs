@@ -73,9 +73,7 @@ fn spawn_arsenal_hud(
     asset_server: Res<AssetServer>,
     query_players: Query<(Entity, &Player, &Arsenal), Changed<Arsenal>>,
 ) {
-    let weapons_config = if let Some(c) = config_assets.get(&weapon_assets.config) {
-        c
-    } else {
+    let Some(weapons_config) = config_assets.get(&weapon_assets.config) else {
         warn!("Couldn't load WeaponsConfig");
         return;
     };
