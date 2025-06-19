@@ -16,7 +16,7 @@ use super::planet;
 use crate::entities::satellite::graviton::Orbited;
 
 mod animation;
-mod inventory;
+pub mod inventory;
 pub mod skin;
 pub mod weapon;
 
