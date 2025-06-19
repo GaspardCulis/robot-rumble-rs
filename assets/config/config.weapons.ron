@@ -57,7 +57,8 @@ WeaponsConfig({
             scale: 0.25,
         ),
         sounds: (
-            fire: "audio/pistol_fire.ogg",
+            fire: "audio/riffle_fire.ogg",
+            reload: Some("audio/riffle_reload.ogg"),
         )
     ),
     Sniper: (
@@ -124,7 +125,7 @@ WeaponsConfig({
         stats: (
             cooldown: 1,
             magazine_size: 2,
-            reload_time: 1.5,
+            reload_time: 1.4,
             damage_multiplier: 0.0,
             projectile_speed: 1500,
             shot_bullet_count: 1,
@@ -137,7 +138,8 @@ WeaponsConfig({
             scale: 0.75,
         ),
         sounds: (
-            fire: "audio/pistol_fire.ogg",
+            fire: "audio/bh_generator_fire.ogg",
+            reload: Some("audio/bh_generator_reload.ogg"),
         )
     ),
 })
