@@ -95,11 +95,11 @@ impl GgrsSessionInput for PlayerActionState {
 
         debug_assert!(buttons.len() < 16);
         for (i, _) in buttons
-            .into_iter()
+            .iter()
             .enumerate()
             .filter(|(_, button)| self.pressed(button))
         {
-            keys = keys | (1 << i);
+            keys |= 1 << i;
         }
 
         NetworkInputs {
