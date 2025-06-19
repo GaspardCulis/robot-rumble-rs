@@ -19,7 +19,7 @@ pub struct InventoryPlugin;
 impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Arsenal>()
-            .add_systems(Update, spawn_arsenal)
+            .add_systems(Update, (spawn_arsenal, update_slot_inputs))
             .add_systems(
                 GgrsSchedule,
                 (handle_slot_change_inputs, summon_current_weapon)
@@ -80,20 +80,10 @@ fn handle_slot_change_inputs(
 ) {
     for (player, current_weapon, arsenal, action_state) in query.iter() {
         for action in action_state.get_just_pressed() {
-            let current_slot = arsenal
-                .0
-                .iter()
-                .position(|(_, weapon)| weapon == &current_weapon.0)
-                .unwrap_or_default();
-
             let selected_slot = match action {
                 PlayerAction::Slot1 => Some(0),
                 PlayerAction::Slot2 => Some(1),
                 PlayerAction::Slot3 => Some(2),
-                PlayerAction::SlotNext => Some((current_slot + 1) % arsenal.0.len()),
-                PlayerAction::SlotPrev => {
-                    Some(current_slot.checked_sub(1).unwrap_or(arsenal.0.len() - 1))
-                }
                 _ => None,
             };
 
@@ -113,6 +103,42 @@ fn handle_slot_change_inputs(
                 } else {
                     warn!("Weapon slot overflow");
                 }
+            }
+        }
+    }
+}
+
+/// Updates `PlayerAction::SlotX` input presses based on `PlayerAction::SlotNext` and `PlayerAction::SlotPrev` to avoid aving to serialize these inputs.
+fn update_slot_inputs(mut query: Query<(&mut ActionState<PlayerAction>, &Weapon, &Arsenal)>) {
+    for (mut action_state, current_weapon, arsenal) in query.iter_mut() {
+        for action in action_state.get_just_pressed() {
+            if let Some(slot_offset) = match action {
+                PlayerAction::SlotNext => Some(1),
+                PlayerAction::SlotPrev => Some(-1),
+                _ => None,
+            } {
+                let current_slot = arsenal
+                    .0
+                    .iter()
+                    .position(|(_, weapon)| weapon == &current_weapon.0)
+                    .unwrap_or_default();
+
+                let selected_slot = if slot_offset > 0 {
+                    (current_slot + 1) % arsenal.0.len()
+                } else {
+                    current_slot.checked_sub(1).unwrap_or(arsenal.0.len() - 1)
+                };
+
+                println!("Switching  from slot {current_slot} to {selected_slot}");
+
+                let action = match selected_slot {
+                    0 => PlayerAction::Slot1,
+                    1 => PlayerAction::Slot2,
+                    2 => PlayerAction::Slot3,
+                    _ => unimplemented!("Should not happend"),
+                };
+
+                action_state.press(&action);
             }
         }
     }
