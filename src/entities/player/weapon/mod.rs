@@ -35,8 +35,9 @@ pub struct WeaponState {
 #[relationship_target(relationship = super::Weapon)]
 pub struct Owner(Entity);
 
-#[derive(Component)]
-pub struct ReloadingPlayer;
+#[derive(Component, Reflect)]
+pub struct ReloadingSound;
+
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
@@ -44,6 +45,7 @@ impl Plugin for WeaponPlugin {
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
             .register_type::<WeaponMode>()
+            .register_type::<ReloadingSound>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
             .register_required_components::<WeaponType, WeaponMode>()
             .add_systems(
@@ -129,10 +131,10 @@ fn add_sprite(
 
 // this will be very useful a bit further in visuals and sound effects
 fn visibility_change_detection(
-    query: Query<(&WeaponType, &AudioSink), (Changed<Visibility>, With<ReloadingPlayer>)>,
+    query: Query<(&WeaponType, Option<&ReloadingSound>), Changed<Visibility>>,
 ) {
-    for (_, sink) in query.iter() {
-        sink.toggle_playback();
+    for (_) in query.iter() {
+        continue;
     }
 }
 
@@ -142,7 +144,6 @@ fn mode_change_detection(
     query: Query<(Entity, &WeaponMode, &WeaponType), Changed<WeaponMode>>,
     weapon_assets: Res<WeaponsAssets>,
     weapon_configs: Res<Assets<WeaponsConfig>>,
-    asset_server: Res<AssetServer>,
 ) {
     // pls gspard fix assets pls pls
     let Some(weapon_config) = weapon_configs.get(&weapon_assets.config) else {
@@ -156,23 +157,15 @@ fn mode_change_detection(
         };
         match mode {
             WeaponMode::Reloading => {
-                if let Some(reload_path) = &weapon_config.sounds.reload {
-                    let reload_sound: Handle<AudioSource> = asset_server.load(reload_path);
-                    commands.entity(entity).insert((
-                        AudioPlayer(reload_sound),
-                        ReloadingPlayer,
-                        PlaybackSettings::REMOVE,
-                    ));
+                if let Some(_) = &weapon_config.sounds.reload {
+                    commands.entity(entity).insert(ReloadingSound);
                 } else {
                     warn!("No reload sound is previewed!")
                 }
             }
-            WeaponMode::Triggered => {
-                commands
-                    .entity(entity)
-                    .remove::<(AudioPlayer, ReloadingPlayer)>();
+            _ => {
+                commands.entity(entity).remove::<ReloadingSound>();
             }
-            _ => {}
         }
     }
 }

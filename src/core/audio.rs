@@ -1,24 +1,28 @@
-use bevy::prelude::AudioSource;
 use bevy::prelude::*;
 use bevy::prelude::{App, Plugin};
-
+use bevy_kira_audio::AudioSource;
+use bevy_kira_audio::prelude::*;
 #[derive(Event)]
 pub struct SoundEvent {
     pub handle: Handle<AudioSource>,
 }
 
-/// Plugin that loads audio assets and provides a playback API.
-pub struct AudioPlugin;
+pub struct GameAudioPlugin;
 
-impl Plugin for AudioPlugin {
+// Channel for weapon audio
+#[derive(Resource)]
+struct SFX;
+impl Plugin for GameAudioPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SoundEvent>()
+            .add_plugins(AudioPlugin)
+            .add_audio_channel::<SFX>()
             .add_systems(Update, play_sound);
     }
 }
 
-fn play_sound(mut commands: Commands, mut events: EventReader<SoundEvent>) {
+fn play_sound(mut events: EventReader<SoundEvent>, sfx_channel: Res<AudioChannel<SFX>>) {
     for SoundEvent { handle } in events.read() {
-        commands.spawn((AudioPlayer(handle.clone()), PlaybackSettings::DESPAWN));
+        sfx_channel.play(handle.clone());
     }
 }
