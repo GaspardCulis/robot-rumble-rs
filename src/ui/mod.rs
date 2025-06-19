@@ -3,9 +3,9 @@ use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_cobweb_ui::prelude::*;
 
 mod hud;
-mod menus;
+mod menu;
 
-pub use menus::Screen;
+pub use menu::Screen;
 
 #[derive(AssetCollection, Resource)]
 pub struct UIAssets {
@@ -17,7 +17,7 @@ pub struct UiPlugins;
 impl Plugin for UiPlugins {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(CobwebUiPlugin)
-            .add_plugins((hud::HudPlugin, menus::MenusPlugin))
+            .add_plugins((hud::HudPlugin, menu::MenusPlugin))
             .load("ui/main.cob")
             .add_systems(
                 OnEnter(LoadState::Done),
