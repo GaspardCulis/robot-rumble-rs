@@ -205,6 +205,7 @@ fn tick_weapon_timers(
 
         if state.reload_timer.finished() && state.current_ammo < stats.magazine_size {
             state.current_ammo = stats.magazine_size;
+            state.reload_timer.reset();
             *mode = WeaponMode::Idle;
         }
     }
@@ -267,7 +268,7 @@ fn fire_weapon_system(
                     }
                     projectile_entity.add_rollback();
                 } else {
-                    warn!("Empy projectile config!")
+                    warn!("Empty projectile config!");
                 }
             }
             // make sound

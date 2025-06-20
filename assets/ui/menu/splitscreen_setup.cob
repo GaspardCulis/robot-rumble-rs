@@ -2,26 +2,6 @@
 
 $gamepad_icon = "img/icons/gamepad-icon.png"
 
-+animation = \
-    Animated<Margin>{
-        idle: { left: 0px }
-        hover: { left: 10px }
-        hover_with: {
-            duration: 0.2,
-            ease: OutExpo
-        }
-        unhover_with: {
-            duration: 0.2,
-            ease: OutExpo
-        }
-        press: { left: 10px }
-        press_with: {
-            duration: 0.2,
-            ease: OutElastic
-        }
-    }
-\
-
 #commands
 LoadImages[$gamepad_icon]
 
