@@ -7,7 +7,11 @@ use crate::{
         physics::{PhysicsSet, Position},
         worldgen,
     },
-    entities::player::{Player, weapon::config::WeaponType},
+    entities::player::{
+        Percentage, Player,
+        inventory::Arsenal,
+        weapon::config::{WeaponStats, WeaponType},
+    },
 };
 
 #[derive(Resource, Reflect)]
@@ -19,7 +23,6 @@ pub struct MapLimit {
 }
 
 #[derive(Event)]
-#[allow(dead_code)] // Temporarly until entity gets used
 /// Points to a Player entity
 pub struct DeathEvent(pub Entity);
 
@@ -34,7 +37,8 @@ impl Plugin for MapLimitPlugin {
             )
             .add_systems(
                 GgrsSchedule,
-                check_outsiders
+                (check_outsiders, handle_player_death)
+                    .chain()
                     .in_set(PhysicsSet::Collision)
                     .run_if(in_state(GameState::InGame).and(resource_exists::<MapLimit>)),
             );
@@ -71,22 +75,37 @@ fn setup(
     commands.insert_resource(limit);
 }
 
-// FIX: Ugly AF
+fn handle_player_death(
+    mut commands: Commands,
+    mut death_events: EventReader<DeathEvent>,
+    query: Query<&Arsenal, With<Player>>,
+) -> Result {
+    for DeathEvent(player) in death_events.read() {
+        // Refresh player
+        commands
+            .entity(*player)
+            .remove::<Position>()
+            .insert(Percentage::default());
+        // Refresh weapons
+        let arsenal = query.get(*player)?;
+        for (_, weapon) in arsenal.0.iter() {
+            warn!("Removing weapon stats!");
+            commands.entity(*weapon).remove::<WeaponStats>();
+        }
+    }
+    Ok(())
+}
+
 fn check_outsiders(
     mut commands: Commands,
     mut death_events: EventWriter<DeathEvent>,
-    query: Query<(Entity, &Position, Has<Player>, Has<WeaponType>)>,
+    query: Query<(Entity, &Position, Has<Player>), Without<WeaponType>>,
     limit: Res<MapLimit>,
 ) {
-    for (entity, position, is_player, is_weapon) in query.iter() {
+    for (entity, position, is_player) in query.iter() {
         if position.length_squared() > limit.radius_squared {
-            if is_weapon {
-                continue;
-            } else if is_player {
+            if is_player {
                 death_events.write(DeathEvent(entity));
-
-                // FIX: Temporary way to handle death
-                commands.entity(entity).remove::<Position>();
             } else {
                 commands.entity(entity).despawn();
             }
