@@ -9,6 +9,7 @@ use crate::{
         inventory::Arsenal,
         weapon::{
             WeaponState,
+            assets::WeaponsAssets,
             config::{WeaponStats, WeaponType},
         },
     },
@@ -30,14 +31,18 @@ struct CurrentWeaponInfo {
     magazine_size: usize,
 }
 
+#[derive(ReactComponent, Default, PartialEq)]
+struct CurrentWeaponSprite(Handle<Image>);
+
 pub struct HUDPlugin;
 impl Plugin for HUDPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (spawn_menu, update_weapon_info).run_if(in_state(GameState::InGame)),
-        )
-        .add_systems(OnExit(GameState::InGame), despawn_menu);
+        app.add_systems(Update, (spawn_menu).run_if(in_state(GameState::InGame)))
+            .add_systems(
+                FixedUpdate,
+                (update_weapon_info, update_weapon_sprite).run_if(in_state(GameState::InGame)),
+            )
+            .add_systems(OnExit(GameState::InGame), despawn_menu);
     }
 }
 
@@ -65,12 +70,13 @@ fn spawn_menu(
 
                     scene_handle.insert(PlayerHud(player));
                     scene_handle.insert_reactive(CurrentWeaponInfo::default());
+                    scene_handle.insert_reactive(CurrentWeaponSprite::default());
                     scene_handle.get("vbox::hbox::bullets_count").update_on(
                         entity_mutation::<CurrentWeaponInfo>(scene_id),
                         move |id: TargetId,
                               info: Reactive<CurrentWeaponInfo>,
                               mut e: TextEditor| {
-                            let weapon_info = info.get(scene_id).expect("WWHUUUTUT");
+                            let weapon_info = info.get(scene_id)?;
                             write_text!(
                                 e,
                                 id.0,
@@ -81,6 +87,20 @@ fn spawn_menu(
                             OK
                         },
                     );
+
+                    scene_handle
+                        .get("vbox::hbox::a_weapon_preview::image")
+                        .update_on(
+                            entity_mutation::<CurrentWeaponSprite>(scene_id),
+                            move |id: TargetId,
+                                  mut query: Query<&mut ImageNode>,
+                                  info: Reactive<CurrentWeaponSprite>| {
+                                let weapon_sprite = info.get(scene_id)?;
+                                let mut image = query.get_mut(id.0)?;
+                                image.image = weapon_sprite.0.clone();
+                                OK
+                            },
+                        );
 
                     let mut weapons_list = scene_handle.get("vbox::weapons_list");
                     for (weapon_type, _) in arsenal.0.iter() {
@@ -124,6 +144,32 @@ fn update_weapon_info(
                 current_ammo: weapon_state.current_ammo,
                 magazine_size: weapon_stats.magazine_size,
             },
+        );
+    }
+
+    Ok(())
+}
+
+fn update_weapon_sprite(
+    mut commands: Commands,
+    mut sprites: ReactiveMut<CurrentWeaponSprite>,
+    huds: Query<(Entity, &PlayerHud)>,
+    player_query: Query<&Weapon>,
+    weapon_query: Query<&WeaponType>,
+    weapon_assets: Res<WeaponsAssets>,
+) -> Result {
+    for (entity, hud) in huds.iter() {
+        // FIX: Updated each frame, not ideal
+        let weapon = player_query.get(hud.0)?;
+        let weapon_type = weapon_query.get(weapon.0)?;
+        let weapon_assets = weapon_assets
+            .get(weapon_type)
+            .ok_or(BevyError::from("Failed to get WeaponAssets"))?;
+
+        let _ = sprites.set_if_neq(
+            &mut commands,
+            entity,
+            CurrentWeaponSprite(weapon_assets.skin.clone()),
         );
     }
 

@@ -28,6 +28,7 @@ LoadImages[$weapon_icon]
                 flex_direction: Row
                 justify_cross: Center
                 column_gap: 30px
+                width:300px
                 padding: {right: 10px left: 10px}
             }
             "a_weapon_preview"
@@ -35,6 +36,7 @@ LoadImages[$weapon_icon]
                     width:160px
                     height: 80px
                     justify_cross: Center
+                    clipping: ClipXY
                 }
                 "image"
                     FlexNode{
