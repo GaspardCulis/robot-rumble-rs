@@ -17,7 +17,7 @@ pub struct UiPlugins;
 impl Plugin for UiPlugins {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(CobwebUiPlugin)
-            .add_plugins((hud::HudPlugin, menu::MenusPlugin))
+            .add_plugins((hud::HUDPlugin, menu::MenusPlugin))
             .load("ui/main.cob")
             .add_systems(
                 OnEnter(LoadState::Done),
