@@ -264,7 +264,7 @@ fn fire_weapon_system(
                     }
                     projectile_entity.add_rollback();
                 } else {
-                    warn!("Empy projectile config!");
+                    warn!("Empty projectile config!");
                 }
             }
             // make sound
