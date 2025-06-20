@@ -100,7 +100,7 @@ fn handle_save_map_button(
             &physics::Position,
             Has<satellite::bumper::Bumper>,
             Has<satellite::grabber::Grabber>,
-            Has<satellite::graviton::Graviton>,
+            Has<satellite::slingshot::Slingshot>,
         ),
         With<satellite::Satellite>,
     >,
@@ -124,7 +124,7 @@ fn handle_save_map_button(
                 } else if grabber {
                     satellite::SatelliteKind::Grabber
                 } else if graviton {
-                    satellite::SatelliteKind::Graviton
+                    satellite::SatelliteKind::Slingshot
                 } else {
                     unimplemented!("Wtf man ?!")
                 };

@@ -11,7 +11,7 @@ use crate::{
         blackhole, planet,
         player::{self, Player, weapon},
         projectile,
-        satellite::{grabber, graviton},
+        satellite::{grabber, slingshot},
     },
     level::save,
 };
@@ -51,7 +51,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<grabber::GrabbedOrbit>()
             .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
-            .rollback_component_with_clone::<graviton::Orbited>()
+            .rollback_component_with_clone::<slingshot::Orbited>()
             .rollback_component_with_clone::<projectile::DecayTimer>()
             .rollback_component_with_copy::<blackhole::BlackHole>()
             // Collisions

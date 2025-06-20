@@ -152,7 +152,7 @@ fn handle_genworld_event(
                     .all(|existing| position.0.distance(existing.0) > safe_distance_satellite);
 
                 let kind = match rng.random_range(0..3) {
-                    0 => SatelliteKind::Graviton,
+                    0 => SatelliteKind::Slingshot,
                     1 => SatelliteKind::Bumper,
                     _ => SatelliteKind::Grabber,
                 };

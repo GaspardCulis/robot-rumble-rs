@@ -13,7 +13,7 @@ use crate::entities::player::weapon::config::WeaponStats;
 use crate::utils::math;
 
 use super::planet;
-use crate::entities::satellite::graviton::Orbited;
+use crate::entities::satellite::slingshot::Orbited;
 
 mod animation;
 pub mod inventory;

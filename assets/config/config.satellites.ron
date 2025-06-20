@@ -1,13 +1,13 @@
 (
     orbit_radius: 200.0,
-    min_angular_speed: 2.0,
     orbit_duration: 5.0,
     orbit_cooldown: 5.0,
-    decay_rate: 40.0,
+    min_angular_speed: 2.0,
 
     bump_radius: 150.0,
     bump_multiplier: 1.5,
 
     grabber_radius: 300,
+
 
 )
