@@ -75,7 +75,7 @@ fn setup(
     commands.insert_resource(limit);
 }
 
-fn handle_player_death(
+pub fn handle_player_death(
     mut commands: Commands,
     mut death_events: EventReader<DeathEvent>,
     query: Query<&Arsenal, With<Player>>,

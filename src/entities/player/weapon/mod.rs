@@ -8,6 +8,7 @@ use crate::{
         Damage, DecayTimer, Projectile,
         config::{BH_BULLET_DECAY_TIME, ProjectilesAssets, ProjectilesConfig},
     },
+    level::limit,
 };
 use bevy::{math::ops::cos, prelude::*};
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
@@ -59,7 +60,6 @@ impl Plugin for WeaponPlugin {
                     #[cfg(feature = "dev_tools")]
                     handle_config_reload,
                     (
-                        add_stats_component,
                         add_sprite,
                         mode_change_detection,
                         visibility_change_detection,
@@ -70,10 +70,10 @@ impl Plugin for WeaponPlugin {
             )
             .add_systems(
                 GgrsSchedule,
-                (tick_weapon_timers, fire_weapon_system)
+                (add_stats_component, tick_weapon_timers, fire_weapon_system)
                     .chain()
-                    .in_set(PhysicsSet::Player)
-                    .after(super::update_weapon),
+                    .in_set(PhysicsSet::Collision)
+                    .after(limit::handle_player_death),
             );
     }
 }
@@ -99,7 +99,7 @@ fn add_stats_component(
                 cooldown_timer: Timer::new(weapon_stats.cooldown, TimerMode::Once),
                 reload_timer: Timer::new(weapon_stats.reload_time, TimerMode::Once),
             });
-            commands.entity(weapon_entity).insert(WeaponMode::Idle);
+            //commands.entity(weapon_entity).insert(WeaponMode::Idle);
             commands.entity(weapon_entity).insert(weapon_stats.clone());
         }
     }
