@@ -117,20 +117,17 @@ fn detect_player_orbit_entry(
 
             let distance = player_position.0.distance(slingshot_pos.0);
 
-            let initial_speed = velocity.length();
-
             let entry_pos = player_position.0;
             let offset = player_position.0 - slingshot_pos.0;
-            let angle = atan2(offset.y, offset.x);
 
             if distance < orbit_radius {
                 commands.entity(player_entity).insert(Orbited {
                     center: slingshot_pos.0,
                     time_left: orbit_duration,
-                    initial_speed,
+                    initial_speed: velocity.length(),
                     entry_pos,
                     elapsed: 0.0,
-                    angle,
+                    angle: atan2(offset.y, offset.x),
                 });
                 let center = slingshot_pos.0;
                 let direction = (entry_pos - center).normalize();
