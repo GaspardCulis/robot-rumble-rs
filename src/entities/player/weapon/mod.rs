@@ -70,7 +70,11 @@ impl Plugin for WeaponPlugin {
             )
             .add_systems(
                 GgrsSchedule,
-                (add_physical_components, tick_weapon_timers, fire_weapon_system)
+                (
+                    add_physical_components,
+                    tick_weapon_timers,
+                    fire_weapon_system,
+                )
                     .chain()
                     .in_set(PhysicsSet::Collision)
                     .after(limit::handle_player_death),
