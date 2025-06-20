@@ -408,12 +408,12 @@ fn mark_players_in_orbit_zone(
 
     for (player_entity, player_pos) in player_query.iter() {
         for (slingshot_pos, cooldown) in slingshot_query.iter() {
-            if let Some(cd) = cooldown {
-                if cd.timer.finished() {
-                    let dist = player_pos.0.distance(slingshot_pos.0);
-                    if dist < radius {
-                        commands.entity(player_entity).insert(WasInsideOrbitZone);
-                    }
+            if let Some(cd) = cooldown
+                && cd.timer.finished()
+            {
+                let dist = player_pos.0.distance(slingshot_pos.0);
+                if dist < radius {
+                    commands.entity(player_entity).insert(WasInsideOrbitZone);
                 }
             }
         }
