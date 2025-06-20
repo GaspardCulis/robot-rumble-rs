@@ -41,7 +41,7 @@ LoadImages[$weapon_icon]
                         width: 100%
                     }
                     LoadedImageNode{ image: $weapon_icon }
-            "b_bullets_count"
+            "bullets_count"
                 TextLine{ text: "42/69" }
         "weapons_list"
             FlexNode{
