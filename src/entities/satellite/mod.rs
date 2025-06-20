@@ -10,7 +10,6 @@ pub mod slingshot;
 mod visuals;
 
 use assets::{SatelliteAssets, SatelliteConfig};
-use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_ggrs::GgrsSchedule;
 use bumper::Bumper;
 use grabber::Grabber;
@@ -46,7 +45,6 @@ pub struct SatellitePlugin;
 impl Plugin for SatellitePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<slingshot::Orbited>()
-            .add_plugins(RonAssetPlugin::<SatelliteConfig>::new(&[]))
             .add_plugins(Material2dPlugin::<OrbitMaterial>::default())
             .configure_sets(
                 GgrsSchedule,

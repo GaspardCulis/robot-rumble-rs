@@ -3,12 +3,13 @@ use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
 
 use crate::core::physics::{Position, Velocity};
-use crate::entities::player::{Player, PlayerAction};
+use crate::entities::player::{Player};
+use crate::core::inputs::PlayerAction;
 use crate::entities::satellite::Satellite;
 
 use bevy_ggrs::GgrsSchedule;
 
-use super::{SatelliteConfig, SatelliteConfigHandle, SatelliteSet};
+use super::{SatelliteConfig, SatelliteAssets, SatelliteSet};
 
 #[derive(Component, Debug, Reflect, Clone)]
 #[reflect(Component)]
@@ -57,6 +58,10 @@ pub struct SlingshotCordTarget {
     pub target: Entity,
 }
 
+#[derive(Component)]
+pub struct WasInsideOrbitZone;
+
+
 pub struct SlingshotPlugin;
 impl Plugin for SlingshotPlugin {
     fn build(&self, app: &mut App) {
@@ -66,6 +71,8 @@ impl Plugin for SlingshotPlugin {
                 detect_player_orbit_entry,
                 update_orbiting_players,
                 update_orbit_cooldowns,
+                mark_players_in_orbit_zone,
+                cleanup_orbit_zone_flags,
                 update_ejection_arrows,
                 load_slingcord_frames,
                 animate_slingshot_cord,
@@ -83,14 +90,14 @@ fn detect_player_orbit_entry(
         (Entity, &Position, Option<&OrbitCooldown>),
         (With<Satellite>, With<Slingshot>),
     >,
-    mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>)>,
-    config_handle: Res<SatelliteConfigHandle>,
+    mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>, Without<WasInsideOrbitZone>)>,
+    assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
@@ -130,7 +137,7 @@ fn detect_player_orbit_entry(
                 let arrow_angle = atan2(direction.y, direction.x);
 
                 // Créer les deux meshes
-                let shaft = meshes.add(Rectangle::new(6.0, 24.0));
+                let shaft = meshes.add(Rectangle::new(12.0, 48.0));
                 let material = materials.add(Color::srgb(1.0, 0.8, 0.0));
 
                 // Corps de flèche (rotation +90°)
@@ -151,7 +158,7 @@ fn detect_player_orbit_entry(
                 commands.entity(slingshot_entity).with_children(|parent| {
                     parent.spawn((
                         Sprite {
-                            image: asset_server.load("skins/satellite/slingshot/rope_1.png"),
+                            image: asset_server.load("img/satellites/slingshot/rope_1.png"),
                             ..default()
                         },
                         Transform {
@@ -172,6 +179,9 @@ fn detect_player_orbit_entry(
             }
         }
     }
+    for (entity, _, _) in player_query.iter() {
+        commands.entity(entity).remove::<WasInsideOrbitZone>();
+    }
 }
 
 // Retarde le despawn de la corde jusqu'à ce que l'animation soit terminée
@@ -189,11 +199,11 @@ fn update_orbiting_players(
     >,
     slingshot_query: Query<(Entity, &Position), (With<Satellite>, With<Slingshot>)>,
     cord_query: Query<(Entity, &SlingshotCordTarget, &SlingshotCordAnimation)>,
-    config_handle: Res<SatelliteConfigHandle>,
+    assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
     time: Res<Time>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
@@ -270,10 +280,10 @@ fn update_ejection_arrows(
     mut commands: Commands,
     mut arrow_query: Query<(Entity, &mut Transform, &EjectionArrow)>,
     player_query: Query<Option<&Orbited>, With<Player>>,
-    config_handle: Res<SatelliteConfigHandle>,
+    assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
@@ -319,10 +329,10 @@ fn update_orbit_cooldowns(
 
 fn load_slingcord_frames(asset_server: Res<AssetServer>, mut commands: Commands) {
     let frames = vec![
-        asset_server.load("skins/satellite/slingshot/rope_1.png"),
-        asset_server.load("skins/satellite/slingshot/rope_2.png"),
-        asset_server.load("skins/satellite/slingshot/rope_3.png"),
-        asset_server.load("skins/satellite/slingshot/rope_4.png"),
+        asset_server.load("img/satellites/slingshot/rope_1.png"),
+        asset_server.load("img/satellites/slingshot/rope_2.png"),
+        asset_server.load("img/satellites/slingshot/rope_3.png"),
+        asset_server.load("img/satellites/slingshot/rope_4.png"),
     ];
     commands.insert_resource(SlingshotCordFrames(frames));
 }
@@ -347,10 +357,10 @@ fn animate_slingshot_cord(
 fn update_slingcord_transform(
     player_query: Query<(&Position, Option<&Orbited>), With<Player>>,
     mut cord_query: Query<(&mut Transform, &SlingshotCordTarget), With<SlingshotCord>>,
-    config_handle: Res<SatelliteConfigHandle>,
+    assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
@@ -378,6 +388,55 @@ fn update_slingcord_transform(
             transform.translation = (midpoint - center).extend(1.0);
             transform.scale = Vec3::new(distance / 20.0, 8.0, 1.0); // ajuste les diviseurs à ton sprite
             transform.rotation = Quat::from_rotation_z(angle_z);
+        }
+    }
+}
+
+fn mark_players_in_orbit_zone(
+    mut commands: Commands,
+    slingshot_query: Query<(&Position, Option<&OrbitCooldown>), (With<Slingshot>, With<Satellite>)>,
+    player_query: Query<(Entity, &Position), With<Player>>,
+    configs: Res<Assets<SatelliteConfig>>,
+    assets: Res<SatelliteAssets>,
+) {
+    let Some(config) = configs.get(&assets.config) else { return; };
+    let radius = config.orbit_radius;
+
+    for (player_entity, player_pos) in player_query.iter() {
+        for (slingshot_pos, cooldown) in slingshot_query.iter() {
+            if let Some(cd) = cooldown {
+                if cd.timer.finished() {
+                    let dist = player_pos.0.distance(slingshot_pos.0);
+                    if dist < radius {
+                        commands.entity(player_entity).insert(WasInsideOrbitZone);
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn cleanup_orbit_zone_flags(
+    mut commands: Commands,
+    player_query: Query<(Entity, &Position), (With<Player>, With<WasInsideOrbitZone>, Without<Orbited>)>,
+    slingshot_query: Query<&Position, (With<Slingshot>, With<Satellite>)>,
+    configs: Res<Assets<SatelliteConfig>>,
+    assets: Res<SatelliteAssets>,
+) {
+    let Some(config) = configs.get(&assets.config) else { return; };
+    let orbit_radius = config.orbit_radius;
+
+    for (player_entity, player_pos) in player_query.iter() {
+        let mut still_inside = false;
+        for slingshot_pos in slingshot_query.iter() {
+            if player_pos.0.distance(slingshot_pos.0) < orbit_radius {
+                still_inside = true;
+                break;
+            }
+        }
+
+        if !still_inside {
+            commands.entity(player_entity).remove::<WasInsideOrbitZone>();
         }
     }
 }
