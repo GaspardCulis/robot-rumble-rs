@@ -70,7 +70,7 @@ impl Plugin for WeaponPlugin {
             )
             .add_systems(
                 GgrsSchedule,
-                (add_stats_component, tick_weapon_timers, fire_weapon_system)
+                (add_physical_components, tick_weapon_timers, fire_weapon_system)
                     .chain()
                     .in_set(PhysicsSet::Collision)
                     .after(limit::handle_player_death),
@@ -78,7 +78,7 @@ impl Plugin for WeaponPlugin {
     }
 }
 
-fn add_stats_component(
+fn add_physical_components(
     mut commands: Commands,
     query: Query<(Entity, &WeaponType), Without<WeaponStats>>,
     assets: Res<WeaponsConfigAssets>,
