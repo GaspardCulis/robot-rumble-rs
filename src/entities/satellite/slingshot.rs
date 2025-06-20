@@ -2,14 +2,14 @@ use bevy::math::ops::*;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::core::physics::{Position, Velocity};
-use crate::entities::player::{Player};
 use crate::core::inputs::PlayerAction;
+use crate::core::physics::{Position, Velocity};
+use crate::entities::player::Player;
 use crate::entities::satellite::Satellite;
 
 use bevy_ggrs::GgrsSchedule;
 
-use super::{SatelliteConfig, SatelliteAssets, SatelliteSet};
+use super::{SatelliteAssets, SatelliteConfig, SatelliteSet};
 
 #[derive(Component, Debug, Reflect, Clone)]
 #[reflect(Component)]
@@ -61,7 +61,6 @@ pub struct SlingshotCordTarget {
 #[derive(Component)]
 pub struct WasInsideOrbitZone;
 
-
 pub struct SlingshotPlugin;
 impl Plugin for SlingshotPlugin {
     fn build(&self, app: &mut App) {
@@ -90,7 +89,10 @@ fn detect_player_orbit_entry(
         (Entity, &Position, Option<&OrbitCooldown>),
         (With<Satellite>, With<Slingshot>),
     >,
-    mut player_query: Query<(Entity, &Position, &Velocity), (With<Player>, Without<Orbited>, Without<WasInsideOrbitZone>)>,
+    mut player_query: Query<
+        (Entity, &Position, &Velocity),
+        (With<Player>, Without<Orbited>, Without<WasInsideOrbitZone>),
+    >,
     assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -399,7 +401,9 @@ fn mark_players_in_orbit_zone(
     configs: Res<Assets<SatelliteConfig>>,
     assets: Res<SatelliteAssets>,
 ) {
-    let Some(config) = configs.get(&assets.config) else { return; };
+    let Some(config) = configs.get(&assets.config) else {
+        return;
+    };
     let radius = config.orbit_radius;
 
     for (player_entity, player_pos) in player_query.iter() {
@@ -418,12 +422,17 @@ fn mark_players_in_orbit_zone(
 
 fn cleanup_orbit_zone_flags(
     mut commands: Commands,
-    player_query: Query<(Entity, &Position), (With<Player>, With<WasInsideOrbitZone>, Without<Orbited>)>,
+    player_query: Query<
+        (Entity, &Position),
+        (With<Player>, With<WasInsideOrbitZone>, Without<Orbited>),
+    >,
     slingshot_query: Query<&Position, (With<Slingshot>, With<Satellite>)>,
     configs: Res<Assets<SatelliteConfig>>,
     assets: Res<SatelliteAssets>,
 ) {
-    let Some(config) = configs.get(&assets.config) else { return; };
+    let Some(config) = configs.get(&assets.config) else {
+        return;
+    };
     let orbit_radius = config.orbit_radius;
 
     for (player_entity, player_pos) in player_query.iter() {
@@ -436,7 +445,9 @@ fn cleanup_orbit_zone_flags(
         }
 
         if !still_inside {
-            commands.entity(player_entity).remove::<WasInsideOrbitZone>();
+            commands
+                .entity(player_entity)
+                .remove::<WasInsideOrbitZone>();
         }
     }
 }
