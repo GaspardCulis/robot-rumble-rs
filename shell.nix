@@ -1,7 +1,7 @@
 let
   rust_overlay = import (builtins.fetchGit {
     url = "https://github.com/oxalica/rust-overlay";
-    rev = "9c8ea175cf9af29edbcff121512e44092a8f37e4";
+    rev = "4178888556c15e0a1c57850d2f103ac300a6e9e2";
   });
   pkgs = import <nixpkgs> {overlays = [rust_overlay];};
   rustVersion = "latest";

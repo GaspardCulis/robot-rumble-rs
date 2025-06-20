@@ -9,7 +9,7 @@ const GAMEPAD_THRESHOLD: f32 = 0.5;
 
 pub type PlayerActionState = ActionState<PlayerAction>;
 
-#[derive(Actionlike, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
+#[derive(Actionlike, Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Reflect)]
 pub enum PlayerAction {
     Jump,
     Sneak,

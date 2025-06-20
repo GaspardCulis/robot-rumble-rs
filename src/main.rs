@@ -1,6 +1,6 @@
 #[cfg(feature = "dev_tools")]
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
-use bevy::prelude::*;
+use bevy::{log, prelude::*};
 #[cfg(feature = "embedded_assets")]
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 #[cfg(feature = "dev_tools")]
@@ -31,6 +31,10 @@ fn main() {
                 }),
                 ..default()
             })
+            .set(log::LogPlugin {
+                filter: format!("{},discord_presence=off", log::DEFAULT_FILTER),
+                ..default()
+            })
             .build(),
     )
     .add_plugins(assets::AssetsPlugin)
@@ -39,7 +43,9 @@ fn main() {
     .add_plugins(level::LevelPlugins)
     .add_plugins(misc::MiscPlugins)
     .add_plugins(network::NetworkPlugin)
+    .add_plugins(ui::UiPlugins)
     .init_state::<GameState>()
+    .init_state::<ui::Screen>()
     .insert_resource(args);
 
     #[cfg(feature = "dev_tools")]
