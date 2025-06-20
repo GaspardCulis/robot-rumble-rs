@@ -29,6 +29,8 @@ struct PlayerHud(Entity);
 struct CurrentWeaponInfo {
     current_ammo: usize,
     magazine_size: usize,
+    reload_time: f32,
+    remaining_reload_time: f32,
 }
 
 #[derive(ReactComponent, Default, PartialEq)]
@@ -83,6 +85,20 @@ fn spawn_menu(
                                 "{}/{}",
                                 weapon_info.current_ammo,
                                 weapon_info.magazine_size
+                            );
+                            OK
+                        },
+                    );
+
+                    scene_handle.get("vbox::hbox::reload_bg").update_on(
+                        entity_mutation::<CurrentWeaponInfo>(scene_id),
+                        move |id: TargetId,
+                              mut query: Query<&mut Node>,
+                              info: Reactive<CurrentWeaponInfo>| {
+                            let info = info.get(scene_id)?;
+                            let mut node = query.get_mut(id.0)?;
+                            node.width = Val::Percent(
+                                100.0 * (1.0 - info.remaining_reload_time / info.reload_time),
                             );
                             OK
                         },
@@ -143,6 +159,8 @@ fn update_weapon_info(
             CurrentWeaponInfo {
                 current_ammo: weapon_state.current_ammo,
                 magazine_size: weapon_stats.magazine_size,
+                reload_time: weapon_stats.reload_time.as_secs_f32(),
+                remaining_reload_time: weapon_state.reload_timer.remaining().as_secs_f32(),
             },
         );
     }

@@ -45,6 +45,14 @@ LoadImages[$weapon_icon]
                     LoadedImageNode{ image: $weapon_icon }
             "bullets_count"
                 TextLine{ text: "42/69" }
+            "reload_bg"
+                AbsoluteNode{
+                    width: 0%
+                    height: 100%
+                }
+                BrRadiusTopRight(8px)
+                BrRadiusTopLeft(8px)
+                BackgroundColor(#80353535)
         "weapons_list"
             FlexNode{
                 flex_direction: Row
