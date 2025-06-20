@@ -6,10 +6,11 @@ use crate::{
     core::worldgen,
     entities::{
         planet,
-        player::{skin as player_skin, weapon::config as weapon},
+        player::{skin as player_skin, weapon},
         projectile::config as projectiles,
         satellite::assets as satellite,
     },
+    network::config as network,
     ui,
 };
 
@@ -27,7 +28,7 @@ impl Plugin for AssetsPlugin {
         .add_plugins(RonAssetPlugin::<player_skin::SkinConfig>::new(&[
             "skin.ron",
         ]))
-        .add_plugins(RonAssetPlugin::<weapon::WeaponsConfig>::new(&[
+        .add_plugins(RonAssetPlugin::<weapon::config::WeaponsConfig>::new(&[
             "weapons.ron",
         ]))
         .add_plugins(RonAssetPlugin::<projectiles::ProjectilesConfig>::new(&[
@@ -36,6 +37,9 @@ impl Plugin for AssetsPlugin {
         .add_plugins(RonAssetPlugin::<satellite::SatelliteConfig>::new(&[
             "satellites.ron",
         ]))
+        .add_plugins(RonAssetPlugin::<network::NetworkConfig>::new(&[
+            "network.ron",
+        ]))
         .add_loading_state(
             LoadingState::new(crate::ui::Screen::AssetLoading)
                 .continue_to_state(crate::ui::Screen::Home)
@@ -43,10 +47,12 @@ impl Plugin for AssetsPlugin {
                 .load_collection::<planet::PlanetAssets>()
                 .load_collection::<player_skin::SkinConfigAssets>()
                 .finally_init_resource::<player_skin::SkinAssets>()
-                .load_collection::<weapon::WeaponsAssets>()
+                .load_collection::<weapon::config::WeaponsConfigAssets>()
+                .finally_init_resource::<weapon::assets::WeaponsAssets>()
                 .load_collection::<projectiles::ProjectilesAssets>()
                 .load_collection::<satellite::SatelliteAssets>()
-                .load_collection::<ui::UiAssets>(),
+                .load_collection::<network::NetworkAssets>()
+                .load_collection::<ui::UIAssets>(),
         );
     }
 }

@@ -6,7 +6,7 @@ use bevy_asset_loader::asset_collection::AssetCollection;
 use crate::entities::projectile::Projectile;
 
 #[derive(AssetCollection, Resource)]
-pub struct WeaponsAssets {
+pub struct WeaponsConfigAssets {
     #[asset(path = "config/config.weapons.ron")]
     pub config: Handle<WeaponsConfig>,
 }
@@ -64,4 +64,5 @@ pub struct WeaponSkin {
 pub struct WeaponSounds {
     /// Path to the weapon fire
     pub fire: String,
+    pub reload: Option<String>,
 }
