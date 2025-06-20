@@ -89,7 +89,6 @@ pub fn handle_player_death(
         // Refresh weapons
         let arsenal = query.get(*player)?;
         for (_, weapon) in arsenal.0.iter() {
-            warn!("Removing weapon stats!");
             commands.entity(*weapon).remove::<WeaponStats>();
         }
     }

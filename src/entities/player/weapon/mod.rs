@@ -71,7 +71,7 @@ impl Plugin for WeaponPlugin {
             .add_systems(
                 GgrsSchedule,
                 (
-                    add_physical_components,
+                    add_weapon_components,
                     tick_weapon_timers,
                     fire_weapon_system,
                 )
@@ -82,7 +82,7 @@ impl Plugin for WeaponPlugin {
     }
 }
 
-fn add_physical_components(
+fn add_weapon_components(
     mut commands: Commands,
     query: Query<(Entity, &WeaponType), Without<WeaponStats>>,
     assets: Res<WeaponsConfigAssets>,
@@ -103,7 +103,7 @@ fn add_physical_components(
                 cooldown_timer: Timer::new(weapon_stats.cooldown, TimerMode::Once),
                 reload_timer: Timer::new(weapon_stats.reload_time, TimerMode::Once),
             });
-            //commands.entity(weapon_entity).insert(WeaponMode::Idle);
+            commands.entity(weapon_entity).insert(WeaponMode::Idle);
             commands.entity(weapon_entity).insert(weapon_stats.clone());
         }
     }
