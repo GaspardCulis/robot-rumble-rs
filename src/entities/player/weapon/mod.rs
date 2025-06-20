@@ -93,13 +93,13 @@ fn add_stats_component(
         if let Some(weapon_config) = config.0.get(weapon_type) {
             let weapon_stats = &weapon_config.stats;
 
-            // Overrides weapon state if present
+            // Overrides weapon components if present
             commands.entity(weapon_entity).insert(WeaponState {
                 current_ammo: weapon_stats.magazine_size,
                 cooldown_timer: Timer::new(weapon_stats.cooldown, TimerMode::Once),
                 reload_timer: Timer::new(weapon_stats.reload_time, TimerMode::Once),
             });
-
+            commands.entity(weapon_entity).insert(WeaponMode::Idle);
             commands.entity(weapon_entity).insert(weapon_stats.clone());
         }
     }
