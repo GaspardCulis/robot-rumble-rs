@@ -48,8 +48,8 @@ fn render_context_menu(mut contexts: EguiContexts, mut ui_state: ResMut<UiState>
                     );
                     ui.selectable_value(
                         &mut ui_state.satellite_kind_input,
-                        satellite::SatelliteKind::Graviton,
-                        "Graviton",
+                        satellite::SatelliteKind::Slingshot,
+                        "Slingshot",
                     );
                     ui.selectable_value(
                         &mut ui_state.satellite_kind_input,

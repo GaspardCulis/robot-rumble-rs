@@ -6,14 +6,14 @@ use bevy::sprite::Material2dPlugin;
 pub mod assets;
 pub mod bumper;
 pub mod grabber;
-pub mod graviton;
+pub mod slingshot;
 mod visuals;
 
 use assets::{SatelliteAssets, SatelliteConfig};
 use bevy_ggrs::GgrsSchedule;
 use bumper::Bumper;
 use grabber::Grabber;
-use graviton::{Graviton, GravitonVisual};
+use slingshot::{Slingshot, SlingshotVisual};
 use visuals::{OrbitMaterial, generate_ring};
 
 #[derive(Component)]
@@ -22,7 +22,7 @@ pub struct Satellite;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, serde::Serialize, serde::Deserialize)]
 pub enum SatelliteKind {
-    Graviton,
+    Slingshot,
     Bumper,
     Grabber,
 }
@@ -36,7 +36,7 @@ pub struct SpawnSatelliteEvent {
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 enum SatelliteSet {
-    Graviton,
+    Slingshot,
     Bumper,
     Grabber,
 }
@@ -44,12 +44,12 @@ enum SatelliteSet {
 pub struct SatellitePlugin;
 impl Plugin for SatellitePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<graviton::Orbited>()
+        app.register_type::<slingshot::Orbited>()
             .add_plugins(Material2dPlugin::<OrbitMaterial>::default())
             .configure_sets(
                 GgrsSchedule,
                 (
-                    SatelliteSet::Graviton,
+                    SatelliteSet::Slingshot,
                     SatelliteSet::Bumper,
                     SatelliteSet::Grabber,
                 )
@@ -61,7 +61,7 @@ impl Plugin for SatellitePlugin {
                 Update,
                 handle_spawn_satellite.run_if(resource_exists::<SatelliteAssets>),
             )
-            .add_plugins(graviton::GravitonPlugin)
+            .add_plugins(slingshot::SlingshotPlugin)
             .add_plugins(bumper::BumperPlugin)
             .add_plugins(grabber::GrabberPlugin);
     }
@@ -90,10 +90,10 @@ fn handle_spawn_satellite(
         let child_transform = Transform::from_translation(Vec3::new(130.0, 75.0, 0.0));
 
         match event.kind {
-            SatelliteKind::Graviton => {
+            SatelliteKind::Slingshot => {
                 entity.insert((
-                    Graviton,
-                    GravitonVisual {
+                    Slingshot,
+                    SlingshotVisual {
                         active: assets.working_graviton.clone(),
                         inactive: assets.destroyed_graviton.clone(),
                     },
@@ -136,7 +136,7 @@ fn handle_spawn_satellite(
         }
 
         let (orbit_radius, base_color) = match event.kind {
-            SatelliteKind::Graviton => (
+            SatelliteKind::Slingshot => (
                 config.orbit_radius + 100.0,
                 LinearRgba::new(0.0, 0.0, 1.0, 1.0),
             ),
