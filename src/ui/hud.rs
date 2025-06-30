@@ -8,7 +8,7 @@ use crate::{
         Weapon,
         inventory::Arsenal,
         weapon::{
-            WeaponState,
+            Owner, WeaponState,
             assets::WeaponsAssets,
             config::{WeaponStats, WeaponType},
         },
@@ -20,6 +20,11 @@ use crate::{
 /// Marker for despawning.
 /// Marks the root HUD container, which can contain HUDs for multiple players.
 struct HudRoot;
+
+#[derive(Component)]
+/// Marker component for `weapon_entry` scene holding a reference to a weapon entity.
+/// Used for updating selected's weapon style.
+struct WeaponEntry(Entity);
 
 #[derive(Component, Reflect)]
 /// Points to the `Player` entity owning the HUD
@@ -42,7 +47,12 @@ impl Plugin for HUDPlugin {
         app.add_systems(Update, (spawn_menu).run_if(in_state(GameState::InGame)))
             .add_systems(
                 FixedUpdate,
-                (update_weapon_info, update_weapon_sprite).run_if(in_state(GameState::InGame)),
+                (
+                    update_weapon_info,
+                    update_weapon_sprite,
+                    update_weapon_entry_style,
+                )
+                    .run_if(in_state(GameState::InGame)),
             )
             .add_systems(OnExit(GameState::InGame), despawn_menu);
     }
@@ -119,7 +129,7 @@ fn spawn_menu(
                         );
 
                     let mut weapons_list = scene_handle.get("vbox::weapons_list");
-                    for (weapon_type, _) in arsenal.0.iter() {
+                    for (weapon_type, weapon_entity) in arsenal.0.iter() {
                         let name = match weapon_type {
                             WeaponType::Pistol => "Pistol",
                             WeaponType::Rifle => "Rifle",
@@ -132,7 +142,8 @@ fn spawn_menu(
                         weapons_list.spawn_scene(
                             ("ui/hud.cob", "weapon_entry"),
                             move |scene_handle| {
-                                scene_handle.update_text(name);
+                                scene_handle.insert(WeaponEntry(*weapon_entity));
+                                scene_handle.get("text").update_text(name);
                             },
                         );
                     }
@@ -192,6 +203,27 @@ fn update_weapon_sprite(
     }
 
     Ok(())
+}
+
+fn update_weapon_entry_style(
+    mut commands: Commands,
+    entries: Query<(Entity, &WeaponEntry, Has<BackgroundColor>)>,
+    weapon_query: Query<Has<Owner>>,
+) {
+    for (node_entity, weapon_entry, is_entry_highlighted) in entries.iter() {
+        let is_weapon_selected = weapon_query.get(weapon_entry.0).unwrap_or_else(|e| {
+            warn!("Invalid query result: {}", e);
+            false
+        });
+
+        if is_weapon_selected && !is_entry_highlighted {
+            commands
+                .entity(node_entity)
+                .insert(BackgroundColor(Srgba::hex("#353535a0").unwrap().into()));
+        } else if !is_weapon_selected && is_entry_highlighted {
+            commands.entity(node_entity).remove::<BackgroundColor>();
+        }
+    }
 }
 
 fn despawn_menu(mut commands: Commands, query: Query<Entity, With<HudRoot>>) -> Result {

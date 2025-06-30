@@ -58,11 +58,17 @@ LoadImages[$weapon_icon]
                 flex_direction: Row
                 justify_main: SpaceEvenly
                 width: 100%
-                padding: {top: 3px bottom: 3px}
             }
             BackgroundColor(#60353535)
             BrRadiusBottomRight(8px)
             BrRadiusBottomLeft(8px)
             
 "weapon_entry"
-    TextLine{ text: "Rifle" size: 18 }
+    FlexGrow(1)
+    Padding{top: 3px bottom: 3px}
+    BackgroundColor(#aa353535)
+    BrRadiusBottomRight(8px)
+    BrRadiusBottomLeft(8px)
+    "text"
+        TextLine{ text: "Rifle" size: 18 justify: Center }
+        Splat<Margin>(auto)
