@@ -47,6 +47,7 @@ pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<AudioReload>()
+            .register_type::<Owner>()
             .register_type::<WeaponType>()
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
