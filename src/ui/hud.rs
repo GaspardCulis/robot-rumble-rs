@@ -1,556 +1,233 @@
-use bevy::{prelude::*, ui::widget::NodeImageMode};
+use bevy::prelude::*;
+use bevy_cobweb::prelude::*;
+use bevy_cobweb_ui::prelude::*;
 
 use crate::{
     GameState,
-    core::inputs::{PlayerAction, PlayerActionState},
     entities::player::{
-        Player, Weapon,
+        Weapon,
         inventory::Arsenal,
         weapon::{
-            WeaponState,
-            config::{WeaponStats, WeaponType, WeaponsConfig, WeaponsConfigAssets},
+            Owner, WeaponState,
+            assets::WeaponsAssets,
+            config::{WeaponStats, WeaponType},
         },
     },
 };
 
+#[derive(Component, Reflect)]
+#[require(Name::new("HUD"))]
+/// Marker for despawning.
+/// Marks the root HUD container, which can contain HUDs for multiple players.
+struct HudRoot;
+
 #[derive(Component)]
-struct WeaponSlotUI {
-    weapon_type: WeaponType,
+/// Marker component for `weapon_entry` scene holding a reference to a weapon entity.
+/// Used for updating selected's weapon style.
+struct WeaponEntry(Entity);
+
+#[derive(Component, Reflect)]
+/// Points to the `Player` entity owning the HUD
+struct PlayerHud(Entity);
+
+#[derive(ReactComponent, Default, PartialEq)]
+struct CurrentWeaponInfo {
+    current_ammo: usize,
+    magazine_size: usize,
+    reload_time: f32,
+    remaining_reload_time: f32,
 }
 
-#[derive(Component)]
-struct AmmoText;
+#[derive(ReactComponent, Default, PartialEq)]
+struct CurrentWeaponSprite(Handle<Image>);
 
-#[derive(Component)]
-struct SelectedWeaponSlot;
-
-#[derive(Component)]
-struct AmmoBackground;
-
-#[derive(Component)]
-struct BlackBar;
-
-#[derive(Component)]
-struct AmmoReloadAnimation {
-    from: f32,
-    to: f32,
-    timer: Timer,
-    original_weapon_entity: Entity,
-}
-
-#[derive(Component)]
-struct WeaponNameBoxUI {
-    weapon_type: WeaponType,
-}
-
-#[derive(Component)]
-struct WeaponSpriteUI {
-    weapon_type: WeaponType,
-}
-
-pub struct HudPlugin;
-impl Plugin for HudPlugin {
+pub struct HUDPlugin;
+impl Plugin for HUDPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (
-                spawn_arsenal_hud,
-                update_weapon_slot_ui,
-                update_ammo_text,
-                update_ammo_background,
-                trigger_reload_animation,
-                animate_ammo_reload,
+        app.add_systems(Update, (spawn_menu).run_if(in_state(GameState::InGame)))
+            .add_systems(
+                FixedUpdate,
+                (
+                    update_weapon_info,
+                    update_weapon_sprite,
+                    update_weapon_entry_style,
+                )
+                    .run_if(in_state(GameState::InGame)),
             )
-                .run_if(in_state(GameState::InGame)),
+            .add_systems(OnExit(GameState::InGame), despawn_menu);
+    }
+}
+
+fn spawn_menu(
+    mut commands: Commands,
+    mut scene_builder: SceneBuilder,
+    arsenals: Query<(Entity, &Arsenal), Changed<Arsenal>>,
+) {
+    if arsenals.is_empty() {
+        return;
+    }
+
+    info!("Updating Head-Up Display UI");
+
+    commands.ui_root().spawn_scene(
+        ("ui/hud.cob", "hud_container"),
+        &mut scene_builder,
+        move |scene_handle| {
+            // Add marker struct
+            scene_handle.insert(HudRoot);
+
+            for (player, arsenal) in arsenals.iter() {
+                scene_handle.spawn_scene(("ui/hud.cob", "hud"), move |scene_handle| {
+                    let scene_id = scene_handle.id();
+
+                    scene_handle.insert(PlayerHud(player));
+                    scene_handle.insert_reactive(CurrentWeaponInfo::default());
+                    scene_handle.insert_reactive(CurrentWeaponSprite::default());
+                    scene_handle.get("vbox::hbox::bullets_count").update_on(
+                        entity_mutation::<CurrentWeaponInfo>(scene_id),
+                        move |id: TargetId,
+                              info: Reactive<CurrentWeaponInfo>,
+                              mut e: TextEditor| {
+                            let weapon_info = info.get(scene_id)?;
+                            write_text!(
+                                e,
+                                id.0,
+                                "{}/{}",
+                                weapon_info.current_ammo,
+                                weapon_info.magazine_size
+                            );
+                            OK
+                        },
+                    );
+
+                    scene_handle.get("vbox::hbox::reload_bg").update_on(
+                        entity_mutation::<CurrentWeaponInfo>(scene_id),
+                        move |id: TargetId,
+                              mut query: Query<&mut Node>,
+                              info: Reactive<CurrentWeaponInfo>| {
+                            let info = info.get(scene_id)?;
+                            let mut node = query.get_mut(id.0)?;
+                            node.width = Val::Percent(
+                                100.0 * (1.0 - info.remaining_reload_time / info.reload_time),
+                            );
+                            OK
+                        },
+                    );
+
+                    scene_handle
+                        .get("vbox::hbox::a_weapon_preview::image")
+                        .update_on(
+                            entity_mutation::<CurrentWeaponSprite>(scene_id),
+                            move |id: TargetId,
+                                  mut query: Query<&mut ImageNode>,
+                                  info: Reactive<CurrentWeaponSprite>| {
+                                let weapon_sprite = info.get(scene_id)?;
+                                let mut image = query.get_mut(id.0)?;
+                                image.image = weapon_sprite.0.clone();
+                                OK
+                            },
+                        );
+
+                    let mut weapons_list = scene_handle.get("vbox::weapons_list");
+                    for (weapon_type, weapon_entity) in arsenal.0.iter() {
+                        let name = match weapon_type {
+                            WeaponType::Pistol => "Pistol",
+                            WeaponType::Rifle => "Rifle",
+                            WeaponType::Shotgun => "Shotgun",
+                            WeaponType::Sniper => "Sniper",
+                            WeaponType::BlackholeGun => "BHL",
+                            _ => unimplemented!(),
+                        };
+
+                        weapons_list.spawn_scene(
+                            ("ui/hud.cob", "weapon_entry"),
+                            move |scene_handle| {
+                                scene_handle.insert(WeaponEntry(*weapon_entity));
+                                scene_handle.get("text").update_text(name);
+                            },
+                        );
+                    }
+                });
+            }
+        },
+    );
+}
+
+fn update_weapon_info(
+    mut commands: Commands,
+    mut info: ReactiveMut<CurrentWeaponInfo>,
+    huds: Query<(Entity, &PlayerHud)>,
+    player_query: Query<&Weapon>,
+    weapon_query: Query<(&WeaponState, &WeaponStats)>,
+) -> Result {
+    for (entity, hud) in huds.iter() {
+        let weapon = player_query.get(hud.0)?;
+        let (weapon_state, weapon_stats) = weapon_query.get(weapon.0)?;
+
+        let _ = info.set_if_neq(
+            &mut commands,
+            entity,
+            CurrentWeaponInfo {
+                current_ammo: weapon_state.current_ammo,
+                magazine_size: weapon_stats.magazine_size,
+                reload_time: weapon_stats.reload_time.as_secs_f32(),
+                remaining_reload_time: weapon_state.reload_timer.remaining().as_secs_f32(),
+            },
         );
     }
+
+    Ok(())
 }
 
-fn spawn_arsenal_hud(
+fn update_weapon_sprite(
     mut commands: Commands,
-    weapon_assets: Res<WeaponsConfigAssets>,
-    config_assets: Res<Assets<WeaponsConfig>>,
-    asset_server: Res<AssetServer>,
-    query_players: Query<(Entity, &Player, &Arsenal), Changed<Arsenal>>,
-) {
-    let Some(weapons_config) = config_assets.get(&weapon_assets.config) else {
-        warn!("Couldn't load WeaponsConfig");
-        return;
-    };
+    mut sprites: ReactiveMut<CurrentWeaponSprite>,
+    huds: Query<(Entity, &PlayerHud)>,
+    player_query: Query<&Weapon>,
+    weapon_query: Query<&WeaponType>,
+    weapon_assets: Res<WeaponsAssets>,
+) -> Result {
+    for (entity, hud) in huds.iter() {
+        // FIX: Updated each frame, not ideal
+        let weapon = player_query.get(hud.0)?;
+        let weapon_type = weapon_query.get(weapon.0)?;
+        let weapon_assets = weapon_assets
+            .get(weapon_type)
+            .ok_or(BevyError::from("Failed to get WeaponAssets"))?;
 
-    for (_entity, _player, maybe_arsenal) in query_players.iter() {
-        let arsenal: Vec<WeaponType> = maybe_arsenal
-            .0
-            .iter()
-            .map(|(weapon_type, _)| weapon_type.clone())
-            .collect();
-
-        info!("Spawning HUD for arsenal: {:?}", maybe_arsenal);
-
-        commands
-            .spawn(Node {
-                position_type: PositionType::Relative,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                bottom: Val::Px(28.0),
-                align_items: AlignItems::End,
-                justify_content: JustifyContent::End,
-                ..default()
-            })
-            .with_children(|parent| {
-                // Fond (bande noire + blanche)
-                parent
-                    .spawn(Node {
-                        display: Display::Flex,
-                        flex_direction: FlexDirection::Row,
-                        width: Val::Px(381.0),
-                        height: Val::Px(122.0),
-                        ..default()
-                    })
-                    .with_children(|background| {
-                        background.spawn((
-                            Node {
-                                width: Val::Percent(0.0),
-                                height: Val::Percent(100.0),
-                                ..default()
-                            },
-                            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6)),
-                            BlackBar,
-                        ));
-                        background.spawn((
-                            Node {
-                                width: Val::Percent(100.0),
-                                height: Val::Percent(100.0),
-                                ..default()
-                            },
-                            BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.2)),
-                            AmmoBackground,
-                        ));
-                    });
-
-                // HUD principal
-                parent
-                    .spawn(Node {
-                        position_type: PositionType::Absolute,
-                        display: Display::Flex,
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
-                        justify_content: JustifyContent::Center,
-                        width: Val::Px(350.0),
-                        height: Val::Px(150.0),
-                        bottom: Val::Px(-28.0),
-                        right: Val::Px(50.0),
-                        padding: UiRect::all(Val::Px(8.0)),
-                        ..default()
-                    })
-                    .with_children(|column| {
-                        // Slot d'arme sélectionnée
-                        column
-                            .spawn(Node {
-                                display: Display::Flex,
-                                flex_direction: FlexDirection::Column,
-                                align_items: AlignItems::Center,
-                                justify_content: JustifyContent::Center,
-                                width: Val::Px(96.0),
-                                height: Val::Px(96.0),
-                                margin: UiRect::all(Val::Px(4.0)),
-                                padding: UiRect::all(Val::Px(6.0)),
-                                border: UiRect::all(Val::Px(1.0)),
-                                ..default()
-                            })
-                            .with_children(|frame| {
-                                frame.spawn((
-                                    BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6)),
-                                    BorderColor(Color::WHITE),
-                                    SelectedWeaponSlot,
-                                    WeaponSlotUI {
-                                        weapon_type: arsenal[0].clone(),
-                                    },
-                                ));
-
-                                for (i, weapon_type) in arsenal.iter().enumerate() {
-                                    if let Some(config) = weapons_config.0.get(weapon_type) {
-                                        let skin = &config.skin;
-                                        let size = 96.0 * skin.scale;
-                                        let mut image_node = frame.spawn((
-                                            Node {
-                                                width: Val::Px(size),
-                                                height: Val::Px(size),
-                                                display: if i == 0 {
-                                                    Display::Flex
-                                                } else {
-                                                    Display::None
-                                                },
-                                                ..default()
-                                            },
-                                            ImageNode {
-                                                image: asset_server.load(skin.sprite.clone()),
-                                                image_mode: NodeImageMode::Stretch,
-                                                ..default()
-                                            },
-                                            WeaponSpriteUI {
-                                                weapon_type: weapon_type.clone(),
-                                            },
-                                        ));
-                                        if i == 0 {
-                                            image_node.insert(SelectedWeaponSlot);
-                                        }
-                                    }
-                                }
-                            });
-
-                        // Noms des armes
-                        column
-                            .spawn(Node {
-                                position_type: PositionType::Absolute,
-                                bottom: Val::Px(0.0),
-                                right: Val::Px(-50.0),
-                                display: Display::Flex,
-                                flex_direction: FlexDirection::Row,
-                                ..default()
-                            })
-                            .with_children(|row| {
-                                for (i, weapon_type) in arsenal.iter().enumerate() {
-                                    let formatted_name =
-                                        format_weapon_name(&format!("{weapon_type:?}"));
-                                    let is_selected = i == 0;
-                                    row.spawn((
-                                        Node {
-                                            width: Val::Px(127.0),
-                                            height: Val::Px(28.0),
-                                            align_items: AlignItems::Center,
-                                            justify_content: JustifyContent::Center,
-                                            ..default()
-                                        },
-                                        BackgroundColor(if is_selected {
-                                            Color::srgba(1.0, 1.0, 1.0, 0.2)
-                                        } else {
-                                            Color::srgba(0.0, 0.0, 0.0, 0.6)
-                                        }),
-                                        WeaponNameBoxUI {
-                                            weapon_type: weapon_type.clone(),
-                                        },
-                                    ))
-                                    .with_children(
-                                        |name_box| {
-                                            name_box.spawn((
-                                                Text::new(format!("{}  {}", i + 1, formatted_name)),
-                                                TextFont {
-                                                    font_size: 16.0,
-                                                    ..default()
-                                                },
-                                                TextColor(Color::WHITE),
-                                                TextLayout {
-                                                    justify: JustifyText::Center,
-                                                    ..default()
-                                                },
-                                            ));
-                                        },
-                                    );
-                                }
-                            });
-                    });
-
-                // Munitions
-                parent
-                    .spawn(Node {
-                        position_type: PositionType::Absolute,
-                        display: Display::Flex,
-                        flex_direction: FlexDirection::Row,
-                        bottom: Val::Px(60.0),
-                        right: Val::Px(16.0),
-                        padding: UiRect::all(Val::Px(8.0)),
-                        ..default()
-                    })
-                    .with_children(|builder| {
-                        builder.spawn((
-                            Text::new("0 / 0"),
-                            TextFont {
-                                font_size: 24.0,
-                                ..default()
-                            },
-                            TextColor(Color::BLACK),
-                            TextLayout {
-                                justify: JustifyText::Left,
-                                ..default()
-                            },
-                            AmmoText,
-                        ));
-                    });
-            });
-
-        // Si tu veux HUD pour un seul joueur, décommente cette ligne :
-        // break;
+        let _ = sprites.set_if_neq(
+            &mut commands,
+            entity,
+            CurrentWeaponSprite(weapon_assets.skin.clone()),
+        );
     }
+
+    Ok(())
 }
 
-// Fonction pour formater le nom de l'arme
-fn format_weapon_name(weapon_type: &str) -> String {
-    weapon_type
-        .replace("_", " ") // Remplace les underscores par des espaces
-        .to_lowercase()
-        .split_whitespace()
-        .map(|word| {
-            // Met en majuscule la première lettre de chaque mot
-            word.chars()
-                .enumerate()
-                .map(|(i, c)| {
-                    if i == 0 {
-                        c.to_uppercase().collect::<String>()
-                    } else {
-                        c.to_string()
-                    }
-                })
-                .collect::<String>()
-        })
-        .collect::<Vec<String>>()
-        .join(" ") // Rejoint les mots avec un espace
-}
-
-fn update_weapon_slot_ui(
+fn update_weapon_entry_style(
     mut commands: Commands,
-    mut query_ui: Query<(
-        Entity,
-        &WeaponSlotUI,
-        Option<&SelectedWeaponSlot>,
-        &mut BorderColor,
-    )>,
-    mut name_boxes: Query<(&mut BackgroundColor, &WeaponNameBoxUI)>,
-    mut weapon_sprites: Query<(&mut Node, &WeaponSpriteUI), Without<AmmoBackground>>,
-    weapon_query: Query<&Weapon, With<Player>>,
-    weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
-    mut background_query: Query<(Entity, &mut Node), With<AmmoBackground>>,
-    reload_anim_query: Query<Option<&AmmoReloadAnimation>>,
-    test_query: Query<(&Weapon, &Player, &Arsenal), Changed<Weapon>>,
+    entries: Query<(Entity, &WeaponEntry, Has<BackgroundColor>)>,
+    weapon_query: Query<Has<Owner>>,
 ) {
-    let mut current_weapon_type: Option<WeaponType> = None;
-
-    if let Ok(weapon) = weapon_query.single()
-        && let Some((_weapon, _player, arsenal)) = test_query.iter().next()
-    {
-        for (weapon_type, weapon_entity) in &arsenal.0 {
-            if *weapon_entity == weapon.0 {
-                current_weapon_type = Some(weapon_type.clone());
-                break;
-            }
-        }
-    }
-    if let Some(current_weapon_type) = current_weapon_type.clone() {
-        for (entity, slot_ui, selected_marker, mut border_color) in query_ui.iter_mut() {
-            if slot_ui.weapon_type == current_weapon_type {
-                if selected_marker.is_none() {
-                    commands.entity(entity).insert(SelectedWeaponSlot);
-                }
-                *border_color = BorderColor(Color::WHITE);
-            } else {
-                if selected_marker.is_some() {
-                    commands.entity(entity).remove::<SelectedWeaponSlot>();
-                }
-                *border_color = BorderColor(Color::srgba(1.0, 1.0, 1.0, 0.1));
-            }
-        }
-
-        for (mut bg_color, name_slot) in name_boxes.iter_mut() {
-            if name_slot.weapon_type == current_weapon_type {
-                *bg_color = BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.2));
-            } else {
-                *bg_color = BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.6));
-            }
-        }
-
-        for (mut node, sprite_ui) in weapon_sprites.iter_mut() {
-            node.display = if sprite_ui.weapon_type == current_weapon_type {
-                Display::Flex
-            } else {
-                Display::None
-            };
-        }
-
-        // Relancer l’animation si l’arme sélectionnée est en cours de rechargement
-        if let Ok(weapon) = weapon_query.single()
-            && let Ok((state, stats)) = weapon_state_query.get(weapon.0)
-            && state.reload_timer.remaining_secs() > 0.0
-            && let Ok((entity, _)) = background_query.single_mut()
-            && reload_anim_query.get(entity).ok().flatten().is_none()
-        {
-            let reload_duration = stats.reload_time.as_secs_f32();
-            let remaining_secs = state
-                .reload_timer
-                .remaining_secs()
-                .clamp(0.0, reload_duration);
-            let elapsed_ratio = 1.0 - (remaining_secs / reload_duration);
-            let ammo_ratio = state.current_ammo as f32 / stats.magazine_size as f32;
-            let from = ammo_ratio.max(elapsed_ratio);
-
-            commands.entity(entity).insert(AmmoReloadAnimation {
-                from,
-                to: 1.0,
-                timer: Timer::from_seconds(remaining_secs, TimerMode::Once),
-                original_weapon_entity: weapon.0,
-            });
-        }
-    }
-}
-
-fn update_ammo_text(
-    weapon_query: Query<&Weapon, With<Player>>,
-    weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
-    mut text_query: Query<&mut Text, With<AmmoText>>,
-) {
-    if let Ok(weapon) = weapon_query.single()
-        && let Ok((state, stats)) = weapon_state_query.get(weapon.0)
-        && let Ok(mut text) = text_query.single_mut()
-    {
-        text.0 = format!("{} / {}", state.current_ammo, stats.magazine_size);
-    }
-}
-
-fn update_ammo_background(
-    weapon_query: Query<&Weapon, With<Player>>,
-    weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
-    mut background_query: Query<(Entity, &mut Node), (With<AmmoBackground>, Without<BlackBar>)>,
-    mut black_bar_query: Query<&mut Node, (With<BlackBar>, Without<AmmoBackground>)>,
-    reload_anim_query: Query<&AmmoReloadAnimation>,
-) {
-    let Ok(weapon) = weapon_query.single() else {
-        return;
-    };
-    let Ok((state, stats)) = weapon_state_query.get(weapon.0) else {
-        return;
-    };
-    let Ok((entity, mut node)) = background_query.single_mut() else {
-        return;
-    };
-
-    // Ne pas mettre à jour si une animation est en cours
-    if reload_anim_query.get(entity).is_ok() {
-        return;
-    }
-
-    let percent = if stats.magazine_size > 0 {
-        state.current_ammo as f32 / stats.magazine_size as f32
-    } else {
-        0.0
-    }
-    .clamp(0.0, 1.0);
-
-    node.width = Val::Percent(percent * 100.0);
-
-    if let Ok(mut black_bar) = black_bar_query.single_mut() {
-        black_bar.width = Val::Percent((1.0 - percent) * 100.0);
-    }
-}
-
-fn trigger_reload_animation(
-    weapon_query: Query<&Weapon, With<Player>>,
-    weapon_state_query: Query<(&WeaponState, &WeaponStats)>,
-    mut background_query: Query<Entity, With<AmmoBackground>>,
-    input_query: Query<&PlayerActionState>,
-    mut commands: Commands,
-    reload_anim_query: Query<&AmmoReloadAnimation>,
-) {
-    let Ok(weapon) = weapon_query.single_inner() else {
-        return;
-    };
-    let Ok((state, stats)) = weapon_state_query.get(weapon.0) else {
-        return;
-    };
-    let Ok(entity) = background_query.single_mut() else {
-        return;
-    };
-
-    // Ignore si une animation est en cours
-    if reload_anim_query.get(entity).is_ok() {
-        return;
-    }
-
-    let Ok(input) = input_query.single() else {
-        return;
-    };
-
-    let reload_pressed = input.just_pressed(&PlayerAction::Reload);
-
-    // Trigger reload animation if player presses reload OR has 0 ammo
-    if reload_pressed || state.current_ammo == 0 {
-        let reload_duration = stats.reload_time.as_secs_f32();
-        let remaining_secs = state
-            .reload_timer
-            .remaining_secs()
-            .clamp(0.0, reload_duration);
-
-        let elapsed_ratio = 1.0 - (remaining_secs / reload_duration);
-        let ammo_ratio = state.current_ammo as f32 / stats.magazine_size as f32;
-
-        // On utilise le plus grand des deux : l’avancée visuelle ne doit jamais être en retard par rapport aux munitions
-        let from = ammo_ratio.max(elapsed_ratio);
-        let to = 1.0;
-
-        commands.entity(entity).insert(AmmoReloadAnimation {
-            from,
-            to,
-            timer: Timer::from_seconds(remaining_secs, TimerMode::Once),
-            original_weapon_entity: weapon.0,
+    for (node_entity, weapon_entry, is_entry_highlighted) in entries.iter() {
+        let is_weapon_selected = weapon_query.get(weapon_entry.0).unwrap_or_else(|e| {
+            warn!("Invalid query result: {}", e);
+            false
         });
+
+        if is_weapon_selected && !is_entry_highlighted {
+            commands
+                .entity(node_entity)
+                .insert(BackgroundColor(Srgba::hex("#353535a0").unwrap().into()));
+        } else if !is_weapon_selected && is_entry_highlighted {
+            commands.entity(node_entity).remove::<BackgroundColor>();
+        }
     }
 }
 
-fn animate_ammo_reload(
-    time: Res<Time>,
-    mut query: Query<(&mut AmmoReloadAnimation, &mut Node, Entity), With<AmmoBackground>>,
-    mut black_bar_query: Query<&mut Node, (With<BlackBar>, Without<AmmoBackground>)>,
-    mut commands: Commands,
-    input_query: Query<&PlayerActionState>,
-    weapon_query: Query<&Weapon, With<Player>>,
-    weapon_state_query: Query<&WeaponState>,
-) {
-    for (mut anim, mut node, entity) in query.iter_mut() {
-        anim.timer.tick(time.delta());
-        let progress =
-            (anim.timer.elapsed_secs() / anim.timer.duration().as_secs_f32()).clamp(0.0, 1.0);
-        let percent = anim.from + (anim.to - anim.from) * progress;
-        node.width = Val::Percent(percent * 100.0);
-
-        // Update black bar accordingly
-        if let Ok(mut black_bar) = black_bar_query.single_mut() {
-            black_bar.width = Val::Percent((1.0 - percent) * 100.0);
-        }
-
-        let Ok(input) = input_query.single() else {
-            return;
-        };
-
-        // Determine current selected slot
-        let Ok(weapon) = weapon_query.single() else {
-            return;
-        };
-
-        if weapon.0 != anim.original_weapon_entity {
-            // L’arme a changé, on stoppe l’animation
-            commands.entity(entity).remove::<AmmoReloadAnimation>();
-            continue;
-        }
-
-        // Check ammo remaining
-        let mut ammo_nonzero = false;
-        if let Ok(weapon) = weapon_query.single()
-            && let Ok(state) = weapon_state_query.get(weapon.0)
-        {
-            ammo_nonzero = state.current_ammo != 0;
-        }
-
-        let shoot_pressed = input.just_pressed(&PlayerAction::Shoot);
-
-        if shoot_pressed && ammo_nonzero {
-            commands.entity(entity).remove::<AmmoReloadAnimation>();
-        }
-
-        if anim.timer.finished() {
-            node.width = Val::Percent(anim.to * 100.0);
-            if let Ok(mut black_bar) = black_bar_query.single_mut() {
-                black_bar.width = Val::Percent((1.0 - anim.to) * 100.0);
-            }
-            // Supprimer le composant à la fin de l'animation
-            commands.entity(entity).remove::<AmmoReloadAnimation>();
-        }
-    }
+fn despawn_menu(mut commands: Commands, query: Query<Entity, With<HudRoot>>) -> Result {
+    let menu = query.single()?;
+    commands.entity(menu).despawn();
+    Ok(())
 }

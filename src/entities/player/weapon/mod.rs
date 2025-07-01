@@ -48,6 +48,7 @@ pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<AudioReload>()
+            .register_type::<Owner>()
             .register_type::<WeaponType>()
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
@@ -205,6 +206,7 @@ fn tick_weapon_timers(
 
         if state.reload_timer.finished() && state.current_ammo < stats.magazine_size {
             state.current_ammo = stats.magazine_size;
+            state.reload_timer.reset();
             *mode = WeaponMode::Idle;
         }
     }
@@ -267,7 +269,7 @@ fn fire_weapon_system(
                     }
                     projectile_entity.add_rollback();
                 } else {
-                    warn!("Empy projectile config!")
+                    warn!("Empty projectile config!");
                 }
             }
             // make sound
