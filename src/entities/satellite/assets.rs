@@ -17,13 +17,37 @@ pub struct SatelliteAssets {
 
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub struct SatelliteConfig {
+    pub bumper: BumperConfig,
+    pub grabber: GrabberConfig,
+    pub slingshot: SlingshotConfig,
+}
+
+#[derive(serde::Deserialize)]
+pub struct BumperConfig {
+    /// Interaction radius
+    pub radius: f32,
+    /// Multiplier by which player speed is multiplied on interaction
+    pub multiplier: f32,
+}
+
+#[derive(serde::Deserialize)]
+pub struct GrabberConfig {
+    /// Orbit and visuals radius
+    pub radius: f32,
+    /// Margin that still allows interaction
+    pub entry_margin: f32,
+    /// Max speed the rope can handle before breaking
+    pub max_speed: f32,
+    /// Use to give a initial boost to the player so he is not stuck in the grabber
+    pub tangential_speed: f32,
+}
+
+#[derive(serde::Deserialize)]
+pub struct SlingshotConfig {
+    /// Interaction radius
     pub orbit_radius: f32,
-    pub min_angular_speed: f32,
+    /// The maximum duration of the orbit
     pub orbit_duration: f32,
+    /// Cooldown before next interaction
     pub orbit_cooldown: f32,
-    pub bump_radius: f32,
-    pub bump_multiplier: f32,
-    pub grabber_radius: f32,
-    pub grabber_entry_margin: f32,
-    pub max_grabber_speed: f32,
 }

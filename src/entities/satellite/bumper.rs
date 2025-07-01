@@ -34,8 +34,8 @@ fn bumper_push_player(
         return;
     };
 
-    let bumper_radius = config.bump_radius;
-    let bump_multiplier = config.bump_multiplier;
+    let bumper_radius = config.bumper.radius;
+    let bump_multiplier = config.bumper.multiplier;
 
     for bumper_pos in bumper_query.iter() {
         for (player_pos, mut velocity) in player_query.iter_mut() {

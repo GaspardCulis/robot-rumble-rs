@@ -1,15 +1,17 @@
 (
-    orbit_radius: 200.0,
-    orbit_duration: 5.0,
-    orbit_cooldown: 5.0,
-    min_angular_speed: 2.0,
-
-    bump_radius: 150.0,
-    bump_multiplier: 1.5,
-
-    grabber_radius: 300,
-    grabber_entry_margin: 10.0,
-    max_grabber_speed: 2000.0,
-
-
+    bumper: (
+        radius: 150,
+        multiplier: 1.5,
+    ),
+    grabber: (
+        radius: 300,
+        entry_margin: 10,
+        max_speed: 2000,
+        tangential_speed: 800,
+    ),
+    slingshot: (
+        orbit_radius: 200.0,
+        orbit_duration: 5.0,
+        orbit_cooldown: 5.0,
+    ),
 )

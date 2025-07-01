@@ -8,9 +8,6 @@ use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::Player;
 
-// Use to give a initial boost to the player so he is not stuck in the grabber
-const TANGENTIAL_SPEED: f32 = 800.0;
-
 #[derive(Component)]
 #[require(Name::new("Grabber"))]
 pub struct Grabber;
@@ -82,7 +79,7 @@ fn detect_player_entry(
             .iter()
             .filter_map(|(entity, position)| {
                 let distance = player_position.distance(position.0) + 30.0;
-                (distance < config.grabber_radius + config.grabber_entry_margin)
+                (distance < config.grabber.radius + config.grabber.entry_margin)
                     .then_some((entity, distance))
             })
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
@@ -189,7 +186,7 @@ fn handle_grabber_interaction(
     for (player_entity, actions, position, nearby, is_grabbed, mut velocity) in
         player_query.iter_mut()
     {
-        if velocity.0.length() > config.max_grabber_speed {
+        if velocity.0.length() > config.grabber.max_speed {
             continue;
         }
 
@@ -211,7 +208,7 @@ fn handle_grabber_interaction(
                 } else {
                     -1.0
                 };
-                velocity.0 = tangent * TANGENTIAL_SPEED * direction_sign;
+                velocity.0 = tangent * config.grabber.tangential_speed * direction_sign;
 
                 commands.entity(player_entity).insert(GrabbedConstraint {
                     anchor: nearby.0,
@@ -250,7 +247,7 @@ fn update_grabbed_players(
     };
 
     for (entity, position, mut velocity, constraint) in query.iter_mut() {
-        if velocity.0.length() > config.max_grabber_speed {
+        if velocity.0.length() > config.grabber.max_speed {
             commands.entity(entity).remove::<GrabbedConstraint>();
             continue;
         }
