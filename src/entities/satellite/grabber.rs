@@ -20,19 +20,19 @@ pub struct ShowInteractPrompt {
     pub message: String,
 }
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Reflect)]
 pub struct NearbyGrabber(pub Entity);
 
 #[derive(Component, Clone)]
 pub struct GrabbedBy;
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 #[require(Name::new("PlayerPrompt"))]
 pub struct PlayerPrompt {
     pub player: Entity,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 #[require(Name::new("GrabberRope"))]
 pub struct GrabberRope {
     pub player: Entity,
@@ -48,18 +48,22 @@ pub struct GrabbedConstraint {
 pub struct GrabberPlugin;
 impl Plugin for GrabberPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            GgrsSchedule,
-            (
-                detect_player_entry,
-                handle_grabber_interaction,
-                update_grabbed_players,
-                cleanup_grabber_ropes,
-                update_grabber_ropes,
-            )
-                .chain()
-                .in_set(SatelliteSet::Grabber),
-        );
+        app.register_type::<NearbyGrabber>()
+            .register_type::<PlayerPrompt>()
+            .register_type::<GrabberRope>()
+            .register_type::<GrabbedConstraint>()
+            .add_systems(
+                GgrsSchedule,
+                (
+                    detect_player_entry,
+                    handle_grabber_interaction,
+                    update_grabbed_players,
+                    cleanup_grabber_ropes,
+                    update_grabber_ropes,
+                )
+                    .chain()
+                    .in_set(SatelliteSet::Grabber),
+            );
         app.add_systems(Update, (display_interact_prompt, remove_interact_prompt));
     }
 }
