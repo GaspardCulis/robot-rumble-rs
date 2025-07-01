@@ -21,7 +21,6 @@ pub struct SatelliteConfig {
     pub min_angular_speed: f32,
     pub orbit_duration: f32,
     pub orbit_cooldown: f32,
-    pub decay_rate: f32,
     pub bump_radius: f32,
     pub bump_multiplier: f32,
     pub grabber_radius: f32,

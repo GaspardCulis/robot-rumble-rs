@@ -15,12 +15,15 @@ WeaponsConfig({
             sprite: "img/weapons/pistol.png",
             scale: 3.0,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Shotgun: (
         stats: (
             cooldown: 0.5,
             magazine_size: 8,
-            reload_time: 5.0,
+            reload_time: 4.0,
             damage_multiplier: 1.0,
             projectile_speed: 1200.0,
             shot_bullet_count: 10,
@@ -32,6 +35,10 @@ WeaponsConfig({
             sprite: "img/weapons/shotgun.png",
             scale: 3.0,
         ),
+        sounds: (
+            fire: "audio/shotgun_fire.ogg",
+            reload: Some("audio/shotgun_reload.ogg"),
+        )
     ),
     Rifle: (
         stats: (
@@ -49,6 +56,10 @@ WeaponsConfig({
             sprite: "img/weapons/assaultrifle.png",
             scale: 0.25,
         ),
+        sounds: (
+            fire: "audio/riffle_fire.ogg",
+            reload: Some("audio/riffle_reload.ogg"),
+        )
     ),
     Sniper: (
         stats: (
@@ -66,6 +77,9 @@ WeaponsConfig({
             sprite: "img/weapons/sniper.png",
             scale: 0.25,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Revolver: (
         stats: (
@@ -83,6 +97,9 @@ WeaponsConfig({
             sprite: "img/weapons/revolver.png",
             scale: 0.5,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     Pulse: (
         stats: (
@@ -100,12 +117,15 @@ WeaponsConfig({
             sprite: "img/weapons/pulse.png",
             scale: 4.0,
         ),
+        sounds: (
+            fire: "audio/pistol_fire.ogg",
+        )
     ),
     BlackholeGun: (
         stats: (
             cooldown: 1,
             magazine_size: 2,
-            reload_time: 1.5,
+            reload_time: 1.4,
             damage_multiplier: 0.0,
             projectile_speed: 1500,
             shot_bullet_count: 1,
@@ -117,5 +137,9 @@ WeaponsConfig({
             sprite: "weapons/blackhole_gun.png",
             scale: 0.75,
         ),
+        sounds: (
+            fire: "audio/bh_generator_fire.ogg",
+            reload: Some("audio/bh_generator_reload.ogg"),
+        )
     ),
 })
