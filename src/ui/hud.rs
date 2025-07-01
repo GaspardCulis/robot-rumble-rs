@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 use bevy_cobweb::prelude::*;
 use bevy_cobweb_ui::prelude::*;
+use bevy_ggrs::LocalPlayers;
 
 use crate::{
     GameState,
     entities::player::{
-        Weapon,
+        Player, Weapon,
         inventory::Arsenal,
         weapon::{
             Owner, WeaponState,
@@ -61,7 +62,8 @@ impl Plugin for HUDPlugin {
 fn spawn_menu(
     mut commands: Commands,
     mut scene_builder: SceneBuilder,
-    arsenals: Query<(Entity, &Arsenal), Changed<Arsenal>>,
+    arsenals: Query<(Entity, &Player, &Arsenal), Changed<Arsenal>>,
+    local_players: Res<LocalPlayers>,
 ) {
     if arsenals.is_empty() {
         return;
@@ -76,11 +78,16 @@ fn spawn_menu(
             // Add marker struct
             scene_handle.insert(HudRoot);
 
-            for (player, arsenal) in arsenals.iter() {
+            for (player_entity, player, arsenal) in arsenals.iter() {
+                if !local_players.0.contains(&player.handle) {
+                    // Don't spawn HUD for local players
+                    continue;
+                }
+
                 scene_handle.spawn_scene(("ui/hud.cob", "hud"), move |scene_handle| {
                     let scene_id = scene_handle.id();
 
-                    scene_handle.insert(PlayerHud(player));
+                    scene_handle.insert(PlayerHud(player_entity));
                     scene_handle.insert_reactive(CurrentWeaponInfo::default());
                     scene_handle.insert_reactive(CurrentWeaponSprite::default());
                     scene_handle.get("vbox::hbox::bullets_count").update_on(
@@ -162,7 +169,10 @@ fn update_weapon_info(
 ) -> Result {
     for (entity, hud) in huds.iter() {
         let weapon = player_query.get(hud.0)?;
-        let (weapon_state, weapon_stats) = weapon_query.get(weapon.0)?;
+        let Ok((weapon_state, weapon_stats)) = weapon_query.get(weapon.0) else {
+            warn!("Weapon state and stats still not loaded");
+            continue;
+        };
 
         let _ = info.set_if_neq(
             &mut commands,
