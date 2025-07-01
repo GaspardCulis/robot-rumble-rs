@@ -77,7 +77,8 @@ env:
   use_github_cache: false
 
   # Reduce compile time.
-  RUSTFLAGS: -Dwarnings -Zshare-generics=y -Zthreads=0
+  # Wait for bevy to adopt encase:0.11.1 to benefit https://github.com/teoxoy/encase/pull/96
+  RUSTFLAGS: -Dwarnings -Zshare-generics=y -Zthreads=0 -Adead-code
 
 jobs:
   # Forward some environment variables as outputs of this job.
