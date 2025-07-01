@@ -47,7 +47,6 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<weapon::WeaponState>()
             .rollback_component_with_clone::<projectile::Projectile>()
             .rollback_component_with_clone::<projectile::Damage>()
-            .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
             .rollback_component_with_clone::<grabber::GrabbedConstraint>()
             .rollback_component_with_clone::<graviton::Orbited>()

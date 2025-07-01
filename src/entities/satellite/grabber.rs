@@ -23,9 +23,6 @@ pub struct ShowInteractPrompt {
 #[derive(Component, Clone, Reflect)]
 pub struct NearbyGrabber(pub Entity);
 
-#[derive(Component, Clone)]
-pub struct GrabbedBy;
-
 #[derive(Component, Reflect)]
 #[require(Name::new("PlayerPrompt"))]
 pub struct PlayerPrompt {
@@ -175,7 +172,7 @@ fn handle_grabber_interaction(
             &PlayerActionState,
             &Position,
             Option<&NearbyGrabber>,
-            Option<&GrabbedBy>,
+            Has<GrabbedConstraint>,
             &mut Velocity,
         ),
         With<Player>,
@@ -189,7 +186,7 @@ fn handle_grabber_interaction(
         return;
     };
 
-    for (player_entity, actions, position, nearby, grabbed_by, mut velocity) in
+    for (player_entity, actions, position, nearby, is_grabbed, mut velocity) in
         player_query.iter_mut()
     {
         if velocity.0.length() > config.max_grabber_speed {
@@ -198,7 +195,7 @@ fn handle_grabber_interaction(
 
         let is_pressed = actions.pressed(&PlayerAction::Interact);
 
-        if is_pressed && grabbed_by.is_none() {
+        if is_pressed && !is_grabbed {
             if let Some(nearby) = nearby
                 && let Ok(grabber_pos) = grabber_query.get(nearby.0)
             {
@@ -216,13 +213,10 @@ fn handle_grabber_interaction(
                 };
                 velocity.0 = tangent * TANGENTIAL_SPEED * direction_sign;
 
-                commands
-                    .entity(player_entity)
-                    .insert(GrabbedBy)
-                    .insert(GrabbedConstraint {
-                        anchor: nearby.0,
-                        distance,
-                    });
+                commands.entity(player_entity).insert(GrabbedConstraint {
+                    anchor: nearby.0,
+                    distance,
+                });
 
                 let mesh = meshes.add(Rectangle::new(4.0, 1.0));
                 let material = materials.add(Color::srgb(0.0, 0.0, 1.0));
@@ -237,11 +231,8 @@ fn handle_grabber_interaction(
                     },
                 ));
             }
-        } else if !is_pressed && grabbed_by.is_some() {
-            commands
-                .entity(player_entity)
-                .remove::<GrabbedBy>()
-                .remove::<GrabbedConstraint>();
+        } else if !is_pressed && is_grabbed {
+            commands.entity(player_entity).remove::<GrabbedConstraint>();
         }
     }
 }
@@ -260,10 +251,7 @@ fn update_grabbed_players(
 
     for (entity, position, mut velocity, constraint) in query.iter_mut() {
         if velocity.0.length() > config.max_grabber_speed {
-            commands
-                .entity(entity)
-                .remove::<GrabbedBy>()
-                .remove::<GrabbedConstraint>();
+            commands.entity(entity).remove::<GrabbedConstraint>();
             continue;
         }
         if let Ok(anchor_pos) = anchor_query.get(constraint.anchor) {
@@ -325,10 +313,13 @@ fn update_grabber_ropes(
 fn cleanup_grabber_ropes(
     mut commands: Commands,
     rope_query: Query<(Entity, &GrabberRope)>,
-    player_query: Query<Option<&GrabbedBy>, With<Player>>,
+    player_query: Query<Has<GrabbedConstraint>, With<Player>>,
 ) {
     for (entity, rope) in rope_query.iter() {
-        if let Ok(None) = player_query.get(rope.player) {
+        if player_query
+            .get(rope.player)
+            .is_ok_and(|is_grabbed| !is_grabbed)
+        {
             commands.entity(entity).despawn();
         }
     }
