@@ -58,10 +58,14 @@ impl Default for NetworkConfig {
             disconnect_timeout: std::time::Duration::from_secs(2),
             desync_detection: DesyncDetectionConfig::Off,
 
+            // Matchbox default's
             ice_server_config: IceServerConfig {
-                urls: vec!["turn:gasdev.fr:3478".to_string()],
-                username: Some("default".to_string()), // Fixes `ErrNoTurnCredentials`
-                credential: Some("default".to_string()), // Same
+                urls: vec![
+                    "stun:stun.l.google.com:19302".to_string(),
+                    "stun:stun1.l.google.com:19302".to_string(),
+                ],
+                username: Default::default(),
+                credential: Default::default(),
             },
         }
     }

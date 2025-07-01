@@ -9,9 +9,9 @@ NetworkConfig (
     disconnect_timeout: 2.0,
     desync_detection: On ( interval: 4 ),
 
-    ice_server_config: IceServerConfig (
-        urls: [ "turn:gasdev.fr:3478" ],
-        username: Some("default"),
-        credential: Some("default"),
-    )
+    // ice_server_config: IceServerConfig (
+    //     urls: [ "turn:gasdev.fr:3478" ],
+    //     username: Some("default"),
+    //     credential: Some("default"),
+    // )
 )
