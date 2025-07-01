@@ -28,6 +28,7 @@ path = "src/main.rs"
 [[bin]]
 name = "map-editor"
 path = "src/tools/map_editor/main.rs"
+required-features = ["dev_tools"]
 
 [dependencies]
 bevy_common_assets = { version = "0.13", features = ["ron"] }
