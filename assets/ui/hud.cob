@@ -8,7 +8,7 @@ LoadImages[$weapon_icon]
 #scenes
 "hud_container"
     FlexNode{
-        flex_direction: Row
+        flex_direction:RowReverse
         justify_main:SpaceBetween
         justify_cross:FlexEnd
         width: 100%
