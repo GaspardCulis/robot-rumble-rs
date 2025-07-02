@@ -47,7 +47,7 @@ fn update_local_pointer_direction(
     let (camera, view) = query_view.single()?;
     if let Some(world_position) = window
         .cursor_position()
-        .map(|cursor| camera.viewport_to_world_2d(view, cursor).unwrap())
+        .and_then(|cursor| camera.viewport_to_world_2d(view, cursor).ok())
     {
         for (_, player_world_pos, mut action_state) in
             player_query.iter_mut().filter(|(player, _, action)| {
