@@ -7,7 +7,6 @@
         radius: 300,
         entry_margin: 10,
         max_speed: 2000,
-        tangential_speed: 800,
     ),
     slingshot: (
         orbit_radius: 200.0,

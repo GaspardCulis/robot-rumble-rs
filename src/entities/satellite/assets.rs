@@ -38,8 +38,6 @@ pub struct GrabberConfig {
     pub entry_margin: f32,
     /// Max speed the rope can handle before breaking
     pub max_speed: f32,
-    /// Use to give a initial boost to the player so he is not stuck in the grabber
-    pub tangential_speed: f32,
 }
 
 #[derive(serde::Deserialize)]
