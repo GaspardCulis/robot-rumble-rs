@@ -31,7 +31,7 @@ pub enum PlayerAction {
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InputSet {
-    /// Were we mutate the PlayerActionState to apply custom input methods
+    /// Where we mutate the PlayerActionState to apply custom input methods
     Update,
     /// Final step were inputs are serialized and sent over the network
     Serialize,
