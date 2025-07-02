@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use crate::{
     core::{
-        inputs::{PlayerAction, PlayerActionState},
+        inputs::{InputSet, PlayerAction, PlayerActionState},
         physics::PhysicsSet,
     },
     entities::player::Player,
@@ -42,10 +42,11 @@ pub struct AlwaysEqWrapper<T>(T);
 pub struct NetworkInputsPlugin;
 impl Plugin for NetworkInputsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(ReadInputs, read_local_inputs).add_systems(
-            GgrsSchedule,
-            update_remote_inputs.before(PhysicsSet::Player),
-        );
+        app.add_systems(ReadInputs, read_local_inputs.in_set(InputSet::Serialize))
+            .add_systems(
+                GgrsSchedule,
+                update_remote_inputs.before(PhysicsSet::Player),
+            );
     }
 }
 

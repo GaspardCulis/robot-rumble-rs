@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_ggrs::LocalPlayers;
+use bevy_ggrs::{LocalPlayers, ReadInputs};
 use leafwing_input_manager::prelude::*;
 
 use crate::entities::player::Player;
@@ -29,11 +29,23 @@ pub enum PlayerAction {
     RopeRetract,
 }
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum InputSet {
+    /// Were we mutate the PlayerActionState to apply custom input methods
+    Update,
+    /// Final step were inputs are serialized and sent over the network
+    Serialize,
+}
+
 pub struct InputsPlugin;
 impl Plugin for InputsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .add_systems(Update, update_local_pointer_direction);
+        app.configure_sets(ReadInputs, (InputSet::Update, InputSet::Serialize).chain())
+            .add_plugins(InputManagerPlugin::<PlayerAction>::default())
+            .add_systems(
+                ReadInputs,
+                update_local_pointer_direction.in_set(InputSet::Update),
+            );
     }
 }
 
