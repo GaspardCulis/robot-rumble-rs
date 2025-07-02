@@ -137,12 +137,12 @@ fn handle_spawn_satellite(
 
         let (orbit_radius, base_color) = match event.kind {
             SatelliteKind::Slingshot => (
-                config.orbit_radius + 100.0,
+                config.slingshot.orbit_radius + 100.0,
                 LinearRgba::new(0.0, 0.0, 1.0, 1.0),
             ),
-            SatelliteKind::Bumper => (config.bump_radius, LinearRgba::new(1.0, 0.5, 0.0, 1.0)),
+            SatelliteKind::Bumper => (config.bumper.radius, LinearRgba::new(1.0, 0.5, 0.0, 1.0)),
             SatelliteKind::Grabber => (
-                config.grabber_radius + 50.0,
+                config.grabber.radius + 50.0,
                 LinearRgba::new(0.0, 1.0, 0.0, 1.0),
             ),
         };

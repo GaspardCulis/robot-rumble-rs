@@ -104,8 +104,8 @@ fn detect_player_orbit_entry(
         return;
     };
 
-    let orbit_radius = config.orbit_radius;
-    let orbit_duration = config.orbit_duration;
+    let orbit_radius = config.slingshot.orbit_radius;
+    let orbit_duration = config.slingshot.orbit_duration;
 
     for (player_entity, player_position, velocity) in player_query.iter_mut() {
         for (slingshot_entity, slingshot_pos, maybe_cooldown) in slingshot_query.iter() {
@@ -268,7 +268,7 @@ fn update_orbiting_players(
                     .unwrap()
             }) {
                 commands.entity(slingshot_entity).insert(OrbitCooldown {
-                    timer: Timer::from_seconds(config.orbit_cooldown, TimerMode::Once),
+                    timer: Timer::from_seconds(config.slingshot.orbit_cooldown, TimerMode::Once),
                 });
             }
         }
@@ -290,7 +290,7 @@ fn update_ejection_arrows(
         if let Ok(Some(orbited)) = player_query.get(arrow.player) {
             let center = orbited.center;
             let direction = Vec2::from_angle(orbited.angle);
-            let arrow_distance = config.orbit_radius + 30.0;
+            let arrow_distance = config.slingshot.orbit_radius + 30.0;
 
             let arrow_pos = center + direction * arrow_distance;
             transform.translation = arrow_pos.extend(transform.translation.z);
@@ -364,7 +364,7 @@ fn update_slingcord_transform(
         return;
     };
 
-    let orbit_radius = config.orbit_radius;
+    let orbit_radius = config.slingshot.orbit_radius;
 
     for (mut transform, target) in cord_query.iter_mut() {
         if let Ok((_, Some(orbited))) = player_query.get(target.target) {
@@ -401,7 +401,7 @@ fn mark_players_in_orbit_zone(
     let Some(config) = configs.get(&assets.config) else {
         return;
     };
-    let radius = config.orbit_radius;
+    let radius = config.slingshot.orbit_radius;
 
     for (player_entity, player_pos) in player_query.iter() {
         for (slingshot_pos, cooldown) in slingshot_query.iter() {
@@ -430,7 +430,7 @@ fn cleanup_orbit_zone_flags(
     let Some(config) = configs.get(&assets.config) else {
         return;
     };
-    let orbit_radius = config.orbit_radius;
+    let orbit_radius = config.slingshot.orbit_radius;
 
     for (player_entity, player_pos) in player_query.iter() {
         let mut still_inside = false;

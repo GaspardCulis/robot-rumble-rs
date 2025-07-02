@@ -22,8 +22,6 @@ const SERIALIZED_BUTTON_INPUTS: &[PlayerAction] = &[
     PlayerAction::Shoot,
     PlayerAction::Reload,
     PlayerAction::Interact,
-    PlayerAction::RopeExtend,
-    PlayerAction::RopeRetract,
     PlayerAction::Slot1,
     PlayerAction::Slot2,
     PlayerAction::Slot3,
