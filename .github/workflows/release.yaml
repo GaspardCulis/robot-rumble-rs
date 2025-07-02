@@ -96,9 +96,23 @@ jobs:
   get-version:
     runs-on: ubuntu-latest
     steps:
-      - name: Determine version number
+      - name: Determine version number (git)
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> "${GITHUB_OUTPUT}"
+
+      - name: Determine version number (cargo)
+        id: cargo-version
+        run: |
+          CARGO_VERSION=$(cargo read-manifest | jq -r '.version')
+          echo "cargo_version=$CARGO_VERSION" >> "${GITHUB_OUTPUT}"
+    
+      - name: Check version match
+        run: |
+          if [ "${{ steps.tag.outputs.tag }}" != "v${{ steps.cargo-version.outputs.cargo_version }}" ]; then
+            echo "Error: Git tag (${{ steps.tag.outputs.tag }}) does not match cargo package version (${{ steps.cargo-version.outputs.cargo_version }})"
+            exit 1
+          fi
+
     outputs:
       # Use the input from workflow dispatch, or fall back to the git tag.
       version: ${{ inputs.version || steps.tag.outputs.tag }}
