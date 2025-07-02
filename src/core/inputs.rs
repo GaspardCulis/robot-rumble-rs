@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_ggrs::LocalPlayers;
+use bevy_ggrs::{LocalPlayers, ReadInputs};
 use leafwing_input_manager::prelude::*;
 
 use crate::entities::player::Player;
@@ -29,11 +29,23 @@ pub enum PlayerAction {
     RopeRetract,
 }
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum InputSet {
+    /// Where we mutate the PlayerActionState to apply custom input methods
+    Update,
+    /// Final step where inputs are serialized and sent over the network
+    Serialize,
+}
+
 pub struct InputsPlugin;
 impl Plugin for InputsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
-            .add_systems(Update, update_local_pointer_direction);
+        app.configure_sets(ReadInputs, (InputSet::Update, InputSet::Serialize).chain())
+            .add_plugins(InputManagerPlugin::<PlayerAction>::default())
+            .add_systems(
+                ReadInputs,
+                update_local_pointer_direction.in_set(InputSet::Update),
+            );
     }
 }
 
@@ -47,7 +59,7 @@ fn update_local_pointer_direction(
     let (camera, view) = query_view.single()?;
     if let Some(world_position) = window
         .cursor_position()
-        .map(|cursor| camera.viewport_to_world_2d(view, cursor).unwrap())
+        .and_then(|cursor| camera.viewport_to_world_2d(view, cursor).ok())
     {
         for (_, player_world_pos, mut action_state) in
             player_query.iter_mut().filter(|(player, _, action)| {
