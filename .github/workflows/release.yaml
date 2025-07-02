@@ -111,7 +111,7 @@ jobs:
     
       - name: Check version match
         run: |
-          if [ "${{ input.version || steps.tag.outputs.tag }}" != "v${{ steps.cargo-version.outputs.cargo_version }}" ]; then
+          if [ "${{ inputs.version || steps.tag.outputs.tag }}" != "v${{ steps.cargo-version.outputs.cargo_version }}" ]; then
             echo "Error: Git tag (${{ inputs.version || steps.tag.outputs.tag }}) does not match cargo package version (${{ steps.cargo-version.outputs.cargo_version }})"
             exit 1
           fi
