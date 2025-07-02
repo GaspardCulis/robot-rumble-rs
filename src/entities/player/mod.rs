@@ -7,15 +7,17 @@ use weapon::{WeaponMode, WeaponState};
 
 use crate::core::collision::{CollisionPlugin, CollisionShape, CollisionState};
 use crate::core::gravity::{Mass, Passive};
+use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{PhysicsSet, Position, Rotation, Velocity};
+use crate::entities::player::weapon::config::WeaponStats;
 use crate::utils::math;
 
 use super::planet;
-use crate::entities::satellite::graviton::Orbited;
+use crate::entities::satellite::slingshot::Orbited;
 
 mod animation;
-mod inventory;
-mod skin;
+pub mod inventory;
+pub mod skin;
 pub mod weapon;
 
 // TODO: Move to config file
@@ -37,7 +39,7 @@ type PlanetCollision = CollisionState<Player, planet::Planet>;
     ActionState<PlayerAction>,
     Mass(PLAYER_MASS),
     CollisionShape::Circle(PLAYER_RADIUS),
-    PlayerSkin("laika".into()),
+    PlayerSkin("laika.skin".into()),
     Name::new("Player"),
     Percentage::default(),
 )]
@@ -50,24 +52,6 @@ pub struct Percentage(pub f32);
 
 #[derive(Component, Clone, Debug, Default, PartialEq, Reflect, Deref)]
 pub struct PlayerInputVelocity(Vec2);
-
-#[derive(Actionlike, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect)]
-pub enum PlayerAction {
-    Jump,
-    Sneak,
-    Left,
-    Right,
-    Shoot,
-    Slot1,
-    Slot2,
-    Slot3,
-    #[actionlike(DualAxis)]
-    PointerDirection,
-    Reload,
-    Interact,
-    RopeExtend,
-    RopeRetract,
-}
 
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 pub struct PlayerSkin(pub String);
@@ -85,7 +69,6 @@ impl Plugin for PlayerPlugin {
             .register_type::<Weapon>()
             .register_type::<Percentage>()
             .add_plugins(CollisionPlugin::<Player, planet::Planet>::new())
-            .add_plugins(InputManagerPlugin::<PlayerAction>::default())
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_plugins(inventory::InventoryPlugin)
             .add_plugins(skin::SkinPlugin)
@@ -102,7 +85,7 @@ impl Plugin for PlayerPlugin {
 fn player_movement(
     mut query: Query<
         (
-            &ActionState<PlayerAction>,
+            &PlayerActionState,
             &mut Velocity,
             &mut PlayerInputVelocity,
             &Rotation,
@@ -152,14 +135,21 @@ fn update_weapon(
             &mut Velocity,
             &mut Rotation,
             &WeaponState,
+            &WeaponStats,
         ),
         Without<Player>,
     >,
 ) {
     for (action_state, player_position, player_velocity, weapon) in player_query.iter() {
         let axis_pair = action_state.axis_pair(&PlayerAction::PointerDirection);
-        if let Ok((mut mode, mut position, mut velocity, mut direction, weapon_state)) =
-            weapon_query.get_mut(weapon.0)
+        if let Ok((
+            mut mode,
+            mut position,
+            mut velocity,
+            mut direction,
+            weapon_state,
+            weapon_stats,
+        )) = weapon_query.get_mut(weapon.0)
         {
             direction.0 = if axis_pair != Vec2::ZERO {
                 axis_pair.to_angle()
@@ -169,7 +159,10 @@ fn update_weapon(
             let pressed = action_state.get_pressed();
             if pressed.contains(&PlayerAction::Shoot) && weapon_state.current_ammo > 0 {
                 *mode = WeaponMode::Triggered;
-            } else if pressed.contains(&PlayerAction::Reload) {
+            } else if pressed.contains(&PlayerAction::Reload)
+                && weapon_state.current_ammo < weapon_stats.magazine_size
+                && *mode != WeaponMode::Reloading
+            {
                 *mode = WeaponMode::Reloading;
             } else if *mode != WeaponMode::Reloading {
                 *mode = WeaponMode::Idle;

@@ -34,20 +34,31 @@ fn main() {
             enable_multipass_for_primary_context: true,
         })
         .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(assets::AssetsPlugin)
         .add_plugins(entities::EntitiesPlugins)
         .add_plugins(core::CorePlugins)
         .add_plugins(level::LevelPlugins)
         .add_plugins(network::NetworkPlugin)
         .insert_resource(robot_rumble::Args {
             players: 1,
-            synctest: false,
+            mode: GameMode::Multiplayer,
             level_path: None,
         })
         .init_state::<GameState>()
+        .insert_state(ui::Screen::AssetLoading)
         .add_plugins(controller::ControllerPlugin)
         .add_plugins(interaction::InteractionPlugin)
         .add_plugins(model::ModelPlugin)
         .add_plugins(view::ViewPlugin)
+        .add_systems(
+            OnEnter(ui::Screen::Home),
+            |mut next_screen: ResMut<NextState<ui::Screen>>,
+             mut next_gamestate: ResMut<NextState<GameState>>| {
+                // Hack to bypass homescreen when using map editor
+                next_screen.set(ui::Screen::None);
+                next_gamestate.set(GameState::MatchMaking);
+            },
+        )
         .add_systems(
             PreUpdate,
             (|mut mode: ResMut<DebugPickingMode>| {

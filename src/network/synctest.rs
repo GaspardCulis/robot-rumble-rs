@@ -2,24 +2,28 @@ use std::hash::{Hash, Hasher as _};
 
 use bevy::prelude::*;
 use bevy_ggrs::{ggrs::GgrsEvent, *};
-use leafwing_input_manager::prelude::{GamepadStick, InputMap, MouseScrollDirection};
+use leafwing_input_manager::prelude::InputMap;
 use rand::Rng;
 
 use crate::{
     Args, GameState,
-    core::{camera, physics},
-    entities::player::{Player, PlayerAction},
+    core::{
+        camera,
+        inputs::{PlayerAction, default_input_map},
+        physics,
+    },
+    entities::player::Player,
     network::{SessionConfig, SessionSeed},
 };
 
 const SYNCTEST_NUM_PLAYERS: usize = 2;
 
 pub fn p2p_mode(args: Res<Args>) -> bool {
-    !args.synctest
+    args.mode == crate::GameMode::Multiplayer
 }
 
 pub fn synctest_mode(args: Res<Args>) -> bool {
-    args.synctest
+    args.mode == crate::GameMode::Synctest
 }
 
 pub fn checksum_position(position: &physics::Position) -> u64 {
@@ -60,27 +64,7 @@ pub fn spawn_synctest_players(
 ) {
     assert_eq!(SYNCTEST_NUM_PLAYERS, 2);
 
-    let input_map_a = InputMap::new([
-        // Jump
-        (PlayerAction::Jump, KeyCode::KeyW),
-        // Sneak
-        (PlayerAction::Sneak, KeyCode::KeyS),
-        // Directions
-        (PlayerAction::Right, KeyCode::KeyD),
-        (PlayerAction::Left, KeyCode::KeyA),
-        // Slot selection
-        (PlayerAction::Slot1, KeyCode::Digit1),
-        (PlayerAction::Slot2, KeyCode::Digit2),
-        (PlayerAction::Slot3, KeyCode::Digit3),
-        // Reloading
-        (PlayerAction::Reload, KeyCode::KeyR),
-        // Interaction
-        (PlayerAction::Interact, KeyCode::KeyE),
-    ])
-    .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
-    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
-    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
+    let input_map_a = default_input_map();
 
     let input_map_b = InputMap::new([
         // Jump

@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
 use inputs::NetworkInputs;
-use leafwing_input_manager::prelude::*;
 use rand::Rng as _;
 
 use crate::{
@@ -10,9 +9,9 @@ use crate::{
     core::{camera::CameraFollowTarget, collision, gravity, physics, worldgen},
     entities::{
         blackhole, planet,
-        player::{self, Player, PlayerAction, weapon},
+        player::{self, Player, weapon},
         projectile,
-        satellite::{grabber, graviton},
+        satellite::{grabber, slingshot},
     },
     level::save,
 };
@@ -21,6 +20,7 @@ use synctest::{
     start_synctest_session, synctest_mode,
 };
 
+pub mod config;
 pub mod inputs;
 mod synctest;
 
@@ -51,49 +51,69 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<grabber::GrabbedOrbit>()
             .rollback_component_with_clone::<grabber::GrabbedBy>()
             .rollback_component_with_clone::<grabber::NearbyGrabber>()
-            .rollback_component_with_clone::<graviton::Orbited>()
+            .rollback_component_with_clone::<slingshot::Orbited>()
             .rollback_component_with_clone::<projectile::DecayTimer>()
             .rollback_component_with_copy::<blackhole::BlackHole>()
             // Collisions
             .rollback_component_with_clone::<collision::CollisionState<player::Player, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, planet::Planet>>()
             .rollback_component_with_clone::<collision::CollisionState<projectile::Projectile, player::Player>>()
-            .checksum_component::<physics::Position>(checksum_position)
-            .add_systems(
-                OnEnter(GameState::MatchMaking),
-                (
-                    start_matchbox_socket.run_if(p2p_mode),
-                    start_synctest_session.run_if(synctest_mode),
+            .checksum_component::<physics::Position>(checksum_position);
+
+        app.add_systems(
+            OnEnter(GameState::MatchMaking),
+            (
+                start_matchbox_socket.run_if(p2p_mode),
+                start_synctest_session.run_if(synctest_mode),
+            ),
+        )
+        .add_systems(
+            OnEnter(GameState::WorldGen),
+            (generate_world, spawn_synctest_players.run_if(synctest_mode)).chain(),
+        )
+        .add_systems(
+            OnEnter(GameState::InGame),
+            (spawn_players, add_local_player_components)
+                .chain()
+                .run_if(p2p_mode),
+        )
+        .add_systems(
+            Update,
+            (
+                wait_for_players.run_if(
+                    in_state(GameState::MatchMaking)
+                        .and(resource_exists::<MatchboxSocket>)
+                        .and(p2p_mode),
                 ),
-            )
-            .add_systems(
-                OnEnter(GameState::WorldGen),
-                (generate_world, spawn_synctest_players.run_if(synctest_mode)).chain(),
-            )
-            .add_systems(
-                OnEnter(GameState::InGame),
-                (spawn_players, add_local_player_components)
-                    .chain()
-                    .run_if(p2p_mode),
-            )
-            .add_systems(
-                Update,
-                (
-                    wait_for_players.run_if(in_state(GameState::MatchMaking).and(p2p_mode)),
-                    wait_start_match.run_if(in_state(GameState::WorldGen).and(p2p_mode)),
-                    handle_ggrs_events.run_if(in_state(GameState::InGame)),
-                ),
-            );
+                wait_start_match.run_if(in_state(GameState::WorldGen).and(p2p_mode)),
+                handle_ggrs_events.run_if(in_state(GameState::InGame)),
+            ),
+        );
     }
 }
 
-fn start_matchbox_socket(mut commands: Commands, args: Res<crate::Args>) {
+fn start_matchbox_socket(
+    mut commands: Commands,
+    args: Res<crate::Args>,
+    assets: Res<config::NetworkAssets>,
+    configs: Res<Assets<config::NetworkConfig>>,
+) -> Result {
+    let config = configs
+        .get(&assets.config)
+        .ok_or(BevyError::from("Couldn't get NetworkConfig"))?;
+
     let room_url = format!(
-        "wss://matchbox.gasdev.fr/extreme_bevy?next={}",
-        args.players
+        "wss://{}/robot_rumble?next={}",
+        config.matchbox_host, args.players
     );
     info!("connecting to matchbox server: {room_url}");
-    commands.insert_resource(MatchboxSocket::new_unreliable(room_url));
+
+    let builder = WebRtcSocketBuilder::new(room_url)
+        .add_unreliable_channel()
+        .ice_server(config.ice_server_config.clone().into());
+    commands.insert_resource(MatchboxSocket::from(builder));
+
+    Ok(())
 }
 
 fn wait_for_players(
@@ -139,21 +159,34 @@ fn wait_start_match(
     mut socket: ResMut<MatchboxSocket>,
     mut next_state: ResMut<NextState<GameState>>,
     mut timeout: ResMut<StartMatchDelay>,
+    assets: Res<config::NetworkAssets>,
+    configs: Res<Assets<config::NetworkConfig>>,
     args: Res<crate::Args>,
     time: Res<Time>,
-) {
+) -> Result {
     timeout.0.tick(time.delta());
     if !timeout.0.finished() {
-        return;
+        return Ok(());
     }
+
+    let config = configs
+        .get(&assets.config)
+        .ok_or(BevyError::from("Couldn't get NetworkConfig"))?;
 
     let players = socket.players();
     assert_eq!(players.len(), args.players);
 
+    // Setup session
     let mut session_builder = ggrs::SessionBuilder::<SessionConfig>::new()
         .with_num_players(args.players)
-        .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 4 })
-        .with_input_delay(2);
+        .with_input_delay(config.input_delay)
+        .with_fps(config.session_fps)
+        .unwrap()
+        .with_check_distance(config.check_distance)
+        .with_max_prediction_window(config.max_prediction_window)
+        .with_disconnect_timeout(config.disconnect_timeout)
+        .with_desync_detection_mode(config.desync_detection.into());
+    commands.insert_resource(RollbackFrameRate(config.schedule_fps));
 
     for (i, player) in players.into_iter().enumerate() {
         session_builder = session_builder
@@ -172,6 +205,8 @@ fn wait_start_match(
     commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
 
     next_state.set(GameState::InGame);
+
+    Ok(())
 }
 
 /// Spawn position is handled by level::spawn
@@ -212,29 +247,7 @@ fn add_local_player_components(
         _ => unimplemented!(),
     };
 
-    let input_map = InputMap::new([
-        // Jump
-        (PlayerAction::Jump, KeyCode::Space),
-        (PlayerAction::Jump, KeyCode::KeyW),
-        // Sneak
-        (PlayerAction::Sneak, KeyCode::ShiftLeft),
-        (PlayerAction::Sneak, KeyCode::KeyS),
-        // Directions
-        (PlayerAction::Right, KeyCode::KeyD),
-        (PlayerAction::Left, KeyCode::KeyA),
-        // Slot selection
-        (PlayerAction::Slot1, KeyCode::Digit1),
-        (PlayerAction::Slot2, KeyCode::Digit2),
-        (PlayerAction::Slot3, KeyCode::Digit3),
-        // Reload
-        (PlayerAction::Reload, KeyCode::KeyR),
-        // Interaction
-        (PlayerAction::Interact, KeyCode::KeyE),
-    ])
-    .with(PlayerAction::Shoot, MouseButton::Left)
-    .with_dual_axis(PlayerAction::PointerDirection, GamepadStick::RIGHT)
-    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
-    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN);
+    let input_map = crate::core::inputs::default_input_map();
 
     let local_players_query = query
         .iter()

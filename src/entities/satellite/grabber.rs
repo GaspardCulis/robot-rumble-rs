@@ -5,9 +5,10 @@ use bevy_ggrs::{GgrsSchedule, LocalPlayers};
 use leafwing_input_manager::prelude::ActionState;
 
 use super::SatelliteSet;
-use super::{SatelliteConfig, SatelliteConfigHandle};
+use super::assets::{SatelliteAssets, SatelliteConfig};
+use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{Position, Velocity};
-use crate::entities::player::{Player, PlayerAction};
+use crate::entities::player::Player;
 
 const ROPE_MIN_LENGTH: f32 = 50.0;
 const ROPE_MAX_LENGTH: f32 = 275.0;
@@ -75,10 +76,10 @@ fn detect_player_entry(
     mut commands: Commands,
     player_query: Query<(Entity, &Position), With<Player>>,
     grabber_query: Query<(Entity, &Position), With<Grabber>>,
-    config_handle: Res<SatelliteConfigHandle>,
     configs: Res<Assets<SatelliteConfig>>,
+    assets: Res<SatelliteAssets>,
 ) {
-    let Some(config) = configs.get(&config_handle.0) else {
+    let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
         return;
     };
@@ -175,7 +176,7 @@ fn handle_grabber_interaction(
     mut player_query: Query<
         (
             Entity,
-            &ActionState<PlayerAction>,
+            &PlayerActionState,
             &Position,
             Option<&NearbyGrabber>,
             Option<&GrabbedBy>,
