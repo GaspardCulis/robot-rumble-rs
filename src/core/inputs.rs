@@ -33,7 +33,7 @@ pub enum PlayerAction {
 pub enum InputSet {
     /// Where we mutate the PlayerActionState to apply custom input methods
     Update,
-    /// Final step were inputs are serialized and sent over the network
+    /// Final step where inputs are serialized and sent over the network
     Serialize,
 }
 
