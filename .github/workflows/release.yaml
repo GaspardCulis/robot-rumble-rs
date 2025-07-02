@@ -96,6 +96,9 @@ jobs:
   get-version:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Determine version number (git)
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> "${GITHUB_OUTPUT}"
@@ -108,8 +111,8 @@ jobs:
     
       - name: Check version match
         run: |
-          if [ "${{ steps.tag.outputs.tag }}" != "v${{ steps.cargo-version.outputs.cargo_version }}" ]; then
-            echo "Error: Git tag (${{ steps.tag.outputs.tag }}) does not match cargo package version (${{ steps.cargo-version.outputs.cargo_version }})"
+          if [ "${{ input.version || steps.tag.outputs.tag }}" != "v${{ steps.cargo-version.outputs.cargo_version }}" ]; then
+            echo "Error: Git tag (${{ inputs.version || steps.tag.outputs.tag }}) does not match cargo package version (${{ steps.cargo-version.outputs.cargo_version }})"
             exit 1
           fi
 
