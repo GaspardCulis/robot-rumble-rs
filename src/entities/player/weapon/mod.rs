@@ -1,9 +1,6 @@
 use crate::{
     GameState,
-    core::{
-        audio::AudioSFX,
-        physics::{PhysicsSet, Position, Rotation, Velocity},
-    },
+    core::physics::{PhysicsSet, Position, Rotation, Velocity},
     entities::projectile::{
         Damage, DecayTimer, Projectile,
         config::{BH_BULLET_DECAY_TIME, ProjectilesAssets, ProjectilesConfig},
@@ -12,12 +9,12 @@ use crate::{
 };
 use bevy::{math::ops::cos, prelude::*};
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
-use bevy_kira_audio::{AudioChannel, AudioControl, AudioInstance, AudioTween, PlaybackState};
 use rand::{Rng as _, SeedableRng as _};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 pub mod assets;
 pub mod config;
+mod sfx;
 
 use assets::WeaponsAssets;
 use config::{WeaponStats, WeaponType, WeaponsConfig, WeaponsConfigAssets};
@@ -41,20 +38,27 @@ pub struct WeaponState {
 #[relationship_target(relationship = super::Weapon)]
 pub struct Owner(Entity);
 
-#[derive(Component, Reflect)]
-struct AudioReload(Handle<AudioInstance>);
+#[derive(Event)]
+pub enum WeaponEvent {
+    Fire(Entity),
+    ReloadStart(Entity),
+    ReloadEnd(Entity),
+    Equipped(Entity),
+    UnEquipped(Entity),
+}
 
 pub struct WeaponPlugin;
 impl Plugin for WeaponPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<AudioReload>()
-            .register_type::<Owner>()
+        app.register_type::<Owner>()
             .register_type::<WeaponType>()
             .register_type::<WeaponStats>()
             .register_type::<WeaponState>()
             .register_type::<WeaponMode>()
             .register_required_components_with::<WeaponType, Name>(|| Name::new("Weapon"))
             .register_required_components::<WeaponType, WeaponMode>()
+            .add_event::<WeaponEvent>()
+            .add_plugins(sfx::WeaponSFXPlugin)
             .add_systems(
                 Update,
                 (
@@ -137,68 +141,44 @@ fn add_sprite(
 
 // this will be very useful a bit further in visuals and sound effects
 fn visibility_change_detection(
-    query: Query<Option<&AudioReload>, (Changed<Visibility>, With<WeaponType>)>,
-    mut audio_instances: ResMut<Assets<AudioInstance>>,
+    query: Query<(Entity, &Visibility), (Changed<Visibility>, With<WeaponType>)>,
+    mut events: EventWriter<WeaponEvent>,
 ) {
-    for audio in query.iter().flatten() {
-        let handle = &audio.0;
-        if let Some(instance) = audio_instances.get_mut(handle) {
-            match instance.state() {
-                PlaybackState::Paused { .. } => {
-                    // There are a lot of control methods defined on the instance
-                    instance.resume(AudioTween::default());
-                }
-                PlaybackState::Playing { .. } => {
-                    instance.pause(AudioTween::default());
-                }
-                _ => {}
+    for (entity, visibility) in query.iter() {
+        match visibility {
+            Visibility::Inherited => {}
+            Visibility::Hidden => {
+                events.write(WeaponEvent::UnEquipped(entity));
             }
-        }
+            Visibility::Visible => {
+                events.write(WeaponEvent::Equipped(entity));
+            }
+        };
     }
 }
 
-// do some effects on mode changes
 fn mode_change_detection(
-    mut commands: Commands,
-    query: Query<(Entity, &WeaponMode, &WeaponType, Option<&AudioReload>), Changed<WeaponMode>>,
-    assets: Res<WeaponsAssets>,
-    sfx_channel: Res<AudioChannel<AudioSFX>>,
-    mut audio_instances: ResMut<Assets<AudioInstance>>,
+    query: Query<(Entity, &WeaponMode), Changed<WeaponMode>>,
+    mut events: EventWriter<WeaponEvent>,
 ) {
-    for (entity, mode, weapon_type, maybe_audio) in query.iter() {
-        let Some(weapon_assets) = assets.get(weapon_type) else {
-            warn!("Couldn't load WeaponAssets");
-            return;
-        };
+    for (entity, mode) in query.iter() {
         match mode {
+            WeaponMode::Idle => {}
+            WeaponMode::Triggered => {}
             WeaponMode::Reloading => {
-                if let Some(sound) = weapon_assets.reload.clone() {
-                    let handle: Handle<AudioInstance> = sfx_channel.play(sound).handle();
-                    commands.entity(entity).insert(AudioReload(handle));
-                } else {
-                    warn!("Reload sound for current weapon is not implemented!");
-                }
+                events.write(WeaponEvent::ReloadStart(entity));
             }
-            _ => {
-                if let Some(audio) = maybe_audio {
-                    let handle = &audio.0;
-                    if let Some(instance) = audio_instances.get_mut(handle) {
-                        instance.stop(AudioTween::default());
-                    }
-
-                    commands.entity(entity).remove::<AudioReload>();
-                }
-            }
-        }
+        };
     }
 }
 
 /// Also handles ammo reloads for convenience
 fn tick_weapon_timers(
-    mut query: Query<(&mut WeaponState, &WeaponStats, &mut WeaponMode), With<Position>>,
+    mut query: Query<(Entity, &mut WeaponState, &mut WeaponMode, &WeaponStats), With<Position>>,
+    mut events: EventWriter<WeaponEvent>,
     time: Res<Time>,
 ) {
-    for (mut state, stats, mut mode) in query.iter_mut() {
+    for (entity, mut state, mut mode, stats) in query.iter_mut() {
         state.cooldown_timer.tick(time.delta());
         if *mode == WeaponMode::Reloading {
             state.reload_timer.tick(time.delta());
@@ -208,6 +188,8 @@ fn tick_weapon_timers(
             state.current_ammo = stats.magazine_size;
             state.reload_timer.reset();
             *mode = WeaponMode::Idle;
+
+            events.write(WeaponEvent::ReloadEnd(entity));
         }
     }
 }
@@ -215,6 +197,7 @@ fn tick_weapon_timers(
 fn fire_weapon_system(
     mut commands: Commands,
     mut weapon_query: Query<(
+        Entity,
         &mut WeaponState,
         &mut WeaponMode,
         &Position,
@@ -222,21 +205,19 @@ fn fire_weapon_system(
         &Rotation,
         &WeaponStats,
         &Owner,
-        &WeaponType,
     )>,
-    mut owner_query: Query<&mut Velocity, Without<WeaponType>>,
+    mut owner_query: Query<&mut Velocity, Without<Owner>>,
+    mut events: EventWriter<WeaponEvent>,
     projectiles_assets: Res<ProjectilesAssets>,
     projectiles_configs: Res<Assets<ProjectilesConfig>>,
     time: Res<bevy_ggrs::RollbackFrameCount>,
-    assets: Res<WeaponsAssets>,
-    sfx_channel: Res<AudioChannel<AudioSFX>>,
 ) {
     let Some(projectiles_config) = projectiles_configs.get(&projectiles_assets.config) else {
         warn!("Couldn't load ProjectileConfig");
         return;
     };
 
-    for (mut state, mut mode, position, velocity, rotation, stats, owner, weapon_type) in
+    for (entity, mut state, mut mode, position, velocity, rotation, stats, owner) in
         weapon_query.iter_mut()
     {
         if *mode == WeaponMode::Triggered && state.can_fire() {
@@ -272,10 +253,8 @@ fn fire_weapon_system(
                     warn!("Empty projectile config!");
                 }
             }
-            // make sound
-            if let Some(weapon_assets) = assets.get(weapon_type) {
-                sfx_channel.play(weapon_assets.fire.clone());
-            }
+
+            events.write(WeaponEvent::Fire(entity));
 
             state.current_ammo -= 1;
             // Reset timers if shooting
@@ -284,6 +263,8 @@ fn fire_weapon_system(
             // Auto-reload if empty mag
             if state.current_ammo == 0 {
                 *mode = WeaponMode::Reloading;
+
+                events.write(WeaponEvent::ReloadStart(entity));
             }
             // Recoil
             if let Ok(mut owner_velocity) = owner_query.get_mut(owner.0) {
@@ -296,6 +277,18 @@ fn fire_weapon_system(
 impl WeaponState {
     pub fn can_fire(&self) -> bool {
         self.cooldown_timer.finished() && self.current_ammo > 0
+    }
+}
+
+impl WeaponEvent {
+    pub fn get_entity(&self) -> Entity {
+        *match self {
+            WeaponEvent::Fire(entity) => entity,
+            WeaponEvent::ReloadStart(entity) => entity,
+            WeaponEvent::ReloadEnd(entity) => entity,
+            WeaponEvent::Equipped(entity) => entity,
+            WeaponEvent::UnEquipped(entity) => entity,
+        }
     }
 }
 
