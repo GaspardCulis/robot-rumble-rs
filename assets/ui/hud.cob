@@ -83,6 +83,7 @@ LoadImages[$weapon_icon $ammunition_icon $heart_icon]
                 AbsoluteNode{
                     height: 100%
                 }
+                ZIndex(-1)
                 BrRadiusTopRight(8px)
                 BrRadiusTopLeft(8px)
                 BackgroundColor(#80353535)
