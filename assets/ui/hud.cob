@@ -18,7 +18,7 @@ LoadImages[$weapon_icon $ammunition_icon $heart_icon]
     }
     Splat<Padding>(10px)
 "hud"
-    BackgroundColor(#40f5f5f5)
+    BackgroundColor(#c0757575)
     BrRadius(8px)
     "vbox"
         FlexNode{
