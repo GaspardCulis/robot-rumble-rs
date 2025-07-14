@@ -29,7 +29,9 @@ fn check_cmdline_args(
     mut next_screen: ResMut<NextState<Screen>>,
     mut next_gamestate: ResMut<NextState<GameState>>,
 ) {
-    if args.mode == GameMode::Synctest {
+    // Don't require going through menus if args are explicitely given
+    // TODO: Less cringe way of checking if players arg is given
+    if args.mode == GameMode::Synctest || args.players != 2 {
         next_screen.set(Screen::None);
         next_gamestate.set(GameState::MatchMaking);
     }
