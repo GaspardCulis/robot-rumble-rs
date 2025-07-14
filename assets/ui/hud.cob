@@ -1,9 +1,11 @@
 #defs
 
-$weapon_icon = "img/weapons/assaultrifle.png"
+$weapon_icon = "img/weapons/pistol.png"
+$ammunition_icon = "img/icons/ammunition-icon.png"
+$heart_icon = "img/icons/heart-icon.png"
 
 #commands
-LoadImages[$weapon_icon]
+LoadImages[$weapon_icon $ammunition_icon $heart_icon]
 
 #scenes
 "hud_container"
@@ -26,6 +28,7 @@ LoadImages[$weapon_icon]
         "hbox"
             FlexNode{
                 flex_direction: Row
+                justify_main: SpaceBetween
                 justify_cross: Center
                 column_gap: 30px
                 width:300px
@@ -33,7 +36,7 @@ LoadImages[$weapon_icon]
             }
             "a_weapon_preview"
                 FlexNode{
-                    width:160px
+                    width:150px
                     height: 80px
                     justify_cross: Center
                     clipping: ClipXY
@@ -43,11 +46,41 @@ LoadImages[$weapon_icon]
                         width: 100%
                     }
                     LoadedImageNode{ image: $weapon_icon }
-            "bullets_count"
-                TextLine{ text: "42/69" }
+            "infos"
+                FlexNode{
+                    flex_direction: Column
+                    padding: {right: 8px}
+                }
+                "bullets_count"
+                    FlexNode{
+                        width: 100%
+                        flex_direction: Row
+                        justify_main: FlexEnd
+                    }
+                    "text"
+                        TextLine{ text: "42/69" }
+                    "icon"
+                        FlexNode{
+                            height: 24px
+                            margin: {left: 8px}
+                        }
+                        LoadedImageNode{ image: $ammunition_icon }
+                "percentage"
+                    FlexNode{
+                        width: 100%
+                        flex_direction: Row
+                        justify_main: FlexEnd
+                    }
+                    "text"
+                        TextLine{ text: "69%" }
+                    "icon"
+                        FlexNode{
+                            height: 24px
+                            margin: {left: 8px}
+                        }
+                        LoadedImageNode{ image: $heart_icon }
             "reload_bg"
                 AbsoluteNode{
-                    width: 0%
                     height: 100%
                 }
                 BrRadiusTopRight(8px)
