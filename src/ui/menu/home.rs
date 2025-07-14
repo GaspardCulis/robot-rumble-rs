@@ -30,6 +30,9 @@ fn check_cmdline_args(
     mut next_gamestate: ResMut<NextState<GameState>>,
 ) {
     // Don't require going through menus if args are explicitely given
+    if args.mode == GameMode::LocalPlay {
+        next_screen.set(Screen::SplitscreenSetup);
+    } else
     // TODO: Less cringe way of checking if players arg is given
     if args.mode == GameMode::Synctest || args.players != 2 {
         next_screen.set(Screen::None);
