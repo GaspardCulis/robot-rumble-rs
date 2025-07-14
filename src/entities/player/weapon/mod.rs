@@ -65,6 +65,7 @@ impl Plugin for WeaponPlugin {
                     #[cfg(feature = "dev_tools")]
                     handle_config_reload,
                     (
+                        add_stats,
                         add_sprite,
                         mode_change_detection,
                         visibility_change_detection,
@@ -75,11 +76,7 @@ impl Plugin for WeaponPlugin {
             )
             .add_systems(
                 GgrsSchedule,
-                (
-                    add_weapon_components,
-                    tick_weapon_timers,
-                    fire_weapon_system,
-                )
+                (init_state, tick_weapon_timers, fire_weapon_system)
                     .chain()
                     .in_set(PhysicsSet::Collision)
                     .after(limit::handle_player_death),
@@ -87,7 +84,7 @@ impl Plugin for WeaponPlugin {
     }
 }
 
-fn add_weapon_components(
+fn add_stats(
     mut commands: Commands,
     query: Query<(Entity, &WeaponType), Without<WeaponStats>>,
     assets: Res<WeaponsConfigAssets>,
@@ -101,16 +98,21 @@ fn add_weapon_components(
     for (weapon_entity, weapon_type) in query.iter() {
         if let Some(weapon_config) = config.0.get(weapon_type) {
             let weapon_stats = &weapon_config.stats;
-
-            // Overrides weapon components if present
-            commands.entity(weapon_entity).insert(WeaponState {
-                current_ammo: weapon_stats.magazine_size,
-                cooldown_timer: Timer::new(weapon_stats.cooldown, TimerMode::Once),
-                reload_timer: Timer::new(weapon_stats.reload_time, TimerMode::Once),
-            });
-            commands.entity(weapon_entity).insert(WeaponMode::Idle);
             commands.entity(weapon_entity).insert(weapon_stats.clone());
+        } else {
+            warn!("Couldn't get config stats for {weapon_type:?}");
         }
+    }
+}
+
+fn init_state(mut commands: Commands, query: Query<(Entity, &WeaponStats), Without<WeaponState>>) {
+    for (weapon_entity, weapon_stats) in query.iter() {
+        commands.entity(weapon_entity).insert(WeaponState {
+            current_ammo: weapon_stats.magazine_size,
+            cooldown_timer: Timer::new(weapon_stats.cooldown, TimerMode::Once),
+            reload_timer: Timer::new(weapon_stats.reload_time, TimerMode::Once),
+        });
+        commands.entity(weapon_entity).insert(WeaponMode::Idle);
     }
 }
 
