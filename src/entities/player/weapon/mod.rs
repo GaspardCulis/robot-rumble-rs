@@ -263,8 +263,6 @@ fn fire_weapon_system(
             // Auto-reload if empty mag
             if state.current_ammo == 0 {
                 *mode = WeaponMode::Reloading;
-
-                events.write(WeaponEvent::ReloadStart(entity));
             }
             // Recoil
             if let Ok(mut owner_velocity) = owner_query.get_mut(owner.0) {
