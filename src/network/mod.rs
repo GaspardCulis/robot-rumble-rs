@@ -41,6 +41,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<physics::Rotation>()
             .rollback_component_with_clone::<physics::Velocity>()
             .rollback_component_with_clone::<gravity::Mass>()
+            .rollback_component_with_clone::<gravity::Static>() // Mutated in grabber interactions
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .rollback_component_with_clone::<player::Percentage>()
             .rollback_immutable_component_with_clone::<player::Weapon>()
