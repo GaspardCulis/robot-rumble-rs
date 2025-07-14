@@ -50,7 +50,7 @@ struct CurrentWeaponSprite(Handle<Image>);
 pub struct HUDPlugin;
 impl Plugin for HUDPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (spawn_menu).run_if(in_state(GameState::InGame)))
+        app.add_systems(PostUpdate, (spawn_menu).run_if(in_state(GameState::InGame)))
             .add_systems(
                 FixedUpdate,
                 (
