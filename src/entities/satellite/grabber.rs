@@ -4,6 +4,7 @@ use bevy_ggrs::{GgrsSchedule, LocalPlayers};
 
 use super::SatelliteSet;
 use super::assets::{SatelliteAssets, SatelliteConfig};
+use crate::core::gravity;
 use crate::core::inputs::{PlayerAction, PlayerActionState};
 use crate::core::physics::{Position, Velocity};
 use crate::entities::player::Player;
@@ -211,10 +212,13 @@ fn handle_grabber_interaction(
                 };
                 velocity.0 = tangent * penetration_speed * direction_sign;
 
-                commands.entity(player_entity).insert(GrabbedConstraint {
-                    anchor: nearby.0,
-                    distance,
-                });
+                commands.entity(player_entity).insert((
+                    GrabbedConstraint {
+                        anchor: nearby.0,
+                        distance,
+                    },
+                    gravity::Static,
+                ));
 
                 let mesh = meshes.add(Rectangle::new(4.0, 1.0));
                 let material = materials.add(Color::srgb(0.0, 0.0, 1.0));
@@ -230,7 +234,9 @@ fn handle_grabber_interaction(
                 ));
             }
         } else if !is_pressed && is_grabbed {
-            commands.entity(player_entity).remove::<GrabbedConstraint>();
+            commands
+                .entity(player_entity)
+                .remove::<(GrabbedConstraint, gravity::Static)>();
         }
     }
 }
@@ -241,6 +247,7 @@ fn update_grabbed_players(
     anchor_query: Query<&Position, (With<Grabber>, Without<Player>)>,
     assets: Res<SatelliteAssets>,
     configs: Res<Assets<SatelliteConfig>>,
+    time: Res<Time>,
 ) {
     let Some(config) = configs.get(&assets.config) else {
         warn!("Satellite config not loaded yet");
@@ -249,31 +256,24 @@ fn update_grabbed_players(
 
     for (entity, position, mut velocity, constraint) in query.iter_mut() {
         if velocity.0.length() > config.grabber.max_speed {
-            commands.entity(entity).remove::<GrabbedConstraint>();
+            commands
+                .entity(entity)
+                .remove::<(GrabbedConstraint, gravity::Static)>();
             continue;
         }
         if let Ok(anchor_pos) = anchor_query.get(constraint.anchor) {
-            let offset = position.0 - anchor_pos.0;
-            let current_distance = offset.length();
+            let displacement = position.0 - anchor_pos.0;
+            let distance = displacement.length();
+            let direction = displacement.normalize();
 
-            if current_distance < f32::EPSILON {
-                continue;
-            }
+            let force_magnitude = -config.grabber.stiffness * (distance - constraint.distance);
+            let damping_force = -config.grabber.damping * (velocity.dot(direction));
 
-            let direction = offset / current_distance;
-            let target_position = anchor_pos.0 + direction * constraint.distance;
+            let total_force_magnitude = force_magnitude + damping_force;
 
-            let stiffness = 5.0;
-            let mut correction = (target_position - position.0) * stiffness;
+            let force = direction * total_force_magnitude;
 
-            let radial_speed = velocity.0.dot(direction);
-            correction -= direction * radial_speed * 0.2;
-
-            let tangent = Vec2::new(-direction.y, direction.x);
-            let tangential_speed = velocity.0.dot(tangent);
-            let orbit_boost = 0.05;
-            correction += tangent * tangential_speed.signum() * orbit_boost;
-            velocity.0 += correction;
+            velocity.0 += force * time.delta_secs();
         }
     }
 }

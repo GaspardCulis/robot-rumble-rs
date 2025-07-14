@@ -7,6 +7,8 @@
         radius: 300,
         entry_margin: 10,
         max_speed: 2000,
+        stiffness: 100,
+        damping: 10,
     ),
     slingshot: (
         orbit_radius: 200.0,

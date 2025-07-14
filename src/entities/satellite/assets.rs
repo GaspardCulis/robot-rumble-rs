@@ -38,6 +38,10 @@ pub struct GrabberConfig {
     pub entry_margin: f32,
     /// Max speed the rope can handle before breaking
     pub max_speed: f32,
+    /// The rope spring stiffness
+    pub stiffness: f32,
+    /// The rope spring damping
+    pub damping: f32,
 }
 
 #[derive(serde::Deserialize)]
