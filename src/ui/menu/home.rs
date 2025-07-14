@@ -29,7 +29,7 @@ fn check_cmdline_args(
     mut next_screen: ResMut<NextState<Screen>>,
     mut next_gamestate: ResMut<NextState<GameState>>,
 ) {
-    // Don't require going through menus if args are explicitely given
+    // Don't require going through menus if args are explicitly given
     if args.mode == GameMode::LocalPlay {
         next_screen.set(Screen::SplitscreenSetup);
     } else
