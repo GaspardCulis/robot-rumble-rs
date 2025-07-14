@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_cobweb_ui::prelude::*;
 
-use crate::ui::UIAssets;
+use crate::{Args, GameMode, GameState, ui::UIAssets};
 
 use super::Screen;
 
@@ -12,12 +12,26 @@ struct HomeMenu;
 pub struct HomeMenuPlugin;
 impl Plugin for HomeMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(Screen::Home), spawn_menu)
-            .add_systems(
-                Update,
-                update_background_size.run_if(in_state(Screen::Home)),
-            )
-            .add_systems(OnExit(Screen::Home), despawn_menu);
+        app.add_systems(
+            OnEnter(Screen::Home),
+            (check_cmdline_args, spawn_menu).chain(),
+        )
+        .add_systems(
+            Update,
+            update_background_size.run_if(in_state(Screen::Home)),
+        )
+        .add_systems(OnExit(Screen::Home), despawn_menu);
+    }
+}
+
+fn check_cmdline_args(
+    args: Res<Args>,
+    mut next_screen: ResMut<NextState<Screen>>,
+    mut next_gamestate: ResMut<NextState<GameState>>,
+) {
+    if args.mode == GameMode::Synctest {
+        next_screen.set(Screen::None);
+        next_gamestate.set(GameState::MatchMaking);
     }
 }
 
