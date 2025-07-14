@@ -25,8 +25,6 @@ pub enum PlayerAction {
     PointerDirection,
     Reload,
     Interact,
-    RopeExtend,
-    RopeRetract,
 }
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -104,8 +102,6 @@ pub fn default_input_map() -> InputMap<PlayerAction> {
     .with(PlayerAction::Shoot, MouseButton::Left)
     .with(PlayerAction::SlotNext, MouseScrollDirection::UP)
     .with(PlayerAction::SlotPrev, MouseScrollDirection::DOWN)
-    .with(PlayerAction::RopeExtend, MouseScrollDirection::UP)
-    .with(PlayerAction::RopeRetract, MouseScrollDirection::DOWN)
     // Gamepad
     .with_multiple([
         (PlayerAction::Right, GamepadButton::DPadRight),
