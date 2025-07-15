@@ -6,7 +6,7 @@ use bevy_ggrs::LocalPlayers;
 use crate::{
     GameState,
     entities::player::{
-        Player, Weapon,
+        Percentage, Player, Weapon,
         inventory::Arsenal,
         weapon::{
             Owner, WeaponState,
@@ -32,6 +32,11 @@ struct WeaponEntry(Entity);
 struct PlayerHud(Entity);
 
 #[derive(ReactComponent, Default, PartialEq)]
+struct PlayerInfo {
+    percentage: f32,
+}
+
+#[derive(ReactComponent, Default, PartialEq)]
 struct CurrentWeaponInfo {
     current_ammo: usize,
     magazine_size: usize,
@@ -45,21 +50,23 @@ struct CurrentWeaponSprite(Handle<Image>);
 pub struct HUDPlugin;
 impl Plugin for HUDPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (spawn_menu).run_if(in_state(GameState::InGame)))
-            .add_systems(
-                FixedUpdate,
-                (
-                    update_weapon_info,
-                    update_weapon_sprite,
-                    update_weapon_entry_style,
-                )
-                    .run_if(in_state(GameState::InGame)),
+        app.add_systems(
+            // Run in `FixedUpdate` because UI info updates do not need to be blazingly fast
+            FixedUpdate,
+            (
+                spawn_hud,
+                update_player_info,
+                update_weapon_info,
+                update_weapon_sprite,
+                update_weapon_entry_style,
             )
-            .add_systems(OnExit(GameState::InGame), despawn_menu);
+                .run_if(in_state(GameState::InGame)),
+        )
+        .add_systems(OnExit(GameState::InGame), despawn_menu);
     }
 }
 
-fn spawn_menu(
+fn spawn_hud(
     mut commands: Commands,
     mut scene_builder: SceneBuilder,
     arsenals: Query<(Entity, &Player, &Arsenal), Changed<Arsenal>>,
@@ -88,24 +95,38 @@ fn spawn_menu(
                     let scene_id = scene_handle.id();
 
                     scene_handle.insert(PlayerHud(player_entity));
+                    scene_handle.insert_reactive(PlayerInfo::default());
                     scene_handle.insert_reactive(CurrentWeaponInfo::default());
                     scene_handle.insert_reactive(CurrentWeaponSprite::default());
-                    scene_handle.get("vbox::hbox::bullets_count").update_on(
-                        entity_mutation::<CurrentWeaponInfo>(scene_id),
-                        move |id: TargetId,
-                              info: Reactive<CurrentWeaponInfo>,
-                              mut e: TextEditor| {
-                            let weapon_info = info.get(scene_id)?;
-                            write_text!(
-                                e,
-                                id.0,
-                                "{}/{}",
-                                weapon_info.current_ammo,
-                                weapon_info.magazine_size
-                            );
-                            OK
-                        },
-                    );
+                    scene_handle
+                        .get("vbox::hbox::infos::percentage::text")
+                        .update_on(
+                            entity_mutation::<PlayerInfo>(scene_id),
+                            move |id: TargetId, info: Reactive<PlayerInfo>, mut e: TextEditor| {
+                                let player_info = info.get(scene_id)?;
+                                write_text!(e, id.0, "{:.1}%", player_info.percentage * 100.0);
+                                OK
+                            },
+                        );
+
+                    scene_handle
+                        .get("vbox::hbox::infos::bullets_count::text")
+                        .update_on(
+                            entity_mutation::<CurrentWeaponInfo>(scene_id),
+                            move |id: TargetId,
+                                  info: Reactive<CurrentWeaponInfo>,
+                                  mut e: TextEditor| {
+                                let weapon_info = info.get(scene_id)?;
+                                write_text!(
+                                    e,
+                                    id.0,
+                                    "{}/{}",
+                                    weapon_info.current_ammo,
+                                    weapon_info.magazine_size
+                                );
+                                OK
+                            },
+                        );
 
                     scene_handle.get("vbox::hbox::reload_bg").update_on(
                         entity_mutation::<CurrentWeaponInfo>(scene_id),
@@ -160,6 +181,27 @@ fn spawn_menu(
     );
 }
 
+fn update_player_info(
+    mut commands: Commands,
+    mut info: ReactiveMut<PlayerInfo>,
+    huds: Query<(Entity, &PlayerHud)>,
+    player_query: Query<&Percentage>,
+) -> Result {
+    for (entity, hud) in huds.iter() {
+        let percentage = player_query.get(hud.0)?;
+
+        let _ = info.set_if_neq(
+            &mut commands,
+            entity,
+            PlayerInfo {
+                percentage: percentage.0,
+            },
+        );
+    }
+
+    Ok(())
+}
+
 fn update_weapon_info(
     mut commands: Commands,
     mut info: ReactiveMut<CurrentWeaponInfo>,
@@ -170,7 +212,7 @@ fn update_weapon_info(
     for (entity, hud) in huds.iter() {
         let weapon = player_query.get(hud.0)?;
         let Ok((weapon_state, weapon_stats)) = weapon_query.get(weapon.0) else {
-            warn!("Weapon state and stats still not loaded");
+            debug!("Weapon state and stats still not loaded");
             continue;
         };
 
