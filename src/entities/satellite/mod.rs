@@ -35,9 +35,12 @@ pub struct SpawnSatelliteEvent {
 }
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-enum SatelliteSet {
+pub enum SatelliteSet {
+    /// First
     Slingshot,
+    /// Second
     Bumper,
+    /// Last
     Grabber,
 }
 
