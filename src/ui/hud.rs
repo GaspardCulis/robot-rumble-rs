@@ -50,22 +50,23 @@ struct CurrentWeaponSprite(Handle<Image>);
 pub struct HUDPlugin;
 impl Plugin for HUDPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PostUpdate, (spawn_menu).run_if(in_state(GameState::InGame)))
-            .add_systems(
-                FixedUpdate,
-                (
-                    update_player_info,
-                    update_weapon_info,
-                    update_weapon_sprite,
-                    update_weapon_entry_style,
-                )
-                    .run_if(in_state(GameState::InGame)),
+        app.add_systems(
+            // Run in `FixedUpdate` because UI info updates do not need to be blazingly fast
+            FixedUpdate,
+            (
+                spawn_hud,
+                update_player_info,
+                update_weapon_info,
+                update_weapon_sprite,
+                update_weapon_entry_style,
             )
-            .add_systems(OnExit(GameState::InGame), despawn_menu);
+                .run_if(in_state(GameState::InGame)),
+        )
+        .add_systems(OnExit(GameState::InGame), despawn_menu);
     }
 }
 
-fn spawn_menu(
+fn spawn_hud(
     mut commands: Commands,
     mut scene_builder: SceneBuilder,
     arsenals: Query<(Entity, &Player, &Arsenal), Changed<Arsenal>>,
