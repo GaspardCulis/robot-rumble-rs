@@ -44,6 +44,7 @@ impl Plugin for NetworkPlugin {
             .rollback_component_with_clone::<gravity::Static>() // Mutated in grabber interactions
             .rollback_component_with_clone::<player::PlayerInputVelocity>()
             .rollback_component_with_clone::<player::Percentage>()
+            .rollback_component_with_clone::<player::Stunned>()
             .rollback_immutable_component_with_clone::<player::Weapon>()
             .rollback_component_with_clone::<weapon::WeaponMode>()
             .rollback_component_with_clone::<weapon::WeaponState>()
