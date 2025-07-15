@@ -212,7 +212,7 @@ fn update_weapon_info(
     for (entity, hud) in huds.iter() {
         let weapon = player_query.get(hud.0)?;
         let Ok((weapon_state, weapon_stats)) = weapon_query.get(weapon.0) else {
-            warn!("Weapon state and stats still not loaded");
+            debug!("Weapon state and stats still not loaded");
             continue;
         };
 
