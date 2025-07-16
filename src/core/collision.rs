@@ -30,11 +30,7 @@ where
 {
     fn build(&self, app: &mut App) {
         app.register_type::<CollisionShape>()
-            .register_required_components_with::<A, CollisionState<A, B>>(|| CollisionState {
-                closest: None,
-                collides: false,
-                _data: default(),
-            })
+            .register_required_components::<A, CollisionState<A, B>>()
             .add_systems(
                 GgrsSchedule,
                 check_collisions::<A, B>.in_set(PhysicsSet::Collision),
@@ -99,6 +95,20 @@ where
 {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<A, B> Default for CollisionState<A, B>
+where
+    A: Component,
+    B: Component,
+{
+    fn default() -> Self {
+        Self {
+            closest: None,
+            collides: false,
+            _data: default(),
+        }
     }
 }
 

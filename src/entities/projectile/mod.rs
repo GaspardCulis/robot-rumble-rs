@@ -5,7 +5,7 @@ use crate::{
         gravity::{Mass, Passive},
         physics::{PhysicsSet, Position, Rotation, Velocity},
     },
-    entities::player::Percentage,
+    entities::player::{Percentage, Stunned},
 };
 use bevy::prelude::*;
 use bevy_ggrs::GgrsSchedule;
@@ -167,7 +167,15 @@ fn check_player_collisions(
         ),
         With<Projectile>,
     >,
-    mut player_query: Query<(&mut Velocity, &Mass, &mut Percentage), Without<Projectile>>,
+    mut player_query: Query<
+        (
+            &mut Velocity,
+            &Mass,
+            &mut Percentage,
+            Option<&CollisionState<Player, Planet>>,
+        ),
+        Without<Projectile>,
+    >,
 ) {
     // Need to sort bullets for determinism in case multiple bullets hits a player at once
     let mut colliding_bullets = query
@@ -181,18 +189,22 @@ fn check_player_collisions(
         _,
         projectile_velocity,
         projectile_mass,
-        player_collision,
+        projectile_collision,
         projectile_damage,
     ) in colliding_bullets.into_iter()
     {
-        if let Some(closest_player) = player_collision.closest
-            && let Ok((mut player_velocity, player_mass, mut player_percentage)) =
+        if let Some(closest_player) = projectile_collision.closest
+            && let Ok((mut player_velocity, player_mass, mut player_percentage, player_collision)) =
                 player_query.get_mut(closest_player)
         {
             player_percentage.0 += projectile_damage.0;
             let knockback_force =
                 (1.0 + player_percentage.0) * projectile_velocity.0 * projectile_mass.0 as f32;
             player_velocity.0 += knockback_force / player_mass.0 as f32;
+
+            if player_collision.is_some_and(|collision| collision.collides) {
+                commands.entity(closest_player).insert(Stunned);
+            }
         }
 
         commands.entity(projectile).despawn();
