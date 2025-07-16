@@ -59,7 +59,7 @@ fn handle_weapon_events(
                 if let Some(instance) = audio_reload
                     .and_then(|audio_reload_handle| audio_instances.get_mut(&audio_reload_handle.0))
                 {
-                    instance.stop(AudioTween::default());
+                    instance.pause(AudioTween::default());
                 }
             }
         };
