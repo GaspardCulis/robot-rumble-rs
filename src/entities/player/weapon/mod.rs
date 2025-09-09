@@ -1,11 +1,13 @@
 use crate::{
     GameState,
     core::physics::{PhysicsSet, Position, Rotation, Velocity},
-    entities::projectile::{
-        Damage, DecayTimer, Projectile,
-        config::{BH_BULLET_DECAY_TIME, ProjectilesAssets, ProjectilesConfig},
+    entities::{
+        projectile::{
+            Damage, DecayTimer, Projectile,
+            config::{BH_BULLET_DECAY_TIME, ProjectilesAssets, ProjectilesConfig},
+        },
+        satellite::SatelliteSet,
     },
-    level::limit,
 };
 use bevy::{math::ops::cos, prelude::*};
 use bevy_ggrs::{AddRollbackCommandExtension, GgrsSchedule};
@@ -78,8 +80,8 @@ impl Plugin for WeaponPlugin {
                 GgrsSchedule,
                 (init_state, tick_weapon_timers, fire_weapon_system)
                     .chain()
-                    .in_set(PhysicsSet::Collision)
-                    .after(limit::handle_player_death),
+                    .in_set(PhysicsSet::Interaction)
+                    .before(SatelliteSet::Slingshot),
             );
     }
 }

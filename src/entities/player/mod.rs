@@ -56,6 +56,9 @@ pub struct PlayerInputVelocity(Vec2);
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 pub struct PlayerSkin(pub String);
 
+#[derive(Component, Clone, Debug, Reflect)]
+pub struct Stunned;
+
 #[derive(Component, Clone, Debug, PartialEq, Reflect)]
 #[relationship(relationship_target = weapon::Owner)]
 pub struct Weapon(pub Entity);
@@ -63,11 +66,12 @@ pub struct Weapon(pub Entity);
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Player>()
+        app.register_type::<Percentage>()
+            .register_type::<Player>()
             .register_type::<PlayerInputVelocity>()
             .register_type::<PlayerSkin>()
+            .register_type::<Stunned>()
             .register_type::<Weapon>()
-            .register_type::<Percentage>()
             .add_plugins(CollisionPlugin::<Player, planet::Planet>::new())
             .add_plugins(animation::PlayerAnimationPlugin)
             .add_plugins(inventory::InventoryPlugin)
@@ -75,7 +79,12 @@ impl Plugin for PlayerPlugin {
             .add_plugins(weapon::WeaponPlugin)
             .add_systems(
                 GgrsSchedule,
-                (player_physics, player_movement, update_weapon)
+                (
+                    player_physics,
+                    player_movement,
+                    update_weapon,
+                    reset_stunned,
+                )
                     .chain()
                     .in_set(PhysicsSet::Player),
             );
@@ -185,6 +194,7 @@ fn player_physics(
             &mut Velocity,
             &PlanetCollision,
             &PlayerInputVelocity,
+            Has<Stunned>,
         ),
         (With<Player>, Without<planet::Planet>, Without<Orbited>),
     >,
@@ -197,6 +207,7 @@ fn player_physics(
         mut velocity,
         planet_collision,
         input_velocity,
+        is_stunned,
     ) in player_query.iter_mut()
     {
         // Find nearest planet (asserts that one planet exists)
@@ -227,9 +238,9 @@ fn player_physics(
                 + collision_normal * (PLAYER_RADIUS + nearest_planet_shape.bounding_radius());
             player_position.0 = clip_position;
 
-            // Bounce if not on feet
+            // Bounce if not on feet or stunned
             let rotation_diff = math::clip_angle(player_rotation.0 - target_angle);
-            if rotation_diff.abs() > 30f32.to_radians() {
+            if is_stunned || rotation_diff.abs() > 30f32.to_radians() {
                 let velocity_along_normal = velocity.0.dot(collision_normal);
                 let reflexion_vector = velocity.0 - 2. * velocity_along_normal * collision_normal;
                 velocity.0 = reflexion_vector * 0.5;
@@ -241,5 +252,14 @@ fn player_physics(
                 velocity.0 *= PLAYER_GROUND_FRICTION_COEFF * time.delta_secs();
             }
         }
+    }
+}
+
+/// Temporary way of dealing with the `Stunned` state, which for now is only used by bullets
+/// in order to bounce during a frame in which the player has been hit.
+// TODO: Make less cringe (gameplay design required)
+fn reset_stunned(mut commands: Commands, query: Query<Entity, (With<Player>, With<Stunned>)>) {
+    for player in query.iter() {
+        commands.entity(player).remove::<Stunned>();
     }
 }
